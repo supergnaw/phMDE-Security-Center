@@ -1,0 +1,132 @@
+{
+  "appid": "14b2b770-93ca-4684-b41e-d585f8466a61",
+  "name": "MDE Security Center",
+  "description": "Splunk SOAR connector module for interacting with the Microsoft Defender for Endpoint Security Center API.",
+  "type": "endpoint",
+  "main_module": "mdesecuritycenter_connector.py",
+  "app_version": "1.0.0",
+  "product_vendor": "Microsoft",
+  "product_name": "Microsoft 365 Defender for Endpoint",
+  "product_version_regex": ".*",
+  "publisher": "Supernawesome L.L.C.",
+  "package_name": "phantom_mdesecuritycenter",
+  "license": "GNU General Public License v3.0",
+  "consolidate_widgets": true,
+  "url": "https://github.com/supergnaw/phMDE-Security-Center",
+  "logo": "logo_mdesecuritycenter.svg",
+  "logo_dark": "logo_mdesecuritycenter_dark.svg",
+  "python_version": "3",
+  "utctime_updated": "2022-05-26T06:24:07.659521Z",
+  "min_phantom_version": "5.3.0",
+  "latest_tested_versions": ["*.securitycenter.microsoft.com/test, 10 Aug 2023"],
+  "fips_compliant": true,
+  "configuration": {
+    "tenant_id": {
+      "data_type": "string",
+      "description": "Tenant ID",
+      "required": true,
+      "order": 0
+    },
+    "ph1": {
+      "data_type": "ph",
+      "order": 1
+    },
+    "client_id": {
+      "data_type": "string",
+      "description": "Client ID",
+      "required": true,
+      "order": 2
+    },
+    "client_secret": {
+      "data_type": "password",
+      "description": "Client Secret",
+      "required": true,
+      "order": 3
+    },
+    "ph2": {
+      "data_type": "ph",
+      "order": 4
+    },
+    "api_uri": {
+      "data_type": "string",
+      "description": "API Endpoint Server URI",
+      "required": true,
+      "value_list": [
+        "https://api-eu.securitycenter.microsoft.com",
+        "https://api-gcc.securitycenter.microsoft.us",
+        "https://api-gov.securitycenter.microsoft.us",
+        "https://api-uk.securitycenter.microsoft.com",
+        "https://api-us.securitycenter.microsoft.com"
+      ],
+      "default": "https://api-us.securitycenter.microsoft.com",
+      "order": 5
+    }
+  },
+  "actions": [
+    {
+      "action": "test connectivity",
+      "identifier": "test_connectivity",
+      "description": "Validate the asset configuration for connectivity using supplied configuration",
+      "type": "test",
+      "read_only": true,
+      "parameters": {
+      },
+      "output": [
+      ],
+      "versions": "EQ(*)"
+    },
+    {
+      "action": "sample action",
+      "description": "An example action for reference in the JSON",
+      "type": "investigate",
+      "identifier": "sample_action",
+      "read_only": true,
+      "parameters": {
+        "param_name": {
+          "description": "an action parameter for the sample action",
+          "data_type": "string",
+          "required": true,
+          "order": 0
+        }
+      },
+      "output": [
+        {
+          "data_path": "action_result.status",
+          "data_type": "string",
+          "example_values": [
+            "success",
+            "failed"
+          ]
+        }
+      ],
+      "render": {
+        "type": "json"
+      },
+      "versions": "EQ(*)"
+    }
+  ],
+  "pip_dependencies": {
+    "wheel": [
+      {
+        "module": "beautifulsoup4",
+        "input_file": "wheels/py3/beautifulsoup4-4.9.1-py3-none-any.whl"
+      },
+      {
+        "module": "urllib3",
+        "input_file": "wheels/shared/urllib3-1.26.11-py2.py3-none-any.whl"
+      }
+    ]
+  },
+  "pip3_dependencies": {
+    "wheel": [
+      {
+        "module": "beautifulsoup4",
+        "input_file": "wheels/py3/beautifulsoup4-4.9.1-py3-none-any.whl"
+      },
+      {
+        "module": "urllib3",
+        "input_file": "wheels/shared/urllib3-1.26.11-py2.py3-none-any.whl"
+      }
+    ]
+  }
+}
