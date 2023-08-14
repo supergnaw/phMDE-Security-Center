@@ -104,29 +104,5 @@
       },
       "versions": "EQ(*)"
     }
-  ],
-  "pip_dependencies": {
-    "wheel": [
-      {
-        "module": "beautifulsoup4",
-        "input_file": "wheels/py3/beautifulsoup4-4.9.1-py3-none-any.whl"
-      },
-      {
-        "module": "urllib3",
-        "input_file": "wheels/shared/urllib3-1.26.11-py2.py3-none-any.whl"
-      }
-    ]
-  },
-  "pip3_dependencies": {
-    "wheel": [
-      {
-        "module": "beautifulsoup4",
-        "input_file": "wheels/py3/beautifulsoup4-4.9.1-py3-none-any.whl"
-      },
-      {
-        "module": "urllib3",
-        "input_file": "wheels/shared/urllib3-1.26.11-py2.py3-none-any.whl"
-      }
-    ]
-  }
+  ]
 }

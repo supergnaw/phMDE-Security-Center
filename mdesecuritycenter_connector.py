@@ -23,6 +23,7 @@ import time
 import datetime
 import urllib
 from bs4 import BeautifulSoup
+from inspect import currentframe
 
 from mdesecuritycenter_consts import *
 
@@ -71,12 +72,16 @@ class MDESecurityCenter_Connector(BaseConnector):
         return "https://login.microsoftonline.com" if "api-gov" not in self.api_uri else "https://login.microsoftonline.us"
 
     @property
+    def line_no(self) -> int:
+        return int(currentframe().f_back.f_lineno)
+
+    @property
     def access_token(self) -> str or bool:
         # not generated yet
         if not self._state.get('access_token', False):
             return False
         # expired
-        if int(datetime.datetime.now(datetime.timezone.utc).strftime("%s")) > self._state['expires_on']:
+        if int(datetime.datetime.now(datetime.timezone.utc).strftime("%s")) > self.expires_on:
             self._state['access_token'] = False
             self._state['expires_on'] = 0
             return False
@@ -144,9 +149,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         # Use f-strings, we are not uncivilized heathens.
         message = f"Status Code: {response.status_code}. Data from server:\n{error_text}\n"
 
-        # Double up on curly-braces???
-        message = message.replace('{', '{{').replace('}', '}}')
-
         return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
 
     def _process_json_response(self, response: object, action_result: object) -> object:
@@ -161,34 +163,39 @@ class MDESecurityCenter_Connector(BaseConnector):
             # Process a json response
             resp_json = response.json()
         except Exception as e:
-            message = f"Unable to parse JSON response. Error: {self._get_error_message_from_exception(e)}"
+            message = f"Unable to parse JSON response. Error: {self._get_error_message_from_exception(e, self.line_no)}"
             return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message), val2=None)
 
         # We have a successful response
         if 200 <= response.status_code < 400:
             return RetVal(val1=phantom.APP_SUCCESS, val2=resp_json)
 
+        # There's an error in our midst
+        if 200 > response.status_code >= 400:
+            message = f"Failed to authenticate [{resp_json['error']}]: {resp_json['error_description'].splitlines()[0]}"
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message), val2=response)
+
         message = None
 
-        # Check whether the response contains error and error description fields
-        if not isinstance(resp_json.get('error'), dict) and resp_json.get('error_description'):
-            error = resp_json.get('error')
-            description = resp_json.get('error_description')
-            message = f"Error: {error}, Description: {description}"
-
-        # For other actions
-        if isinstance(resp_json.get('error'), dict) and resp_json.get('error', {}).get('code'):
-            message = resp_json.get('error', {}).get('message')
-            if 'text/html' in message:
-                message = BeautifulSoup(message, "html.parser")
-                for element in message(["title"]):
-                    element.extract()
-                message = message.get('text', message)
-            code = resp_json.get('error', {}).get('code', None)
-            message = f"Error from server [{response.status_code}] - Code {code}: {message}"
-
-        if not message:
-            message = f"Error from server. Status Code: {response.status_code} Data from server: {response.text}"
+        # # Check whether the response contains error and error description fields
+        # if not isinstance(resp_json.get('error'), dict) and resp_json.get('error_description'):
+        #     error = resp_json.get('error')
+        #     description = resp_json.get('error_description')
+        #     message = f"Error: {error}, Description: {description}"
+        #
+        # # For other actions
+        # if isinstance(resp_json.get('error'), dict) and resp_json.get('error', {}).get('code'):
+        #     message = resp_json.get('error', {}).get('message')
+        #     if 'text/html' in message:
+        #         message = BeautifulSoup(message, "html.parser")
+        #         for element in message(["title"]):
+        #             element.extract()
+        #         message = message.get('text', message)
+        #     code = resp_json.get('error', {}).get('code', None)
+        #     message = f"Error from server [{response.status_code}] - Code {code}: {message}"
+        #
+        # if not message:
+        #     message = f"Error from server. Status Code: {response.status_code} Data from server: {response.text}"
 
         return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
 
@@ -229,7 +236,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         message = f"Can't process response from server [{response.status_code}]: {response}"
         return RetVal(action_result.set_status(phantom.APP_ERROR, message), None)
 
-    def _get_error_message_from_exception(self, e: Exception) -> str:
+    def _get_error_message_from_exception(self, e: Exception, line_no: int=0) -> str:
         """
         Get appropriate error message from the exception.
         :param e: Exception object
@@ -238,6 +245,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         error_code = ""
         error_msg = "No error message available."
+        error_line = f", near line {line_no}" if 0 < line_no else ""
 
         try:
             if 1 < len(getattr(e, "args", [])):
@@ -248,10 +256,11 @@ class MDESecurityCenter_Connector(BaseConnector):
         except Exception:
             self.debug_print("Error occurred while fetching exception information")
 
-        return f"Error message{error_code}: {error_msg}"
+        return f"Error message{error_line}{error_code}: {error_msg}"
 
     def _make_rest_call(self, endpoint: str, action_result: object=None, headers: dict={}, params: list=None, data: str=None, method: str="get", verify: bool=True):
-        """ Function that makes the REST call to the app.
+        """
+        This function makes the REST call to the Microsoft API
 
         :param endpoint: REST endpoint that needs to appended to the service address
         :param action_result: object of ActionResult class
@@ -263,14 +272,18 @@ class MDESecurityCenter_Connector(BaseConnector):
         :return: status phantom.APP_ERROR/phantom.APP_SUCCESS(along with appropriate message),
         response obtained by making an API call
         """
-        if not self._authenticate():
-            message = f"Failed to authenticate with API"
-            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+        if not action_result:
+            action_result = self.add_action_result(ActionResult(self.param))
 
         # Hey now, you can't do that type of REST call
         if not hasattr(phantom.requests, method):
             message = f"Invalid method sent to '_make_rest_call': {method}"
             return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        ret_val, response = self._authenticate(action_result)
+
+        if phantom.is_fail(ret_val):
+            return RetVal(val1=action_result.get_status(), val2=response)
 
         # Global headers verification
         if not headers.get("Content-Type", False):
@@ -279,23 +292,38 @@ class MDESecurityCenter_Connector(BaseConnector):
         try:
             response = getattr(phantom.requests, method)(endpoint, data=data, headers=headers, verify=verify, params=params, timeout=30)
         except Exception as e:
-            message = f"Error connecting to server. Details: {self._get_error_message_from_exception(e)}"
+            message = f"Exception occurred while connecting to server: {self._get_error_message_from_exception(e, (self.line_no - 2))}"
             return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
 
         if response.status_code == 429 and 300 < int(response.headers.get('Retry-After', 301)):
-            message = f"Error occurred : {response.status_code}, {str(response.text)}"
-            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+            message = f"Error occurred [{response.status_code}]: {str(response.text)}"
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message), val2=response)
 
         if 429 == response.status_code and 300 >= int(response.headers.get('Retry-After', 301)):
             self.debug_print(f"Retrying after {response.headers.get('Retry-After', 301)} seconds")
             time.sleep(int(response.headers['Retry-After']) + 1)
             return self._make_rest_call(endpoint, action_result, headers, params, data, method, verify)
 
+        try:
+            r_json = json.loads(response.text)
+        except Exception as e:
+            message = f"Exception occurred while parsing JSON response: {self._get_error_message_from_exception(e, (self.line_no - 2))}"
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        self.debug_print(json.dumps(r_json, indent=4))
+
+        if 200 != response.status_code:
+            message = f"{str(r_json.get('error', {}).get('code', 'Unknown'))} error occurred [{response.status_code}]: {str(r_json.get('error', {}).get('message', 'No message available'))}"
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message), val2=r_json)
+
         return self._process_response(response, action_result)
 
-    def _authenticate(self) -> object:
+    def _authenticate(self, action_result: object=None) -> object:
+        if not action_result:
+            action_result = self.add_action_result(ActionResult(self.param))
+
         if self.access_token:
-            return RetVal(val1=phantom.APP_SUCCESS)
+            return RetVal(val1=action_result.set_status(phantom.APP_SUCCESS))
 
         body = {
             'resource': self.api_uri,
@@ -309,17 +337,25 @@ class MDESecurityCenter_Connector(BaseConnector):
         data = urllib.parse.urlencode(body).encode("utf-8")
         url = f"{self.login_uri}/{self.tenant_id}/oauth2/token"
 
-        response = phantom.requests.get(url, data=data, headers=headers)
-        r_json = json.loads(response.text)
+        # the authentication request is a bit different from the cookie cutter request from the main REST caller
+        try:
+            response = phantom.requests.get(url, data=data, headers=headers)
+            r_json = json.loads(response.text)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 3))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
 
         if 200 != response.status_code:
             message = f"Failed to authenticate [{r_json['error']}]: {r_json['error_description'].splitlines()[0]}"
-            return RetVal(val1=phantom.APP_ERROR, val2=message)
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message), val2=r_json)
 
         self.access_token = r_json.get('access_token', '')
         self.expires_on = r_json.get('expires_on', 0)
+        message = f"Authentication successful with access token: {self.access_token}"
+        self.debug_print(message)
+        action_result.set_status(phantom.APP_SUCCESS, message)
 
-        return RetVal(val1=phantom.APP_SUCCESS, val2=None)
+        return RetVal(val1=action_result.set_status(phantom.APP_SUCCESS, message), val2=r_json)
 
     def _handle_test_connectivity(self) -> object:
         """
@@ -327,16 +363,34 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         :return: status(phantom.APP_SUCCESS/phantom.APP_ERROR)
         """
-
         action_result = self.add_action_result(ActionResult(self.param))
 
-        result, message = self._authenticate()
+        try:
+            ret_val, r_json = self._authenticate(action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
 
-        if not result:
-            self.save_progress('Test connectivity failed')
-            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message), val2=None)
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
 
-        self.save_progress('Test connectivity passed')
+        seconds_remaining = self.expires_on - int(datetime.datetime.now(datetime.timezone.utc).strftime("%s"))
+        s = seconds_remaining % 60
+        m = seconds_remaining // 60
+        self.save_progress(f"Current token expires in {m}m {s}s: {datetime.datetime.fromtimestamp(self.expires_on)}")
+
+        try:
+            ret_val, response = self._make_rest_call(self.api_uri, action_result=action_result)
+        except Exception as e:
+            self.debug_print(self._get_error_message_from_exception(e, self.line_no))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(response)
+
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def handle_action(self, param):
@@ -347,7 +401,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             ret_val = getattr(self, f"_handle_{self.action_id}")()
         except Exception as e:
             self.debug_print(f"Error occurred while attempting {self.action_id}:")
-            self.debug_print(self._get_error_message_from_exception(e))
+            self.debug_print(self._get_error_message_from_exception(e, self.line_no))
             ret_val = phantom.APP_ERROR
 
         return ret_val
