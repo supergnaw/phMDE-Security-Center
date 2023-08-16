@@ -117,8 +117,8 @@ class MDESecurityCenter_Connector(BaseConnector):
         if not self._action_result:
             self._action_result = self.add_action_result(ActionResult(self.param))
             self._action_result.add_debug_data({'action started': self.action_id})
-            self._action_result.add_debug_data({'parameters': f"\n{json.dumps(self.param, indent=4)}"})
-            self._action_result.add_debug_data({'app roles': f"\n{json.dumps(self.param, indent=4)}"})
+            self._action_result.add_debug_data({'parameters': self.param})
+            self._action_result.add_debug_data({'app roles': self.roles})
         return self._action_result
 
     def __init__(self):
@@ -286,7 +286,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             headers["Accept"] = "application/json"
 
         self.action_result.add_debug_data({'rest call endpoint': endpoint})
-        self.action_result.add_debug_data({'rest call headers': f"\n{json.dumps(headers, indent=4)}"})
+        self.action_result.add_debug_data({'rest call headers': headers})
 
         try:
             response = getattr(phantom.requests, method)(endpoint, data=data, headers=headers, verify=verify, params=params, timeout=30)
