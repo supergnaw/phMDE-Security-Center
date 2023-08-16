@@ -36,7 +36,7 @@ LIVE_RESPONSE_LIST_LIBRARY = "/api/libraryfiles"
 # https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/run-live-response
 LIVE_RESPONSE_RUN_SCRIPT = "/api/machines/{machine_id}/runliveresponse"
 # https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/get-live-response-result
-LIVE_RESPONSE_GET_RESULT = "/api/machineactions/{action_id}/GetLiveResponseResultDownloadLink(index={command-index})"
+LIVE_RESPONSE_GET_RESULT = "/api/machineactions/{action_id}/GetLiveResponseResultDownloadLink(index={command_index})"
 
 """
     INVESTIGATIONS
@@ -45,14 +45,14 @@ LIVE_RESPONSE_GET_RESULT = "/api/machineactions/{action_id}/GetLiveResponseResul
 INVESTIGATION_LIST = "/api/investigations"
 INVESTIGATION_SINGLE = "/api/investigations/{investigation_id}"
 INVESTIGATION_START = "/api/machines/{machine_id}/startInvestigation"
+# https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/collect-investigation-package
+INVESTIGATION_COLLECT_PACKAGE = "/api/machines/{machine_id}/collectInvestigationPackage"
 
 """
     MACHINES
 """
 # https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/get-machineaction-object
 MACHINE_LIST_ACTIONS = "/api/machineactions/{machine_id}"
-# https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/collect-investigation-package
-MACHINE_COLLECT_INVESTIGATION_PACKAGE = "/api/machines/{id}/collectInvestigationPackage"
 # https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/isolate-machine
 MACHINE_ISOLATE = "/api/machines/{machine_id}/isolate"
 # https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/unisolate-machine

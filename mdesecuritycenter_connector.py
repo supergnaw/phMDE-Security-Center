@@ -376,120 +376,720 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.debug_print(f"Starting action {self.action_id}")
         self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
         action_result = self.add_action_result(ActionResult(self.param))
+
+        try:
+            ret_val, r_json = self._authenticate(action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"self.roles:\n{json.dumps(self.roles, indent=4)}")
+
+        url = INCIDENT_LIST
+
+        try:
+            ret_val, response = self._make_rest_call(url, action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
+
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_get_incident(self) -> object:
         self.debug_print(f"Starting action {self.action_id}")
         self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
         action_result = self.add_action_result(ActionResult(self.param))
+
+        try:
+            ret_val, r_json = self._authenticate(action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"self.roles:\n{json.dumps(self.roles, indent=4)}")
+
+        url = INCIDENT_SINGLE.format(incident_id=self.param['incident_id'])
+
+        try:
+            ret_val, response = self._make_rest_call(url, action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
+
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_update_incident(self) -> object:
         self.debug_print(f"Starting action {self.action_id}")
         self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
         action_result = self.add_action_result(ActionResult(self.param))
+
+        try:
+            ret_val, r_json = self._authenticate(action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"self.roles:\n{json.dumps(self.roles, indent=4)}")
+
+        url = INCIDENT_SINGLE.format(incident_id=self.param['incident_id'])
+
+        try:
+            ret_val, response = self._make_rest_call(url, action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
+
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_list_alerts(self) -> object:
         self.debug_print(f"Starting action {self.action_id}")
         self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
         action_result = self.add_action_result(ActionResult(self.param))
+
+        try:
+            ret_val, r_json = self._authenticate(action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"self.roles:\n{json.dumps(self.roles, indent=4)}")
+
+        url = ALERT_LIST
+
+        try:
+            ret_val, response = self._make_rest_call(url, action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
+
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_get_alert(self) -> object:
         self.debug_print(f"Starting action {self.action_id}")
         self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
         action_result = self.add_action_result(ActionResult(self.param))
+
+        try:
+            ret_val, r_json = self._authenticate(action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"self.roles:\n{json.dumps(self.roles, indent=4)}")
+
+        url = ALERT_SINGLE.format(alert_id=self.param['alert_id'])
+
+        try:
+            ret_val, response = self._make_rest_call(url, action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
+
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_update_alert(self) -> object:
         self.debug_print(f"Starting action {self.action_id}")
         self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
         action_result = self.add_action_result(ActionResult(self.param))
+
+        try:
+            ret_val, r_json = self._authenticate(action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"self.roles:\n{json.dumps(self.roles, indent=4)}")
+
+        url = ALERT_SINGLE.format(alert_id=self.param['alert_id'])
+
+        try:
+            ret_val, response = self._make_rest_call(url, action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
+
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_update_alert_batch(self) -> object:
+        self.debug_print(f"Starting action {self.action_id}")
+        self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
+        action_result = self.add_action_result(ActionResult(self.param))
+
+        try:
+            ret_val, r_json = self._authenticate(action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"self.roles:\n{json.dumps(self.roles, indent=4)}")
+
+        url = ALERT_BATCH_UPDATE
+
+        try:
+            ret_val, response = self._make_rest_call(url, action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
+
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_list_alert_files(self) -> object:
         self.debug_print(f"Starting action {self.action_id}")
         self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
         action_result = self.add_action_result(ActionResult(self.param))
+
+        try:
+            ret_val, r_json = self._authenticate(action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"self.roles:\n{json.dumps(self.roles, indent=4)}")
+
+        url = ALERT_FILES
+
+        try:
+            ret_val, response = self._make_rest_call(url, action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
+
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_list_library_scripts(self) -> object:
         self.debug_print(f"Starting action {self.action_id}")
         self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
         action_result = self.add_action_result(ActionResult(self.param))
+
+        try:
+            ret_val, r_json = self._authenticate(action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"self.roles:\n{json.dumps(self.roles, indent=4)}")
+
+        url = LIVE_RESPONSE_LIST_LIBRARY
+
+        try:
+            ret_val, response = self._make_rest_call(url, action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
+
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_run_library_script(self) -> object:
         self.debug_print(f"Starting action {self.action_id}")
         self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
         action_result = self.add_action_result(ActionResult(self.param))
+
+        try:
+            ret_val, r_json = self._authenticate(action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"self.roles:\n{json.dumps(self.roles, indent=4)}")
+
+        url = LIVE_RESPONSE_RUN_SCRIPT.format(machine_id=self.param['machine_id'])
+
+        try:
+            ret_val, response = self._make_rest_call(url, action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
+
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_get_library_script_result(self) -> object:
         self.debug_print(f"Starting action {self.action_id}")
         self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
         action_result = self.add_action_result(ActionResult(self.param))
+
+        try:
+            ret_val, r_json = self._authenticate(action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"self.roles:\n{json.dumps(self.roles, indent=4)}")
+
+        url = LIVE_RESPONSE_GET_RESULT.format(action_id=self.param['action_id'], command_index=self.param['command_index'])
+
+        try:
+            ret_val, response = self._make_rest_call(url, action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
+
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_list_investigations(self) -> object:
         self.debug_print(f"Starting action {self.action_id}")
         self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
         action_result = self.add_action_result(ActionResult(self.param))
+
+        try:
+            ret_val, r_json = self._authenticate(action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"self.roles:\n{json.dumps(self.roles, indent=4)}")
+
+        url = INVESTIGATION_LIST
+
+        try:
+            ret_val, response = self._make_rest_call(url, action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
+
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_get_investigation(self) -> object:
         self.debug_print(f"Starting action {self.action_id}")
         self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
         action_result = self.add_action_result(ActionResult(self.param))
+
+        try:
+            ret_val, r_json = self._authenticate(action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"self.roles:\n{json.dumps(self.roles, indent=4)}")
+
+        url = INVESTIGATION_SINGLE.format(investigation_id=self.param['investigation_id'])
+
+        try:
+            ret_val, response = self._make_rest_call(url, action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
+
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_start_investigation(self) -> object:
         self.debug_print(f"Starting action {self.action_id}")
         self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
         action_result = self.add_action_result(ActionResult(self.param))
+
+        try:
+            ret_val, r_json = self._authenticate(action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"self.roles:\n{json.dumps(self.roles, indent=4)}")
+
+        url = INVESTIGATION_START.format(machine_id=self.param['machine_id'])
+
+        try:
+            ret_val, response = self._make_rest_call(url, action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
+
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_collect_investigation_package(self) -> object:
+        self.debug_print(f"Starting action {self.action_id}")
+        self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
+        action_result = self.add_action_result(ActionResult(self.param))
+
+        try:
+            ret_val, r_json = self._authenticate(action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"self.roles:\n{json.dumps(self.roles, indent=4)}")
+
+        url = INVESTIGATION_COLLECT_PACKAGE.format(machine_id=self.param['machine_id'])
+
+        try:
+            ret_val, response = self._make_rest_call(url, action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
+
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_list_machine_actions(self) -> object:
         self.debug_print(f"Starting action {self.action_id}")
         self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
         action_result = self.add_action_result(ActionResult(self.param))
-        return action_result.set_status(phantom.APP_SUCCESS)
 
-    def _handle_collect_investigation_package(self) -> objec
-    self.debug_print(f"Starting action {self.action_id}")
-    self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
-        action_result = self.add_action_result(ActionResult(self.param))t:
+        try:
+            ret_val, r_json = self._authenticate(action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"self.roles:\n{json.dumps(self.roles, indent=4)}")
+
+        url = MACHINE_LIST_ACTIONS.format(machine_id=self.param['machine_id'])
+
+        try:
+            ret_val, response = self._make_rest_call(url, action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
+
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_isolate_machine(self) -> object:
         self.debug_print(f"Starting action {self.action_id}")
         self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
         action_result = self.add_action_result(ActionResult(self.param))
+
+        try:
+            ret_val, r_json = self._authenticate(action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"self.roles:\n{json.dumps(self.roles, indent=4)}")
+
+        url = MACHINE_ISOLATE.format(machine_id=self.param['machine_id'])
+
+        try:
+            ret_val, response = self._make_rest_call(url, action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
+
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_unisolate_machine(self) -> object:
         self.debug_print(f"Starting action {self.action_id}")
         self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
         action_result = self.add_action_result(ActionResult(self.param))
+
+        try:
+            ret_val, r_json = self._authenticate(action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"self.roles:\n{json.dumps(self.roles, indent=4)}")
+
+        url = MACHINE_UNISOLATE.format(machine_id=self.param['machine_id'])
+
+        try:
+            ret_val, response = self._make_rest_call(url, action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
+
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_get_file_info(self) -> object:
         self.debug_print(f"Starting action {self.action_id}")
         self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
         action_result = self.add_action_result(ActionResult(self.param))
+
+        try:
+            ret_val, r_json = self._authenticate(action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"self.roles:\n{json.dumps(self.roles, indent=4)}")
+
+        url = ALERT_LIST
+
+        try:
+            ret_val, response = self._make_rest_call(url, action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
+
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_get_file_stats(self) -> object:
         self.debug_print(f"Starting action {self.action_id}")
         self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
         action_result = self.add_action_result(ActionResult(self.param))
+
+        try:
+            ret_val, r_json = self._authenticate(action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"self.roles:\n{json.dumps(self.roles, indent=4)}")
+
+        url = ALERT_LIST
+
+        try:
+            ret_val, response = self._make_rest_call(url, action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
+
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_quarantine_file(self) -> object:
         self.debug_print(f"Starting action {self.action_id}")
         self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
         action_result = self.add_action_result(ActionResult(self.param))
+
+        try:
+            ret_val, r_json = self._authenticate(action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"self.roles:\n{json.dumps(self.roles, indent=4)}")
+
+        url = ALERT_LIST
+
+        try:
+            ret_val, response = self._make_rest_call(url, action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
+
+
+        try:
+            ret_val, r_json = self._authenticate(action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"self.roles:\n{json.dumps(self.roles, indent=4)}")
+
+        url = ALERT_LIST
+
+        try:
+            ret_val, response = self._make_rest_call(url, action_result=action_result)
+        except Exception as e:
+            message = self._get_error_message_from_exception(e, (self.line_no - 2))
+            return RetVal(val1=action_result.set_status(phantom.APP_ERROR, message))
+
+        if phantom.is_fail(ret_val):
+            self.save_progress(action_result.get_message())
+            return action_result.get_status()
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
+
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def handle_action(self, param):
