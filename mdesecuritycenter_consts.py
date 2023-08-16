@@ -62,6 +62,6 @@ MACHINE_UNISOLATE = "/api/machines/{machine_id}/unisolate"
     FILES
 """
 # https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/stop-and-quarantine-file
-FILE_QUARANTINE = "/api/machines/{machine_id}/StopAndQuarantineFile"
 FILE_INFO = "/api/files/{file_id}"
 FILE_STATS = "/api/files/{file_id}/stats"
+FILE_QUARANTINE = "/api/machines/{machine_id}/StopAndQuarantineFile"

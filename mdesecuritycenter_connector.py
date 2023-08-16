@@ -372,6 +372,126 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
+    def _handle_list_incidents(self) -> object:
+        self.debug_print(f"Starting action {self.action_id}")
+        self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
+        action_result = self.add_action_result(ActionResult(self.param))
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_get_incident(self) -> object:
+        self.debug_print(f"Starting action {self.action_id}")
+        self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
+        action_result = self.add_action_result(ActionResult(self.param))
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_update_incident(self) -> object:
+        self.debug_print(f"Starting action {self.action_id}")
+        self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
+        action_result = self.add_action_result(ActionResult(self.param))
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_list_alerts(self) -> object:
+        self.debug_print(f"Starting action {self.action_id}")
+        self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
+        action_result = self.add_action_result(ActionResult(self.param))
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_get_alert(self) -> object:
+        self.debug_print(f"Starting action {self.action_id}")
+        self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
+        action_result = self.add_action_result(ActionResult(self.param))
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_update_alert(self) -> object:
+        self.debug_print(f"Starting action {self.action_id}")
+        self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
+        action_result = self.add_action_result(ActionResult(self.param))
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_list_alert_files(self) -> object:
+        self.debug_print(f"Starting action {self.action_id}")
+        self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
+        action_result = self.add_action_result(ActionResult(self.param))
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_list_library_scripts(self) -> object:
+        self.debug_print(f"Starting action {self.action_id}")
+        self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
+        action_result = self.add_action_result(ActionResult(self.param))
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_run_library_script(self) -> object:
+        self.debug_print(f"Starting action {self.action_id}")
+        self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
+        action_result = self.add_action_result(ActionResult(self.param))
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_get_library_script_result(self) -> object:
+        self.debug_print(f"Starting action {self.action_id}")
+        self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
+        action_result = self.add_action_result(ActionResult(self.param))
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_list_investigations(self) -> object:
+        self.debug_print(f"Starting action {self.action_id}")
+        self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
+        action_result = self.add_action_result(ActionResult(self.param))
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_get_investigation(self) -> object:
+        self.debug_print(f"Starting action {self.action_id}")
+        self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
+        action_result = self.add_action_result(ActionResult(self.param))
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_start_investigation(self) -> object:
+        self.debug_print(f"Starting action {self.action_id}")
+        self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
+        action_result = self.add_action_result(ActionResult(self.param))
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_list_machine_actions(self) -> object:
+        self.debug_print(f"Starting action {self.action_id}")
+        self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
+        action_result = self.add_action_result(ActionResult(self.param))
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_collect_investigation_package(self) -> objec
+    self.debug_print(f"Starting action {self.action_id}")
+    self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
+        action_result = self.add_action_result(ActionResult(self.param))t:
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_isolate_machine(self) -> object:
+        self.debug_print(f"Starting action {self.action_id}")
+        self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
+        action_result = self.add_action_result(ActionResult(self.param))
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_unisolate_machine(self) -> object:
+        self.debug_print(f"Starting action {self.action_id}")
+        self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
+        action_result = self.add_action_result(ActionResult(self.param))
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_get_file_info(self) -> object:
+        self.debug_print(f"Starting action {self.action_id}")
+        self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
+        action_result = self.add_action_result(ActionResult(self.param))
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_get_file_stats(self) -> object:
+        self.debug_print(f"Starting action {self.action_id}")
+        self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
+        action_result = self.add_action_result(ActionResult(self.param))
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_quarantine_file(self) -> object:
+        self.debug_print(f"Starting action {self.action_id}")
+        self.debug_print(f"Action parameters:\n{json.dumps(self.param, indent=4)}")
+        action_result = self.add_action_result(ActionResult(self.param))
+        return action_result.set_status(phantom.APP_SUCCESS)
+
     def handle_action(self, param):
         self.param = param
         try:
