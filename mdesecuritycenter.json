@@ -65,13 +65,12 @@
   "actions": [
     { "action": "test connectivity",
       "identifier": "test_connectivity",
-      "description": "Validate the asset configuration for connectivity using supplied configuration",
+      "description": "Verifies app connection with MDE",
+      "verbose": "Validates the asset configuration for connectivity using the spllied configuration and displays expiration timestamp of the access_token",
       "type": "test",
       "read_only": true,
-      "parameters": {
-      },
-      "output": [
-      ],
+      "parameters": {},
+      "output": [],
       "versions": "EQ(*)"
     },
     { "action": "list incidents",
@@ -81,7 +80,25 @@
       "type": "type_goes_here",
       "read_only": true,
       "versions": "EQ(*)",
-      "parameters": {},
+      "parameters": {
+        "filter": {
+          "description": "filters to apply (<a href='https://learn.microsoft.com/en-us/dynamics-nav/using-filter-expressions-in-odata-uris' target='_blank'>Microsoft Documentation</a>)",
+          "data_type": "string",
+          "required": false
+        },
+        "top": {
+          "description": "limit results to the top x results",
+          "data_type": "numeric",
+          "required": false,
+          "default": 1000
+        },
+        "skip": {
+          "description": "skip the first x results",
+          "data_type": "numeric",
+          "required": false,
+          "default": 0
+        }
+      },
       "render": {},
       "output": []
     },
@@ -92,7 +109,14 @@
       "type": "type_goes_here",
       "read_only": true,
       "versions": "EQ(*)",
-      "parameters": {},
+      "parameters": {
+        "incident_id": {
+          "description": "Incident ID",
+          "data_type": "numeric",
+          "required": true,
+          "primary": false
+        }
+      },
       "render": {},
       "output": []
     },
@@ -103,7 +127,64 @@
       "type": "type_goes_here",
       "read_only": false,
       "versions": "EQ(*)",
-      "parameters": {},
+      "parameters": {
+        "incident_id": {
+          "description": "Incident ID",
+          "data_type": "numeric",
+          "required": true,
+          "primary": false
+        },
+        "status": {
+          "description": "Specifies the current status of the incident",
+          "data_type": "string",
+          "required": true,
+          "primary": false,
+          "value_list": ["No Change", "Active", "Resolved", "Redirected"],
+          "default": "No Change"
+        },
+        "assigned_to": {
+          "description": "Owner of the incident",
+          "data_type": "string",
+          "required": false,
+          "primary": false
+        },
+        "category": {
+          "description": "Classification and determination of the incident",
+          "data_type": "string",
+          "required": false,
+          "primary": false,
+          "value_list": [
+            "No Change",
+            "Informational: Security test",
+            "Informational: Line-of-business application",
+            "Informational: Confirmed activity",
+            "Informational: Other",
+            "False positive: Not malicious",
+            "False positive: Not enough data to validate",
+            "False positive: Other",
+            "True positive: Multistage attack",
+            "True positive: Malicious user activity",
+            "True positive: Compromised account",
+            "True positive: Malware",
+            "True positive: Phishing",
+            "True positive: Unwanted software",
+            "True positive: Other"
+          ]
+        },
+        "tags": {
+          "description": "List of Incident tags",
+          "data_type": "string",
+          "required": false,
+          "primary": false,
+          "allow_list": true
+        },
+        "comment": {
+          "description": "Comment to be added to the incident",
+          "data_type": "string",
+          "required": true,
+          "primary": false
+        }
+      },
       "render": {},
       "output": []
     },
