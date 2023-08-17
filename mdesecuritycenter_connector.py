@@ -22,6 +22,7 @@ import json
 import time
 import datetime
 import urllib
+import base64
 from bs4 import BeautifulSoup
 from inspect import currentframe
 
@@ -65,7 +66,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
     @property
     def api_uri(self) -> str or bool:
-        return self.get_config().get("api_uri", False)
+        return self.get_config().get("api_uri", "").replace("*", "{resource}")
 
     @property
     def login_uri(self) -> str:
@@ -76,27 +77,44 @@ class MDESecurityCenter_Connector(BaseConnector):
         return int(currentframe().f_back.f_lineno)
 
     @property
-    def access_token(self) -> str or bool:
-        # not generated yet
-        if not self._state.get('access_token', False):
-            return False
+    def security_token(self) -> str or bool:
         # expired
-        if int(datetime.datetime.now(datetime.timezone.utc).strftime("%s")) > self.expires_on:
-            self._state['access_token'] = False
-            self._state['expires_on'] = 0
+        if int(datetime.datetime.now(datetime.timezone.utc).strftime("%s")) > self.security_expires_on:
+            self._state['security_token'] = False
+            self._state['security_expires_on'] = 0
             return False
         # valid
-        return str(encryption_helper.decrypt(str(self._state['access_token']), self.asset_id))
-    @access_token.setter
-    def access_token(self, access_token: str) -> None:
-        self._state['access_token'] = encryption_helper.encrypt(str(access_token), self.asset_id)
+        return str(encryption_helper.decrypt(str(self._state['security_token']), self.asset_id))
+    @security_token.setter
+    def security_token(self, access_token: str) -> None:
+        self._state['security_token'] = encryption_helper.encrypt(str(access_token), self.asset_id)
 
     @property
-    def expires_on(self) -> int:
-        return int(self._state['expires_on'])
-    @expires_on.setter
-    def expires_on(self, expires_on: int) -> None:
-        self._state['expires_on'] = expires_on
+    def security_expires_on(self) -> int:
+        return int(self._state.get('security_expires_on', 0))
+    @security_expires_on.setter
+    def security_expires_on(self, expires_on: str or int) -> None:
+        self._state['security_expires_on'] = int(expires_on)
+
+    @property
+    def securitycenter_token(self) -> str or bool:
+        # expired
+        if int(datetime.datetime.now(datetime.timezone.utc).strftime("%s")) > self.securitycenter_expires_on:
+            self._state['securitycenter_token'] = False
+            self._state['securitycenter_expires_on'] = 0
+            return False
+        # valid
+        return str(encryption_helper.decrypt(str(self._state['securitycenter_token']), self.asset_id))
+    @securitycenter_token.setter
+    def securitycenter_token(self, access_token: str) -> None:
+        self._state['securitycenter_token'] = encryption_helper.encrypt(str(access_token), self.asset_id)
+
+    @property
+    def securitycenter_expires_on(self) -> int:
+        return int(self._state.get('securitycenter_expires_on', 0))
+    @securitycenter_expires_on.setter
+    def securitycenter_expires_on(self, expires_on: str or int) -> None:
+        self._state['securitycenter_expires_on'] = int(expires_on)
 
     @property
     def roles(self) -> list:
@@ -306,42 +324,64 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self._process_response(response)
 
     def _authenticate(self) -> object:
-        if self.access_token:
-            return RetVal(val1=self.action_result.set_status(phantom.APP_SUCCESS))
-
-        body = {
-            'resource': self.api_uri,
-            'client_id': self.client_id,
-            'client_secret': self.client_secret,
-            'grant_type': 'client_credentials'
-        }
-
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        # Microsoft split their permissions so lets request everything assigned from both resources
+        for resource in ['security', 'securitycenter']:
+            if getattr(self, f"{resource}_token", False):
+                continue
 
-        data = urllib.parse.urlencode(body).encode("utf-8")
-        url = f"{self.login_uri}/{self.tenant_id}/oauth2/token"
+            body = {
+                'resource': self.api_uri.format(resource=resource),
+                'client_id': self.client_id,
+                'client_secret': self.client_secret,
+                'grant_type': 'client_credentials'
+            }
+            data = urllib.parse.urlencode(body).encode("utf-8")
+            url = f"{self.login_uri}/{self.tenant_id}/oauth2/token"
 
-        # the authentication request is a bit different from the cookie cutter request from the main REST caller
-        # so let's make a special one!
-        try:
-            response = phantom.requests.get(url, data=data, headers=headers)
-            r_json = response.json()
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, (self.line_no - 3))
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+            # the authentication request is a bit different from the cookie cutter request from the main REST caller
+            # so let's make a special one!
+            try:
+                response = phantom.requests.get(url, data=data, headers=headers)
+                r_json = response.json()
+            except Exception as e:
+                message = self._get_error_message_from_exception(e, (self.line_no - 3))
+                return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
 
-        if 200 != response.status_code:
-            message = f"Failed to authenticate [{r_json['error']}]: {r_json['error_description'].splitlines()[0]}"
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message), val2=r_json)
+            if 200 != response.status_code:
+                message = f"Failed to authenticate [{r_json['error']}]: {r_json['error_description'].splitlines()[0]}"
+                return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message), val2=r_json)
 
-        self.access_token = r_json.get('access_token', '')
-        self.expires_on = r_json.get('expires_on', 0)
-        self.roles = r_json.get('roles', [])
-        message = f"Authentication successful with access token: {self.access_token}"
+            setattr(self, f"{resource}_token", r_json.get('access_token', ''))
+            setattr(self, f"{resource}_expires_on", r_json.get('expires_on', 0))
+
+        message = f"Authentication successful for both access tokens!"
         self.debug_print(message)
         self.action_result.set_status(phantom.APP_SUCCESS, message)
 
         return RetVal(val1=self.action_result.set_status(phantom.APP_SUCCESS, message), val2=r_json)
+
+    def _parse_tokens(self) -> dict:
+        security_seconds = self.security_expires_on - int(datetime.datetime.now(datetime.timezone.utc).strftime("%s"))
+        securitycenter_seconds = self.securitycenter_expires_on - int(datetime.datetime.now(datetime.timezone.utc).strftime("%s"))
+
+        tokens = {
+            'security': {
+                'details': [json.loads(base64.b64decode(part + ('=' * (-len(part) % 4))).decode('utf-8')) for part in self.security_token.split('.')[0:2]],
+                'expires': {
+                    'time remaining': f"{security_seconds // 60}m {security_seconds % 60}s",
+                    'timestamp': str(datetime.datetime.fromtimestamp(self.security_expires_on))
+                }
+            },
+            'securitycenter': {
+                'details': [json.loads(base64.b64decode(part + ('=' * (-len(part) % 4))).decode('utf-8')) for part in self.securitycenter_token.split('.')[0:2]],
+                'expires': {
+                    'time remaining': f"{securitycenter_seconds // 60}m {securitycenter_seconds % 60}s",
+                    'timestamp': str(datetime.datetime.fromtimestamp(self.securitycenter_expires_on))
+                }
+            },
+        }
+        return tokens
 
     def _handle_test_connectivity(self) -> object:
         """
@@ -360,24 +400,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
 
-        seconds_remaining = self.expires_on - int(datetime.datetime.now(datetime.timezone.utc).strftime("%s"))
-        s = seconds_remaining % 60
-        m = seconds_remaining // 60
-        self.save_progress(f"Current token expires in {m}m {s}s: {datetime.datetime.fromtimestamp(self.expires_on)}")
-
-        url = f"{self.api_uri}/api/"
-
-        try:
-            ret_val, response = self._make_rest_call(url)
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, (self.line_no - 2))
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
-
-        if phantom.is_fail(ret_val):
-            self.save_progress(self.action_result.get_message())
-            return self.action_result.get_status()
-
-        self.debug_print(f"response: {json.dumps(response, indent=4)}")
+        self.debug_print(f"Access tokens:\n{json.dumps(self._parse_tokens(), indent=4)}")
 
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
@@ -392,7 +415,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
 
-        url = f"{self.api_uri}{INCIDENT_LIST}"
+        url = f"{self.api_uri}{INCIDENT_LIST}".format(resource='security')
 
         params = {
             "$filter": self.param.get("filter", ""),
@@ -427,7 +450,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
 
-        url = f"{self.api_uri}{INCIDENT_SINGLE}".format(incident_id=self.param['incident_id'])
+        url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security', incident_id=self.param['incident_id'])
 
         headers = {"Content-Type": "application/json"}
 
@@ -456,7 +479,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
 
-        url = f"{self.api_uri}{INCIDENT_SINGLE}".format(incident_id=self.param['incident_id'])
+        url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security', incident_id=self.param['incident_id'])
 
         headers = {"Content-Type": "application/json"}
 
@@ -529,7 +552,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
 
-        url = f"{self.api_uri}{ALERT_LIST}"
+        url = f"{self.api_uri}{ALERT_LIST}".format(resource='securitycenter')
 
         try:
             ret_val, response = self._make_rest_call(url)
@@ -556,7 +579,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
 
-        url = f"{self.api_uri}{ALERT_SINGLE}".format(alert_id=self.param['alert_id'])
+        url = f"{self.api_uri}{ALERT_SINGLE}".format(resource='securitycenter', alert_id=self.param['alert_id'])
 
         try:
             ret_val, response = self._make_rest_call(url)
@@ -583,7 +606,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
 
-        url = f"{self.api_uri}{ALERT_SINGLE}".format(alert_id=self.param['alert_id'])
+        url = f"{self.api_uri}{ALERT_SINGLE}".format(resource='securitycenter', alert_id=self.param['alert_id'])
 
         try:
             ret_val, response = self._make_rest_call(url)
@@ -610,7 +633,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
 
-        url = f"{self.api_uri}{ALERT_BATCH_UPDATE}"
+        url = f"{self.api_uri}{ALERT_BATCH_UPDATE}".format(resource='securitycenter')
 
         try:
             ret_val, response = self._make_rest_call(url)

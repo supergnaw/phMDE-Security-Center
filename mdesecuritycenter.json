@@ -52,13 +52,13 @@
       "description": "API Endpoint Server URI",
       "required": true,
       "value_list": [
-        "https://api-eu.securitycenter.microsoft.com",
-        "https://api-gcc.securitycenter.microsoft.us",
-        "https://api-gov.securitycenter.microsoft.us",
-        "https://api-uk.securitycenter.microsoft.com",
-        "https://api-us.securitycenter.microsoft.com"
+        "https://api-eu.*.microsoft.com",
+        "https://api-gcc.*.microsoft.us",
+        "https://api-gov.*.microsoft.us",
+        "https://api-uk.*.microsoft.com",
+        "https://api-us.*.microsoft.com"
       ],
-      "default": "https://api-us.securitycenter.microsoft.com",
+      "default": "https://api-us.*.microsoft.com",
       "order": 5
     }
   },
