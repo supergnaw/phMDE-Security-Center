@@ -11,8 +11,6 @@
 # either expressed or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
-import typing
-
 import phantom.app as phantom
 from phantom.action_result import ActionResult
 from phantom.base_connector import BaseConnector
@@ -23,7 +21,7 @@ import time
 import datetime
 import urllib
 import base64
-from bs4 import BeautifulSoup
+import replus as rp
 from inspect import currentframe
 
 from mdesecuritycenter_consts import *
@@ -142,6 +140,7 @@ class MDESecurityCenter_Connector(BaseConnector):
     def __init__(self):
         # Call the BaseConnector's init first
         super(MDESecurityCenter_Connector, self).__init__()
+        self.resources = ['security', 'securitycenter']
         self._state = None
         self._param = None
         self._action_result = None
@@ -150,7 +149,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         """
         This function is used to process html response.
         :param response: response data
-        :param action_result: object of Action Result
         :return: status phantom.APP_ERROR/phantom.APP_SUCCESS(along with appropriate message)
         """
 
@@ -208,17 +206,14 @@ class MDESecurityCenter_Connector(BaseConnector):
         """
         This function is used to process html response.
         :param response: response data
-        :param action_result: object of Action Result
         :return: status phantom.APP_ERROR/phantom.APP_SUCCESS(along with appropriate message)
         """
 
         try:
-            # Create a new BS object
-            soup = BeautifulSoup(response.text, "html.parser")
             # Remove extra elements
-            [element.extract() for element in soup(["script", "style", "footer", "nav"])]
-            # Clear out the extra whitespace
-            error_text = '\n'.join([x.strip() for x in soup.text.split('\n') if x.strip()])
+            content = rp.sub(pattern="/(<script.*?(?=<\/script>)<\/script>|<style.*?(?=<\/style>)<\/style>|<footer.*?(?=<\/footer>)<\/footer>|<nav.*?(?=<\/nav>)<\/nav>)/sim", repl="", string=response.text)
+            # Clear out extra whitespace
+            error_text = rp.sub(pattern="/\s+/sim", repl=" ", string=content).strip()
         except Exception:
             error_text = "Cannot parse error details"
 
@@ -226,7 +221,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             error_text = "Error message unavailable. Please check the asset configuration and/or the action parameters"
 
         # Use f-strings, we are not uncivilized heathens.
-        message = f"Status Code: {response.status_code}. Data from server:\n{error_text}\n"
+        message = f"Status Code: {response.status_code}. Raw data from server:\n{error_text}\n"
 
         return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
 
@@ -234,7 +229,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         """
         This function is used to process empty response.
         :param response: response data
-        :param action_result: object of Action Result
         :return: status phantom.APP_ERROR/phantom.APP_SUCCESS(along with appropriate message)
         """
 
@@ -275,7 +269,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         This function makes the REST call to the Microsoft API
 
         :param endpoint: REST endpoint that needs to appended to the service address
-        :param action_result: object of ActionResult class
         :param headers: request headers
         :param params: request parameters
         :param data: request body
@@ -299,7 +292,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         if not headers.get('Content-Type', False):
             headers["Content-Type"] = "application/json"
         if not headers.get('Authorization', False):
-            headers["Authorization"] = f"Bearer {self.access_token}"
+            headers["Authorization"] = "Bearer " + getattr(self, rp.search(pattern="/\.([^\.]+)\.microsoft/i", string=endpoint).group(1) + "_token")
         if not headers.get('Accept', False):
             headers["Accept"] = "application/json"
 
@@ -326,7 +319,7 @@ class MDESecurityCenter_Connector(BaseConnector):
     def _authenticate(self) -> object:
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
         # Microsoft split their permissions so lets request everything assigned from both resources
-        for resource in ['security', 'securitycenter']:
+        for resource in self.resources:
             if getattr(self, f"{resource}_token", False):
                 continue
 
@@ -355,7 +348,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             setattr(self, f"{resource}_token", r_json.get('access_token', ''))
             setattr(self, f"{resource}_expires_on", r_json.get('expires_on', 0))
 
-        message = f"Authentication successful for both access tokens!"
+        message = f"Authentication successful for all access tokens!"
         self.debug_print(message)
         self.action_result.set_status(phantom.APP_SUCCESS, message)
 
@@ -423,7 +416,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             "$skip": int(self.param.get("skip", 0))
         }
 
-        headers = {"Content-Type": "application/json"}
+        headers = {"Authorization": self.security_token}
 
         try:
             ret_val, response = self._make_rest_call(url, headers=headers, params=params, method="get")
@@ -1080,7 +1073,7 @@ def main():
             login_url = "{}login".format(BaseConnector._get_phantom_base_url())
 
             print("Accessing the Login page")
-            r = phantom.requests.get(login_url, verify=verify, timeout=DEFAULT_TIMEOUT)
+            r = phantom.requests.get(login_url, verify=verify, timeout=30)
             csrftoken = r.cookies['csrftoken']
 
             data = dict()
@@ -1093,7 +1086,7 @@ def main():
             headers['Referer'] = login_url
 
             print("Logging into Platform to get the session id")
-            r2 = phantom.requests.post(login_url, verify=verify, data=data, headers=headers, timeout=DEFAULT_TIMEOUT)
+            r2 = phantom.requests.post(login_url, verify=verify, data=data, headers=headers, timeout=30)
             session_id = r2.cookies['sessionid']
         except Exception as e:
             print("Unable to get session id from the platform. Error: {0}".format(str(e)))
