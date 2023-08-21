@@ -18,7 +18,9 @@
   "python_version": "3",
   "utctime_updated": "2022-05-26T06:24:07.659521Z",
   "min_phantom_version": "5.3.0",
-  "latest_tested_versions": ["*.securitycenter.microsoft.com/test, 10 Aug 2023"],
+  "latest_tested_versions": [
+    "*.securitycenter.microsoft.com/test, 10 Aug 2023"
+  ],
   "fips_compliant": true,
   "configuration": {
     "tenant_id": {
@@ -63,7 +65,8 @@
     }
   },
   "actions": [
-    { "action": "test connectivity",
+    {
+      "action": "test connectivity",
       "identifier": "test_connectivity",
       "description": "Verifies app connection with MDE",
       "verbose": "Validates the asset configuration for connectivity using the spllied configuration and displays expiration timestamp of the access_token",
@@ -73,9 +76,10 @@
       "output": [],
       "versions": "EQ(*)"
     },
-    { "action": "list incidents",
+    {
+      "action": "list incidents",
       "identifier": "list_incidents",
-      "description":  "description_goes_here",
+      "description": "description_goes_here",
       "verbose": "longer_more_detailed_description_goes_here",
       "type": "type_goes_here",
       "read_only": true,
@@ -100,11 +104,42 @@
         }
       },
       "render": {},
-      "output": []
+      "output": [
+        {
+          "data_path": "action_result.status",
+          "data_type": "string",
+          "example_values": [
+            "success",
+            "failed"
+          ]
+        },
+        {
+          "data_path": "action_result.parameter.filter",
+          "data_type": "string",
+          "example_values": [
+            "status eq 'active'"
+          ]
+        },
+        {
+          "data_path": "action_result.parameter.top",
+          "data_type": "numeric",
+          "example_values": [
+            1000
+          ]
+        },
+        {
+          "data_path": "action_result.parameter.skip",
+          "data_type": "numeric",
+          "example_values": [
+            0
+          ]
+        }
+      ]
     },
-    { "action": "get incident",
+    {
+      "action": "get incident",
       "identifier": "get_incident",
-      "description":  "description_goes_here",
+      "description": "description_goes_here",
       "verbose": "longer_more_detailed_description_goes_here",
       "type": "type_goes_here",
       "read_only": true,
@@ -120,9 +155,10 @@
       "render": {},
       "output": []
     },
-    { "action": "update incident",
+    {
+      "action": "update incident",
       "identifier": "update_incident",
-      "description":  "description_goes_here",
+      "description": "description_goes_here",
       "verbose": "longer_more_detailed_description_goes_here",
       "type": "type_goes_here",
       "read_only": false,
@@ -139,7 +175,12 @@
           "data_type": "string",
           "required": true,
           "primary": false,
-          "value_list": ["No Change", "Active", "Resolved", "Redirected"],
+          "value_list": [
+            "No Change",
+            "Active",
+            "Resolved",
+            "Redirected"
+          ],
           "default": "No Change"
         },
         "assigned_to": {
@@ -188,9 +229,10 @@
       "render": {},
       "output": []
     },
-    { "action": "list alerts",
+    {
+      "action": "list alerts",
       "identifier": "list_alerts",
-      "description":  "description_goes_here",
+      "description": "description_goes_here",
       "verbose": "longer_more_detailed_description_goes_here",
       "type": "type_goes_here",
       "read_only": true,
@@ -199,9 +241,10 @@
       "render": {},
       "output": []
     },
-    { "action": "get alert",
+    {
+      "action": "get alert",
       "identifier": "get_alert",
-      "description":  "description_goes_here",
+      "description": "description_goes_here",
       "verbose": "longer_more_detailed_description_goes_here",
       "type": "type_goes_here",
       "read_only": true,
@@ -210,9 +253,10 @@
       "render": {},
       "output": []
     },
-    { "action": "update alert",
+    {
+      "action": "update alert",
       "identifier": "update_alert",
-      "description":  "description_goes_here",
+      "description": "description_goes_here",
       "verbose": "longer_more_detailed_description_goes_here",
       "type": "type_goes_here",
       "read_only": false,
@@ -221,9 +265,10 @@
       "render": {},
       "output": []
     },
-    { "action": "list alert files",
+    {
+      "action": "list alert files",
       "identifier": "list_alert_files",
-      "description":  "description_goes_here",
+      "description": "description_goes_here",
       "verbose": "longer_more_detailed_description_goes_here",
       "type": "type_goes_here",
       "read_only": true,
@@ -232,9 +277,10 @@
       "render": {},
       "output": []
     },
-    { "action": "list library scripts",
+    {
+      "action": "list library scripts",
       "identifier": "list_library_scripts",
-      "description":  "description_goes_here",
+      "description": "description_goes_here",
       "verbose": "longer_more_detailed_description_goes_here",
       "type": "type_goes_here",
       "read_only": true,
@@ -243,9 +289,10 @@
       "render": {},
       "output": []
     },
-    { "action": "run library script",
+    {
+      "action": "run library script",
       "identifier": "run_library_script",
-      "description":  "description_goes_here",
+      "description": "description_goes_here",
       "verbose": "longer_more_detailed_description_goes_here",
       "type": "type_goes_here",
       "read_only": false,
@@ -254,9 +301,10 @@
       "render": {},
       "output": []
     },
-    { "action": "get library script result",
+    {
+      "action": "get library script result",
       "identifier": "get_library_script_result",
-      "description":  "description_goes_here",
+      "description": "description_goes_here",
       "verbose": "longer_more_detailed_description_goes_here",
       "type": "type_goes_here",
       "read_only": true,
@@ -265,9 +313,10 @@
       "render": {},
       "output": []
     },
-    { "action": "list investigations",
+    {
+      "action": "list investigations",
       "identifier": "list_investigations",
-      "description":  "description_goes_here",
+      "description": "description_goes_here",
       "verbose": "longer_more_detailed_description_goes_here",
       "type": "type_goes_here",
       "read_only": true,
@@ -276,9 +325,10 @@
       "render": {},
       "output": []
     },
-    { "action": "get investigation",
+    {
+      "action": "get investigation",
       "identifier": "get_investigation",
-      "description":  "description_goes_here",
+      "description": "description_goes_here",
       "verbose": "longer_more_detailed_description_goes_here",
       "type": "type_goes_here",
       "read_only": true,
@@ -287,9 +337,10 @@
       "render": {},
       "output": []
     },
-    { "action": "start investigation",
+    {
+      "action": "start investigation",
       "identifier": "start_investigation",
-      "description":  "description_goes_here",
+      "description": "description_goes_here",
       "verbose": "longer_more_detailed_description_goes_here",
       "type": "type_goes_here",
       "read_only": false,
@@ -298,9 +349,10 @@
       "render": {},
       "output": []
     },
-    { "action": "collect investigation package",
+    {
+      "action": "collect investigation package",
       "identifier": "collect_investigation_package",
-      "description":  "description_goes_here",
+      "description": "description_goes_here",
       "verbose": "longer_more_detailed_description_goes_here",
       "type": "type_goes_here",
       "read_only": false,
@@ -309,9 +361,10 @@
       "render": {},
       "output": []
     },
-    { "action": "list machine actions",
+    {
+      "action": "list machine actions",
       "identifier": "list_machine_actions",
-      "description":  "description_goes_here",
+      "description": "description_goes_here",
       "verbose": "longer_more_detailed_description_goes_here",
       "type": "type_goes_here",
       "read_only": true,
@@ -320,9 +373,10 @@
       "render": {},
       "output": []
     },
-    { "action": "isolate machine",
+    {
+      "action": "isolate machine",
       "identifier": "isolate_machine",
-      "description":  "description_goes_here",
+      "description": "description_goes_here",
       "verbose": "longer_more_detailed_description_goes_here",
       "type": "type_goes_here",
       "read_only": false,
@@ -331,9 +385,10 @@
       "render": {},
       "output": []
     },
-    { "action": "unisolate machine",
+    {
+      "action": "unisolate machine",
       "identifier": "unisolate_machine",
-      "description":  "description_goes_here",
+      "description": "description_goes_here",
       "verbose": "longer_more_detailed_description_goes_here",
       "type": "type_goes_here",
       "read_only": false,
@@ -342,9 +397,10 @@
       "render": {},
       "output": []
     },
-    { "action": "get file info",
+    {
+      "action": "get file info",
       "identifier": "get_file_info",
-      "description":  "description_goes_here",
+      "description": "description_goes_here",
       "verbose": "longer_more_detailed_description_goes_here",
       "type": "type_goes_here",
       "read_only": true,
@@ -353,9 +409,10 @@
       "render": {},
       "output": []
     },
-    { "action": "get file starts",
+    {
+      "action": "get file starts",
       "identifier": "get_file_starts",
-      "description":  "description_goes_here",
+      "description": "description_goes_here",
       "verbose": "longer_more_detailed_description_goes_here",
       "type": "type_goes_here",
       "read_only": true,
@@ -364,9 +421,10 @@
       "render": {},
       "output": []
     },
-    { "action": "quarantine file",
+    {
+      "action": "quarantine file",
       "identifier": "quarantine_file",
-      "description":  "description_goes_here",
+      "description": "description_goes_here",
       "verbose": "longer_more_detailed_description_goes_here",
       "type": "type_goes_here",
       "read_only": false,
