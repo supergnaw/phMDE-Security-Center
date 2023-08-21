@@ -42,7 +42,7 @@ class AuthenticationToken:
     @property
     def token(self) -> str or bool:
         # expired
-        if int(datetime.datetime.now(datetime.timezone.utc).strftime("%s")) > self.expires_on:
+        if int(datetime.datetime.now(datetime.timezone.utc).strftime("%s")) > self.expires_on - 5:
             self._token = False
             self._expires_on = 0
             return False
@@ -72,7 +72,7 @@ class AuthenticationToken:
 
     def details(self) -> dict:
         details = [json.loads(base64.b64decode(part + ('=' * (-len(part) % 4))).decode('utf-8')) for part
-                   in self.token.split('.')[0:2]]
+                   in self._token.split('.')[0:2]]
         return details
 
     def summary(self) -> dict:
@@ -303,7 +303,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         ret_val, response = self._authenticate()
 
         if phantom.is_fail(ret_val):
-            return RetVal(val1=self.action_result.get_status(), val2=response)
+            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, response))
 
         # Global headers verification
         if not headers.get('Content-Type', False):
@@ -311,8 +311,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         if not headers.get('Authorization', False):
             resource = rp.search(pattern="/\.([^\.]+)\.microsoft/i", string=endpoint).group(1)
             headers["Authorization"] = f"Bearer {self.tokens[resource].token}"
-            # headers["Authorization"] = "Bearer " + getattr(self, rp.search(pattern="/\.([^\.]+)\.microsoft/i",
-            #                                                                string=endpoint).group(1) + "_token")
         if not headers.get('Accept', False):
             headers["Accept"] = "application/json"
 
@@ -427,7 +425,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             "$top": int(self.param.get("top", 1000)),
             "$skip": int(self.param.get("skip", 0))
         }
-        params = {k: v for k, v in params.items() if v}
+        params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
 
         # Make rest call
         try:
