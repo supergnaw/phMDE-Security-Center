@@ -79,14 +79,14 @@
     {
       "action": "list incidents",
       "identifier": "list_incidents",
-      "description": "description_goes_here",
-      "verbose": "longer_more_detailed_description_goes_here",
+      "description": "list incidents",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender/api-list-incidents?view=o365-worldwide' target='blank'>List incidents API in Microsoft 365 Defender</a>",
       "type": "type_goes_here",
       "read_only": true,
       "versions": "EQ(*)",
       "parameters": {
         "filter": {
-          "description": "filters to apply (<a href='https://learn.microsoft.com/en-us/dynamics-nav/using-filter-expressions-in-odata-uris' target='_blank'>Microsoft Documentation</a>)",
+          "description": "filters to apply: (createdTime ge 2023-08-21T12:00:00Z and status eq 'active')",
           "data_type": "string",
           "required": false
         },
@@ -106,32 +106,106 @@
       "render": {},
       "output": [
         {
-          "data_path": "action_result.status",
+          "data_path": "action_result.data.*.status",
           "data_type": "string",
           "example_values": [
-            "success",
-            "failed"
+            "Active"
+          ],
+          "contains": [
           ]
         },
         {
-          "data_path": "action_result.parameter.filter",
+          "data_path": "action_result.data.*.severity",
           "data_type": "string",
           "example_values": [
-            "status eq 'active'"
+            "Low"
+          ],
+          "contains": [
           ]
         },
         {
-          "data_path": "action_result.parameter.top",
-          "data_type": "numeric",
+          "data_path": "action_result.data.*.assignedTo",
+          "data_type": "string",
           "example_values": [
-            1000
+            "None",
+            "user@email.com"
+          ],
+          "contains": [
+            "email"
           ]
         },
         {
-          "data_path": "action_result.parameter.skip",
+          "data_path": "action_result.data.*.incidentId",
           "data_type": "numeric",
           "example_values": [
-            0
+            68594,
+            12345,
+            54321
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.createdTime",
+          "data_type": "string",
+          "example_values": [
+            "2023-08-21T18:02:40.84Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.incidentUri",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+            "url"
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.incidentName",
+          "data_type": "string",
+          "example_values": [
+            "Suspicious activity"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.determination",
+          "data_type": "string",
+          "example_values": [
+            "NotAvailable"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.classification",
+          "data_type": "string",
+          "example_values": [
+            "Unknown"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.lastUpdateTime",
+          "data_type": "string",
+          "example_values": [
+            "2023-08-21T18:02:46.3Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.redirectIncidentId",
+          "data_type": "string",
+          "example_values": [
+            "None"
+          ],
+          "contains": [
           ]
         }
       ]
@@ -153,7 +227,111 @@
         }
       },
       "render": {},
-      "output": []
+      "output": [
+        {
+          "data_path": "action_result.data.*.status",
+          "data_type": "string",
+          "example_values": [
+            "Active"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.severity",
+          "data_type": "string",
+          "example_values": [
+            "Low"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.assignedTo",
+          "data_type": "string",
+          "example_values": [
+            "None",
+            "user@email.com"
+          ],
+          "contains": [
+            "email"
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.incidentId",
+          "data_type": "numeric",
+          "example_values": [
+            68594,
+            12345,
+            54321
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.createdTime",
+          "data_type": "string",
+          "example_values": [
+            "2023-08-21T18:02:40.84Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.incidentUri",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+            "url"
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.incidentName",
+          "data_type": "string",
+          "example_values": [
+            "Suspicious activity"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.determination",
+          "data_type": "string",
+          "example_values": [
+            "NotAvailable"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.classification",
+          "data_type": "string",
+          "example_values": [
+            "Unknown"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.lastUpdateTime",
+          "data_type": "string",
+          "example_values": [
+            "2023-08-21T18:02:46.3Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.redirectIncidentId",
+          "data_type": "string",
+          "example_values": [
+            "None"
+          ],
+          "contains": [
+          ]
+        }
+      ]
     },
     {
       "action": "update incident",

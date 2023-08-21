@@ -48,6 +48,7 @@ class AuthenticationToken:
             return False
         # valid
         return self._token
+
     @token.setter
     def token(self, token: str) -> None:
         self._token = token
@@ -55,6 +56,7 @@ class AuthenticationToken:
     @property
     def expires_on(self) -> int:
         return self._expires_on
+
     @expires_on.setter
     def expires_on(self, expires_on: int) -> None:
         self._expires_on = expires_on
@@ -407,50 +409,28 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_list_incidents(self) -> object:
-        # Authentication tokens
-        try:
-            ret_val, r_json = self._authenticate()
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, r_json = self._authenticate()
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
 
-        # Prepare request parameters
         url = f"{self.api_uri}{INCIDENT_LIST}".format(resource='security')
-        params = {
-            "$filter": self.param.get("filter", False),
-            "$top": int(self.param.get("top", 1000)),
-            "$skip": int(self.param.get("skip", 0))
-        }
         params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
 
-        # Make rest call
-        try:
-            ret_val, response = self._make_rest_call(endpoint=url, params=params)
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, response = self._make_rest_call(endpoint=url, params=params)
 
-        # Rest call was unsuccessful
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
 
-        # Add results to output data
         for incident in response['value']:
             self.action_result.add_data(incident)
 
         return self.action_result.set_status(phantom.APP_SUCCESS, f"Returned {len(response['value'])} incidents")
 
     def _handle_get_incident(self) -> object:
-        try:
-            ret_val, r_json = self._authenticate()
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, r_json = self._authenticate()
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
@@ -458,26 +438,18 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security', incident_id=self.param['incident_id'])
 
-        try:
-            ret_val, response = self._make_rest_call(url, method="get")
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, response = self._make_rest_call(url, method="get")
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
 
-        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
+        self.action_result.add_data({key: val for key, val in response.items() if not key.startswith("@")})
 
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_update_incident(self) -> object:
-        try:
-            ret_val, r_json = self._authenticate()
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, r_json = self._authenticate()
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
@@ -531,11 +503,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         if 0 < len(self.param.get("comment", "")):
             body["comment"] = self.param["comment"]
 
-        try:
-            ret_val, response = self._make_rest_call(url, headers=headers, data=body, method="patch")
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, response = self._make_rest_call(url, headers=headers, data=body, method="patch")
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
@@ -546,11 +514,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_list_alerts(self) -> object:
-        try:
-            ret_val, r_json = self._authenticate()
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, r_json = self._authenticate()
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
@@ -558,12 +522,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         url = f"{self.api_uri}{ALERT_LIST}".format(resource='securitycenter')
 
-        try:
-            ret_val, response = self._make_rest_call(url)
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
-
+        ret_val, response = self._make_rest_call(url)
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
@@ -573,11 +532,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_get_alert(self) -> object:
-        try:
-            ret_val, r_json = self._authenticate()
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, r_json = self._authenticate()
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
@@ -585,12 +540,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         url = f"{self.api_uri}{ALERT_SINGLE}".format(resource='securitycenter', alert_id=self.param['alert_id'])
 
-        try:
-            ret_val, response = self._make_rest_call(url)
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
-
+        ret_val, response = self._make_rest_call(url)
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
@@ -600,11 +550,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_update_alert(self) -> object:
-        try:
-            ret_val, r_json = self._authenticate()
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, r_json = self._authenticate()
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
@@ -612,12 +558,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         url = f"{self.api_uri}{ALERT_SINGLE}".format(resource='securitycenter', alert_id=self.param['alert_id'])
 
-        try:
-            ret_val, response = self._make_rest_call(url)
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
-
+        ret_val, response = self._make_rest_call(url)
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
@@ -627,11 +568,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_update_alert_batch(self) -> object:
-        try:
-            ret_val, r_json = self._authenticate()
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, r_json = self._authenticate()
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
@@ -639,12 +576,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         url = f"{self.api_uri}{ALERT_BATCH_UPDATE}".format(resource='securitycenter')
 
-        try:
-            ret_val, response = self._make_rest_call(url)
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
-
+        ret_val, response = self._make_rest_call(url)
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
@@ -654,11 +586,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_list_alert_files(self) -> object:
-        try:
-            ret_val, r_json = self._authenticate()
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, r_json = self._authenticate()
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
@@ -666,12 +594,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         url = f"{self.api_uri}{ALERT_FILES}"
 
-        try:
-            ret_val, response = self._make_rest_call(url)
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
-
+        ret_val, response = self._make_rest_call(url)
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
@@ -681,11 +604,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_list_library_scripts(self) -> object:
-        try:
-            ret_val, r_json = self._authenticate()
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, r_json = self._authenticate()
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
@@ -693,12 +612,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         url = f"{self.api_uri}{LIVE_RESPONSE_LIST_LIBRARY}"
 
-        try:
-            ret_val, response = self._make_rest_call(url)
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
-
+        ret_val, response = self._make_rest_call(url)
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
@@ -708,11 +622,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_run_library_script(self) -> object:
-        try:
-            ret_val, r_json = self._authenticate()
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, r_json = self._authenticate()
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
@@ -720,12 +630,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         url = f"{self.api_uri}{LIVE_RESPONSE_RUN_SCRIPT}".format(machine_id=self.param['machine_id'])
 
-        try:
-            ret_val, response = self._make_rest_call(url)
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
-
+        ret_val, response = self._make_rest_call(url)
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
@@ -735,11 +640,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_get_library_script_result(self) -> object:
-        try:
-            ret_val, r_json = self._authenticate()
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, r_json = self._authenticate()
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
@@ -748,12 +649,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         url = f"{self.api_uri}{LIVE_RESPONSE_GET_RESULT}".format(action_id=self.param['action_id'],
                                                                  command_index=self.param['command_index'])
 
-        try:
-            ret_val, response = self._make_rest_call(url)
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
-
+        ret_val, response = self._make_rest_call(url)
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
@@ -763,11 +659,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_list_investigations(self) -> object:
-        try:
-            ret_val, r_json = self._authenticate()
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, r_json = self._authenticate()
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
@@ -775,12 +667,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         url = f"{self.api_uri}{INVESTIGATION_LIST}"
 
-        try:
-            ret_val, response = self._make_rest_call(url)
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
-
+        ret_val, response = self._make_rest_call(url)
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
@@ -790,11 +677,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_get_investigation(self) -> object:
-        try:
-            ret_val, r_json = self._authenticate()
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, r_json = self._authenticate()
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
@@ -802,12 +685,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         url = f"{self.api_uri}{INVESTIGATION_SINGLE}".format(investigation_id=self.param['investigation_id'])
 
-        try:
-            ret_val, response = self._make_rest_call(url)
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
-
+        ret_val, response = self._make_rest_call(url)
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
@@ -817,11 +695,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_start_investigation(self) -> object:
-        try:
-            ret_val, r_json = self._authenticate()
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, r_json = self._authenticate()
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
@@ -829,12 +703,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         url = f"{self.api_uri}{INVESTIGATION_START}".format(machine_id=self.param['machine_id'])
 
-        try:
-            ret_val, response = self._make_rest_call(url)
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
-
+        ret_val, response = self._make_rest_call(url)
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
@@ -844,11 +713,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_collect_investigation_package(self) -> object:
-        try:
-            ret_val, r_json = self._authenticate()
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, r_json = self._authenticate()
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
@@ -856,12 +721,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         url = f"{self.api_uri}{INVESTIGATION_COLLECT_PACKAGE}".format(machine_id=self.param['machine_id'])
 
-        try:
-            ret_val, response = self._make_rest_call(url)
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
-
+        ret_val, response = self._make_rest_call(url)
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
@@ -871,11 +731,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_list_machine_actions(self) -> object:
-        try:
-            ret_val, r_json = self._authenticate()
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, r_json = self._authenticate()
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
@@ -883,12 +739,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         url = f"{self.api_uri}{MACHINE_LIST_ACTIONS}".format(machine_id=self.param['machine_id'])
 
-        try:
-            ret_val, response = self._make_rest_call(url)
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
-
+        ret_val, response = self._make_rest_call(url)
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
@@ -898,11 +749,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_isolate_machine(self) -> object:
-        try:
-            ret_val, r_json = self._authenticate()
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, r_json = self._authenticate()
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
@@ -910,12 +757,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         url = f"{self.api_uri}{MACHINE_ISOLATE}".format(machine_id=self.param['machine_id'])
 
-        try:
-            ret_val, response = self._make_rest_call(url)
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
-
+        ret_val, response = self._make_rest_call(url)
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
@@ -925,11 +767,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_unisolate_machine(self) -> object:
-        try:
-            ret_val, r_json = self._authenticate()
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, r_json = self._authenticate()
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
@@ -937,12 +775,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         url = f"{self.api_uri}{MACHINE_UNISOLATE}".format(machine_id=self.param['machine_id'])
 
-        try:
-            ret_val, response = self._make_rest_call(url)
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
-
+        ret_val, response = self._make_rest_call(url)
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
@@ -952,11 +785,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_get_file_info(self) -> object:
-        try:
-            ret_val, r_json = self._authenticate()
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, r_json = self._authenticate()
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
@@ -964,12 +793,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         url = f"{self.api_uri}{FILE_INFO}".format(file_id=self.param['file_id'])
 
-        try:
-            ret_val, response = self._make_rest_call(url)
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
-
+        ret_val, response = self._make_rest_call(url)
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
@@ -979,11 +803,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_get_file_stats(self) -> object:
-        try:
-            ret_val, r_json = self._authenticate()
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, r_json = self._authenticate()
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
@@ -991,12 +811,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         url = f"{self.api_uri}{FILE_STATS}".format(file_id=self.param['file_id'])
 
-        try:
-            ret_val, response = self._make_rest_call(url)
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
-
+        ret_val, response = self._make_rest_call(url)
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
@@ -1006,11 +821,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_quarantine_file(self) -> object:
-        try:
-            ret_val, r_json = self._authenticate()
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
+        ret_val, r_json = self._authenticate()
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
@@ -1018,12 +829,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         url = f"{self.api_uri}{FILE_QUARANTINE}".format(machine_id=self.param['machine_id'])
 
-        try:
-            ret_val, response = self._make_rest_call(url)
-        except Exception as e:
-            message = self._get_error_message_from_exception(e, self.line_no)
-            return RetVal(val1=self.action_result.set_status(phantom.APP_ERROR, message))
-
+        ret_val, response = self._make_rest_call(url)
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
@@ -1034,15 +840,9 @@ class MDESecurityCenter_Connector(BaseConnector):
 
     def handle_action(self, param):
         self.param = param
-        try:
-            self.debug_print(f"Starting action: {self.action_id}")
-            self.debug_print(f"Action parameters: {json.dumps(self.param, indent=4)}")
-            ret_val = getattr(self, f"_handle_{self.action_id}")()
-        except Exception as e:
-            self.debug_print(self._get_error_message_from_exception(e, self.line_no))
-            ret_val = phantom.APP_ERROR
-
-        return ret_val
+        self.debug_print(f"Starting action: {self.action_id}")
+        self.debug_print(f"Action parameters: {json.dumps(self.param, indent=4)}")
+        return getattr(self, f"_handle_{self.action_id}")()
 
     def initialize(self):
         # Load the state in initialize, use it to store data that needs to be accessed across actions
