@@ -320,6 +320,9 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.action_result.add_debug_data({'rest call headers': headers})
         self.action_result.add_debug_data({'rest call data': data})
 
+        if isinstance(data, dict):
+            data = json.dumps(data)
+
         try:
             response = getattr(phantom.requests, method)(endpoint, data=data, headers=headers, verify=verify,
                                                          params=params, timeout=30)
@@ -437,7 +440,6 @@ class MDESecurityCenter_Connector(BaseConnector):
             return self.action_result.get_status()
 
         url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security', incident_id=self.param['incident_id'])
-
         ret_val, response = self._make_rest_call(url, method="get")
 
         if phantom.is_fail(ret_val):
@@ -455,61 +457,51 @@ class MDESecurityCenter_Connector(BaseConnector):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
 
-        url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security', incident_id=self.param['incident_id'])
+        if self.param.get("tags", "") and not self.param.get("remove_tags", False):
+            url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security', incident_id=self.param['incident_id'])
+            ret_val, response = self._make_rest_call(url, method="get")
 
-        headers = {"Content-Type": "application/json"}
+            if phantom.is_fail(ret_val):
+                self.save_progress(self.action_result.get_message())
+                return self.action_result.get_status()
 
+            self.param["tags"] += str(self.param["tags"] + f",{','.join(response['tags'])}").strip(",")
+
+        statuses = {"Active": "Active", "Resolved": "Resolved", "Redirected": "Redirected", "default": False}
         categories = {
-            "Informational: Security test":
-                ["Informational, expected activity", "SecurityTesting"],
-            "Informational: Line-of-business application":
-                ["Informational, expected activity", "LineOfBusinessApplication"],
-            "Informational: Confirmed activity":
-                ["Informational, expected activity", "ConfirmedUserActivity"],
-            "Informational: Other":
-                ["Informational, expected activity", "Other"],
-            "False positive: Not malicious":
-                ["FalsePositive", "Clean"],
-            "False positive: Not enough data to validate":
-                ["FalsePositive", "InsufficientData"],
-            "False positive: Other":
-                ["FalsePositive", "Other"],
-            "True positive: Multistage attack":
-                ["TruePositive", "MultiStagedAttack"],
-            "True positive: Malicious user activity":
-                ["TruePositive", "MaliciousUserActivity"],
-            "True positive: Compromised account":
-                ["TruePositive", "CompromisedUser"],
-            "True positive: Malware":
-                ["TruePositive", "Malware"],
-            "True positive: Phishing":
-                ["TruePositive", "Phishing"],
-            "True positive: Unwanted software":
-                ["TruePositive", "UnwantedSoftware"],
-            "True positive: Other":
-                ["TruePositive", "Other"],
+            "Informational: Security test": ["InformationalExpectedActivity", "SecurityTesting"],
+            "Informational: Line-of-business application": ["InformationalExpectedActivity",
+                                                            "LineOfBusinessApplication"],
+            "Informational: Confirmed activity": ["InformationalExpectedActivity", "ConfirmedUserActivity"],
+            "Informational: Other": ["InformationalExpectedActivity", "Other"],
+            "False positive: Not malicious": ["FalsePositive", "Clean"],
+            "False positive: Not enough data to validate": ["FalsePositive", "InsufficientData"],
+            "False positive: Other": ["FalsePositive", "Other"],
+            "True positive: Multistage attack": ["TruePositive", "MultiStagedAttack"],
+            "True positive: Malicious user activity": ["TruePositive", "MaliciousUserActivity"],
+            "True positive: Compromised account": ["TruePositive", "CompromisedUser"],
+            "True positive: Malware": ["TruePositive", "Malware"],
+            "True positive: Phishing": ["TruePositive", "Phishing"],
+            "True positive: Unwanted software": ["TruePositive", "UnwantedSoftware"],
+            "True positive: Other": ["TruePositive", "Other"],
         }
 
-        body = {}
-        if self.param.get("status", False) in ["Active", "Resolved", "Redirected"]:
-            body["status"] = self.param["status"]
-        if self.param.get("assigned_to", False):
-            body["assignedTo"] = self.param["assigned_to"]
-        if categories.get(self.param.get("category", False), False):
-            body["classification"] = categories[self.param["category"][0]]
-            body["determination"] = categories[self.param["category"][1]]
-        if 0 < len(self.param.get("tags", "")):
-            body["tags"] = self.param["tags"]
-        if 0 < len(self.param.get("comment", "")):
-            body["comment"] = self.param["comment"]
+        body = {
+            'status': statuses.get(self.param.get("status", "default"), False),
+            'assignedTo': self.param.get("assigned_to", False),
+            'classification': categories.get(self.param.get("category", False), [False])[0],
+            'determination': categories.get(self.param.get("category", False), [None, False])[1],
+            'tags': [tag.strip() for tag in self.param.get("tags", "").split(",") if 0 < tag.strip()],
+            'comment': self.param.get("comment", False)
+        }
+        data = json.dumps({key: val for key, val in body.items() if val})
 
-        ret_val, response = self._make_rest_call(url, headers=headers, data=body, method="patch")
+        url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security', incident_id=self.param['incident_id'])
+        ret_val, response = self._make_rest_call(url, data=data, method="patch")
 
         if phantom.is_fail(ret_val):
             self.save_progress(self.action_result.get_message())
             return self.action_result.get_status()
-
-        self.debug_print(f"{self.action_id} response:\n{json.dumps(response, indent=4)}")
 
         return self.action_result.set_status(phantom.APP_SUCCESS)
 

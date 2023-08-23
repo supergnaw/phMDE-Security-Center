@@ -388,14 +388,20 @@
             "True positive: Phishing",
             "True positive: Unwanted software",
             "True positive: Other"
-          ]
+          ],
+          "default": "No Change"
         },
         "tags": {
-          "description": "List of Incident tags",
+          "description": "List of incident tags",
           "data_type": "string",
           "required": false,
           "primary": false,
           "allow_list": true
+        },
+        "remove_tags": {
+          "description": "Remove existing incident tags",
+          "data_type": "bool",
+          "required": false
         },
         "comment": {
           "description": "Comment to be added to the incident",
