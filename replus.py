@@ -17,10 +17,10 @@ if not hasattr(re, 'NOFLAG'): setattr(re, 'NOFLAG', 0)
 # SPECIALTY INTERNAL FUNCTIONS
 
 def _parse_regex(pattern: Pattern[AnyStr], pre_flags: int = re.NOFLAG) -> Pattern[Any] or Pattern[str or Any]:
-    if not re.fullmatch(r"^\/(.*)\/([\w]*)$", f"{pattern}"):
+    if not re.fullmatch(pattern=r"^\/(.*)\/([\w]*)$", string=f"{pattern}"):
         return re.compile(pattern, pre_flags)
 
-    pattern, flags = re.fullmatch(r"^\/(.*)\/([\w]*)$", f"{pattern}").groups()
+    pattern, flags = re.fullmatch(pattern=r"^\/(.*)\/([\w]*)$", string=f"{pattern}").groups()
     flags = _parse_flags(flags, pre_flags)
 
     return re.compile(pattern, flags)
@@ -28,7 +28,7 @@ def _parse_regex(pattern: Pattern[AnyStr], pre_flags: int = re.NOFLAG) -> Patter
 
 def _parse_flags(flags: str = "", pre_flags: int = re.NOFLAG) -> int:
     parsed_flags = pre_flags
-    flags = re.sub(r"[^ailmsux]", "", flags).strip()
+    flags = re.sub(pattern=r"[^ailmsux]", repl="", flags=flags)
 
     for character_flag in flags:
         parsed_flags |= re_flags.get(character_flag, re.NOFLAG)
