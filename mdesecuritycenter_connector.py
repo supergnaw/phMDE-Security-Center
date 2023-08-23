@@ -403,12 +403,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_list_incidents(self) -> object:
-        ret_val, r_json = self._authenticate()
-
-        if phantom.is_fail(ret_val):
-            self.save_progress(self.action_result.get_message())
-            return self.action_result.get_status()
-
         url = f"{self.api_uri}{INCIDENT_LIST}".format(resource='security')
         params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
 
@@ -424,12 +418,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS, f"Returned {len(response['value'])} incidents")
 
     def _handle_get_incident(self) -> object:
-        ret_val, r_json = self._authenticate()
-
-        if phantom.is_fail(ret_val):
-            self.save_progress(self.action_result.get_message())
-            return self.action_result.get_status()
-
         url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security', incident_id=self.param['incident_id'])
         ret_val, response = self._make_rest_call(url, method="get")
 
@@ -442,12 +430,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_update_incident(self) -> object:
-        ret_val, r_json = self._authenticate()
-
-        if phantom.is_fail(ret_val):
-            self.save_progress(self.action_result.get_message())
-            return self.action_result.get_status()
-
         if self.param.get("remove_tags", False):
             url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security', incident_id=self.param['incident_id'])
             ret_val, response = self._make_rest_call(url, method="get")
@@ -497,12 +479,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_list_alerts(self) -> object:
-        ret_val, r_json = self._authenticate()
-
-        if phantom.is_fail(ret_val):
-            self.save_progress(self.action_result.get_message())
-            return self.action_result.get_status()
-
         url = f"{self.api_uri}{ALERT_LIST}".format(resource='securitycenter')
 
         ret_val, response = self._make_rest_call(url)
@@ -515,12 +491,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_get_alert(self) -> object:
-        ret_val, r_json = self._authenticate()
-
-        if phantom.is_fail(ret_val):
-            self.save_progress(self.action_result.get_message())
-            return self.action_result.get_status()
-
         url = f"{self.api_uri}{ALERT_SINGLE}".format(resource='securitycenter', alert_id=self.param['alert_id'])
 
         ret_val, response = self._make_rest_call(url)
@@ -533,12 +503,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_update_alert(self) -> object:
-        ret_val, r_json = self._authenticate()
-
-        if phantom.is_fail(ret_val):
-            self.save_progress(self.action_result.get_message())
-            return self.action_result.get_status()
-
         url = f"{self.api_uri}{ALERT_SINGLE}".format(resource='securitycenter', alert_id=self.param['alert_id'])
 
         ret_val, response = self._make_rest_call(url)
@@ -551,12 +515,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_update_alert_batch(self) -> object:
-        ret_val, r_json = self._authenticate()
-
-        if phantom.is_fail(ret_val):
-            self.save_progress(self.action_result.get_message())
-            return self.action_result.get_status()
-
         url = f"{self.api_uri}{ALERT_BATCH_UPDATE}".format(resource='securitycenter')
 
         ret_val, response = self._make_rest_call(url)
@@ -569,12 +527,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_list_alert_files(self) -> object:
-        ret_val, r_json = self._authenticate()
-
-        if phantom.is_fail(ret_val):
-            self.save_progress(self.action_result.get_message())
-            return self.action_result.get_status()
-
         url = f"{self.api_uri}{ALERT_FILES}"
 
         ret_val, response = self._make_rest_call(url)
@@ -587,12 +539,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_list_library_scripts(self) -> object:
-        ret_val, r_json = self._authenticate()
-
-        if phantom.is_fail(ret_val):
-            self.save_progress(self.action_result.get_message())
-            return self.action_result.get_status()
-
         url = f"{self.api_uri}{LIVE_RESPONSE_LIST_LIBRARY}"
 
         ret_val, response = self._make_rest_call(url)
@@ -605,12 +551,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_run_library_script(self) -> object:
-        ret_val, r_json = self._authenticate()
-
-        if phantom.is_fail(ret_val):
-            self.save_progress(self.action_result.get_message())
-            return self.action_result.get_status()
-
         url = f"{self.api_uri}{LIVE_RESPONSE_RUN_SCRIPT}".format(machine_id=self.param['machine_id'])
 
         ret_val, response = self._make_rest_call(url)
@@ -623,12 +563,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_get_library_script_result(self) -> object:
-        ret_val, r_json = self._authenticate()
-
-        if phantom.is_fail(ret_val):
-            self.save_progress(self.action_result.get_message())
-            return self.action_result.get_status()
-
         url = f"{self.api_uri}{LIVE_RESPONSE_GET_RESULT}".format(action_id=self.param['action_id'],
                                                                  command_index=self.param['command_index'])
 
@@ -642,12 +576,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_list_investigations(self) -> object:
-        ret_val, r_json = self._authenticate()
-
-        if phantom.is_fail(ret_val):
-            self.save_progress(self.action_result.get_message())
-            return self.action_result.get_status()
-
         url = f"{self.api_uri}{INVESTIGATION_LIST}"
 
         ret_val, response = self._make_rest_call(url)
@@ -660,12 +588,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_get_investigation(self) -> object:
-        ret_val, r_json = self._authenticate()
-
-        if phantom.is_fail(ret_val):
-            self.save_progress(self.action_result.get_message())
-            return self.action_result.get_status()
-
         url = f"{self.api_uri}{INVESTIGATION_SINGLE}".format(investigation_id=self.param['investigation_id'])
 
         ret_val, response = self._make_rest_call(url)
@@ -678,12 +600,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_start_investigation(self) -> object:
-        ret_val, r_json = self._authenticate()
-
-        if phantom.is_fail(ret_val):
-            self.save_progress(self.action_result.get_message())
-            return self.action_result.get_status()
-
         url = f"{self.api_uri}{INVESTIGATION_START}".format(machine_id=self.param['machine_id'])
 
         ret_val, response = self._make_rest_call(url)
@@ -696,12 +612,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_collect_investigation_package(self) -> object:
-        ret_val, r_json = self._authenticate()
-
-        if phantom.is_fail(ret_val):
-            self.save_progress(self.action_result.get_message())
-            return self.action_result.get_status()
-
         url = f"{self.api_uri}{INVESTIGATION_COLLECT_PACKAGE}".format(machine_id=self.param['machine_id'])
 
         ret_val, response = self._make_rest_call(url)
@@ -714,12 +624,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_list_machine_actions(self) -> object:
-        ret_val, r_json = self._authenticate()
-
-        if phantom.is_fail(ret_val):
-            self.save_progress(self.action_result.get_message())
-            return self.action_result.get_status()
-
         url = f"{self.api_uri}{MACHINE_LIST_ACTIONS}".format(machine_id=self.param['machine_id'])
 
         ret_val, response = self._make_rest_call(url)
@@ -732,12 +636,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_isolate_machine(self) -> object:
-        ret_val, r_json = self._authenticate()
-
-        if phantom.is_fail(ret_val):
-            self.save_progress(self.action_result.get_message())
-            return self.action_result.get_status()
-
         url = f"{self.api_uri}{MACHINE_ISOLATE}".format(machine_id=self.param['machine_id'])
 
         ret_val, response = self._make_rest_call(url)
@@ -750,12 +648,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_unisolate_machine(self) -> object:
-        ret_val, r_json = self._authenticate()
-
-        if phantom.is_fail(ret_val):
-            self.save_progress(self.action_result.get_message())
-            return self.action_result.get_status()
-
         url = f"{self.api_uri}{MACHINE_UNISOLATE}".format(machine_id=self.param['machine_id'])
 
         ret_val, response = self._make_rest_call(url)
@@ -768,12 +660,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_get_file_info(self) -> object:
-        ret_val, r_json = self._authenticate()
-
-        if phantom.is_fail(ret_val):
-            self.save_progress(self.action_result.get_message())
-            return self.action_result.get_status()
-
         url = f"{self.api_uri}{FILE_INFO}".format(file_id=self.param['file_id'])
 
         ret_val, response = self._make_rest_call(url)
@@ -786,12 +672,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_get_file_stats(self) -> object:
-        ret_val, r_json = self._authenticate()
-
-        if phantom.is_fail(ret_val):
-            self.save_progress(self.action_result.get_message())
-            return self.action_result.get_status()
-
         url = f"{self.api_uri}{FILE_STATS}".format(file_id=self.param['file_id'])
 
         ret_val, response = self._make_rest_call(url)
@@ -804,12 +684,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_quarantine_file(self) -> object:
-        ret_val, r_json = self._authenticate()
-
-        if phantom.is_fail(ret_val):
-            self.save_progress(self.action_result.get_message())
-            return self.action_result.get_status()
-
         url = f"{self.api_uri}{FILE_QUARANTINE}".format(machine_id=self.param['machine_id'])
 
         ret_val, response = self._make_rest_call(url)
