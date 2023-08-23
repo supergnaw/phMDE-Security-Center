@@ -13,7 +13,7 @@
 
 # If you find errors or would like to help contribute, please see:
 # https://github.com/supergnaw/phMDE-Security-Center
-#
+
 # For more info regarding the mysterious functions and libraries within this code, please see:
 # https://docs.splunk.com/Documentation/SOARonprem/latest/DevelopApps/AppDevAPIRef
 
@@ -503,37 +503,44 @@ class MDESecurityCenter_Connector(BaseConnector):
         if not self._make_rest_call(url, data=data):
             return phantom.APP_ERROR
 
-        message = f"{self.action_id} complete"
+        message = f"Updated alert {self.param['alert_id']}:\n{json.dumps(self.r_json, indent=4)}"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
-    def _handle_update_alert_batch(self) -> object:
+    def _handle_update_alert_batch(self) -> bool:
+        body = {
+            'alertIds': [alert_id.strip() for alert_id in ",".split(self.param['alert_list'])],
+            'status': self.param.get("status", False),
+            'assignedTo': self.param.get("assigned_to", False),
+            'classification': self.categories.get(self.param.get("category", False), [False])[0],
+            'determination': self.categories.get(self.param.get("category", False), [None, False])[1],
+            'comment': self.param.get("comment", False)
+        }
+        data = json.dumps({key: val for key, val in body.items() if val})
         url = f"{self.api_uri}{ALERT_BATCH_UPDATE}".format(resource='securitycenter')
-        if not self._make_rest_call(url):
+        if not self._make_rest_call(url, data=data):
             return phantom.APP_ERROR
 
-        self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
-
-        message = f"{self.action_id} complete"
+        message = f"Updated {len(self.param['alert_list'])} alerts:\n{json.dumps(self.r_json, indent=4)}"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
-    def _handle_list_alert_files(self) -> object:
+    def _handle_list_alert_files(self) -> bool:
         url = f"{self.api_uri}{ALERT_FILES}".format(resource='securitycenter')
         if not self._make_rest_call(url):
             return phantom.APP_ERROR
 
-        self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
+        [self.add_data(file) for file in self.r_json['value']]
 
-        message = f"{self.action_id} complete"
+        message = f"Returned {len(self.r_json['value'])} files"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
-    def _handle_list_library_scripts(self) -> object:
+    def _handle_list_library_scripts(self) -> bool:
         url = f"{self.api_uri}{LIVE_RESPONSE_LIST_LIBRARY}".format(resource='securitycenter')
         if not self._make_rest_call(url):
             return phantom.APP_ERROR
 
-        self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
+        [self.add_data(script) for script in self.r_json['value']]
 
-        message = f"{self.action_id} complete"
+        message = f"Returned {len(self.r_json['value'])} scripts"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_run_library_script(self) -> object:
