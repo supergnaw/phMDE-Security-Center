@@ -11,6 +11,9 @@
 # either expressed or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
+# If you find errors or would like to help contribute, please see:
+# https://github.com/supergnaw/phMDE-Security-Center
+
 """
     INCIDENTS
 """
