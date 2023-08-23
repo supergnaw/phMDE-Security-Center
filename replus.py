@@ -28,7 +28,7 @@ def _parse_regex(pattern: Pattern[AnyStr], pre_flags: int = re.NOFLAG) -> Patter
 
 def _parse_flags(flags: str = "", pre_flags: int = re.NOFLAG) -> int:
     parsed_flags = pre_flags
-    flags = re.sub(pattern=r"[^ailmsux]", repl="", flags=flags)
+    flags = re.sub(pattern=r"[^ailmsux]", repl="", string=flags)
 
     for character_flag in flags:
         parsed_flags |= re_flags.get(character_flag, re.NOFLAG)
