@@ -160,6 +160,32 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.response = None
         self.r_json = None
 
+        # Input validation helper variables
+        self.statuses = {
+            "Active": "Active",
+            "Resolved": "Resolved",
+            "Redirected": "Redirected",
+            "default": False
+        }
+
+        self.categories = {
+            "Informational: Security test": ["InformationalExpectedActivity", "SecurityTesting"],
+            "Informational: Line-of-business application": ["InformationalExpectedActivity",
+                                                            "LineOfBusinessApplication"],
+            "Informational: Confirmed activity": ["InformationalExpectedActivity", "ConfirmedUserActivity"],
+            "Informational: Other": ["InformationalExpectedActivity", "Other"],
+            "False positive: Not malicious": ["FalsePositive", "Clean"],
+            "False positive: Not enough data to validate": ["FalsePositive", "InsufficientData"],
+            "False positive: Other": ["FalsePositive", "Other"],
+            "True positive: Multistage attack": ["TruePositive", "MultiStagedAttack"],
+            "True positive: Malicious user activity": ["TruePositive", "MaliciousUserActivity"],
+            "True positive: Compromised account": ["TruePositive", "CompromisedUser"],
+            "True positive: Malware": ["TruePositive", "Malware"],
+            "True positive: Phishing": ["TruePositive", "Phishing"],
+            "True positive: Unwanted software": ["TruePositive", "UnwantedSoftware"],
+            "True positive: Other": ["TruePositive", "Other"],
+        }
+
     def _process_response(self) -> bool:
         """
         This function is used to process html response.
@@ -396,7 +422,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         message = f"Active access tokens:\n{json.dumps(self._parse_tokens(), indent=4)}"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
-    def _handle_list_incidents(self) -> object:
+    def _handle_list_incidents(self) -> bool:
         params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
         url = f"{self.api_uri}{INCIDENT_LIST}".format(resource='security')
         if not self._make_rest_call(endpoint=url, params=params):
@@ -407,7 +433,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         message = f"Returned {len(self.r_json['value'])} incidents"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
-    def _handle_get_incident(self) -> object:
+    def _handle_get_incident(self) -> bool:
         url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security', incident_id=self.param['incident_id'])
         if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
@@ -417,7 +443,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         message = f"Retrieved incident {self.param['incident_id']}"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
-    def _handle_update_incident(self) -> object:
+    def _handle_update_incident(self) -> bool:
         if self.param.get("remove_tags", False):
             url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security', incident_id=self.param['incident_id'])
             if not self._make_rest_call(url, method="get"):
@@ -426,29 +452,11 @@ class MDESecurityCenter_Connector(BaseConnector):
             self.param["tags"] = str(self.param.get("tags", "") + f",{','.join(self.r_json['tags'])}").strip(",")
             self.save_progress(f"Joined new tags with existing tags: '{self.param['tags']}'")
 
-        statuses = {"Active": "Active", "Resolved": "Resolved", "Redirected": "Redirected", "default": False}
-        categories = {
-            "Informational: Security test": ["InformationalExpectedActivity", "SecurityTesting"],
-            "Informational: Line-of-business application": ["InformationalExpectedActivity",
-                                                            "LineOfBusinessApplication"],
-            "Informational: Confirmed activity": ["InformationalExpectedActivity", "ConfirmedUserActivity"],
-            "Informational: Other": ["InformationalExpectedActivity", "Other"],
-            "False positive: Not malicious": ["FalsePositive", "Clean"],
-            "False positive: Not enough data to validate": ["FalsePositive", "InsufficientData"],
-            "False positive: Other": ["FalsePositive", "Other"],
-            "True positive: Multistage attack": ["TruePositive", "MultiStagedAttack"],
-            "True positive: Malicious user activity": ["TruePositive", "MaliciousUserActivity"],
-            "True positive: Compromised account": ["TruePositive", "CompromisedUser"],
-            "True positive: Malware": ["TruePositive", "Malware"],
-            "True positive: Phishing": ["TruePositive", "Phishing"],
-            "True positive: Unwanted software": ["TruePositive", "UnwantedSoftware"],
-            "True positive: Other": ["TruePositive", "Other"],
-        }
         body = {
-            'status': statuses.get(self.param.get("status", "default"), False),
+            'status': self.statuses.get(self.param.get("status", "default"), False),
             'assignedTo': self.param.get("assigned_to", False),
-            'classification': categories.get(self.param.get("category", False), [False])[0],
-            'determination': categories.get(self.param.get("category", False), [None, False])[1],
+            'classification': self.categories.get(self.param.get("category", False), [False])[0],
+            'determination': self.categories.get(self.param.get("category", False), [None, False])[1],
             'tags': [tag.strip() for tag in self.param.get("tags", "").split(",") if tag.strip()],
             'comment': self.param.get("comment", False)
         }
@@ -461,32 +469,39 @@ class MDESecurityCenter_Connector(BaseConnector):
         message = f"Updated incident {self.param['incident_id']}:\n{json.dumps(self.r_json, indent=4)}"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
-    def _handle_list_alerts(self) -> object:
+    def _handle_list_alerts(self) -> bool:
         url = f"{self.api_uri}{ALERT_LIST}".format(resource='securitycenter')
         if not self._make_rest_call(url):
             return phantom.APP_ERROR
 
-        self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
+        [self.add_data(alert) for alert in self.r_json['value']]
 
         message = f"Returned {len(self.r_json['value'])} alerts"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
-    def _handle_get_alert(self) -> object:
+    def _handle_get_alert(self) -> bool:
         url = f"{self.api_uri}{ALERT_SINGLE}".format(resource='securitycenter', alert_id=self.param['alert_id'])
         if not self._make_rest_call(url):
             return phantom.APP_ERROR
 
-        self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
+        self.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
-        message = f"{self.action_id} complete"
+        message = f"Retrieved alert {self.param['alert_id']}"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
-    def _handle_update_alert(self) -> object:
-        url = f"{self.api_uri}{ALERT_SINGLE}".format(resource='securitycenter', alert_id=self.param['alert_id'])
-        if not self._make_rest_call(url):
-            return phantom.APP_ERROR
+    def _handle_update_alert(self) -> bool:
+        body = {
+            'status': self.statuses.get(self.param.get("status", "default"), False),
+            'assignedTo': self.param.get("assigned_to", False),
+            'classification': self.categories.get(self.param.get("category", False), [False])[0],
+            'determination': self.categories.get(self.param.get("category", False), [None, False])[1],
+            'comment': self.param.get("comment", False)
+        }
+        data = json.dumps({key: val for key, val in body.items() if val})
 
-        self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
+        url = f"{self.api_uri}{ALERT_SINGLE}".format(resource='securitycenter', alert_id=self.param['alert_id'])
+        if not self._make_rest_call(url, data=data):
+            return phantom.APP_ERROR
 
         message = f"{self.action_id} complete"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
