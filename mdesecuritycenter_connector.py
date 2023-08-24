@@ -500,7 +500,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         data = json.dumps({key: val for key, val in body.items() if val})
 
         url = f"{self.api_uri}{ALERT_SINGLE}".format(resource='securitycenter', alert_id=self.param['alert_id'])
-        if not self._make_rest_call(url, data=data):
+        if not self._make_rest_call(url, data=data, method="patch"):
             return phantom.APP_ERROR
 
         message = f"Updated alert {self.param['alert_id']}:\n{json.dumps(self.r_json, indent=4)}"
@@ -543,15 +543,80 @@ class MDESecurityCenter_Connector(BaseConnector):
         message = f"Returned {len(self.r_json['value'])} scripts"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
-    def _handle_run_library_script(self) -> object:
-        url = f"{self.api_uri}{LIVE_RESPONSE_RUN_SCRIPT}".format(resource='securitycenter',
-                                                                 machine_id=self.param['machine_id'])
-        if not self._make_rest_call(url):
+    def _handle_run_commands(self) -> bool:
+        url = f"{self.api_uri}{LIVE_RESPONSE_RUN_COMMAND}".format(resource='securitycenter',
+                                                                  machine_id=self.param['machine_id'])
+        commands = []
+        for command in self.param.get("commands", "").split("\n"):
+            command_type, command_content = command.strip().split(sep=" ", maxsplit=1)
+            if "putfile" == command_type.lower():
+                commands.append({
+                    "type": "PutFile",
+                    "params": [{"key": "FileName", "value": command_content}]
+                })
+            if "runscript" == command_type.lower():
+                commands.append({
+                    "type": "RunScript",
+                    "params": [
+                        {"key": "ScriptName", "value": command_content.split(sep=" ", maxsplit=1)[0].strip()},
+                        {"key": "Args", "value": command_content.split(sep=" ", maxsplit=1)[1].strip()}
+                    ]
+                })
+            if "getfile" == command_type.lower():
+                commands.append({
+                    "type": "GetFile",
+                    "params": [{"key": "Path", "value": command_content}]
+                })
+
+        if not commands:
+            message = f"No valid commands found in {self.param.get('commands', '')}"
+            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
+
+        body = {
+            'comment': self.param.get("comment", False),
+            'commands': commands
+        }
+        data = json.dumps({key: val for key, val in body.items() if val})
+
+        if not self._make_rest_call(url, data=data, method="post"):
             return phantom.APP_ERROR
 
         self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
 
-        message = f"{self.action_id} complete"
+        message = f"Commands sent to '{self.param['machine_id']}':\n{json.dumps(self.r_json, indent=4)}"
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+
+    def _handle_run_command(self) -> bool:
+        url = f"{self.api_uri}{LIVE_RESPONSE_RUN_COMMAND}".format(resource='securitycenter',
+                                                                  machine_id=self.param['machine_id'])
+
+        params = None
+        if "GetFile" == self.param.get("command_type", False):
+            params = [{"key": "FileName", "value": self.param.get("file_name", False)}]
+        if "RunScript" == self.param.get("command_type", False):
+            params = [
+                {"key": "ScriptName", "value": self.param.get("file_name", False)},
+                {"key": "Args", "value": self.param.get("arguments", False)}
+            ]
+        if "GetFile" == self.param.get("command_type", False):
+            params = [{"key": "Path", "value": self.param.get("file_name", False)}]
+
+        if not params:
+            message = f"You somehow managed to input an invalid command:\n{json.dumps(self.param, indent=4)}"
+            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
+
+        body = {
+            'comment': self.param.get("comment", False),
+            'commands': [{"type": self.param["command_type"], "params": params}]
+        }
+        data = json.dumps({key: val for key, val in body.items() if val})
+
+        if not self._make_rest_call(url, data=data, method="post"):
+            return phantom.APP_ERROR
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
+
+        message = f"Command sent to '{self.param['machine_id']}':\n{json.dumps(self.r_json, indent=4)}"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_get_library_script_result(self) -> object:

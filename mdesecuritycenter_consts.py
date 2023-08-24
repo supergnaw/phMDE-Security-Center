@@ -37,7 +37,7 @@ ALERT_FILES = "/api/alerts/{alert_id}/files"
 # https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/list-library-files
 LIVE_RESPONSE_LIST_LIBRARY = "/api/libraryfiles"
 # https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/run-live-response
-LIVE_RESPONSE_RUN_SCRIPT = "/api/machines/{machine_id}/runliveresponse"
+LIVE_RESPONSE_RUN_COMMAND = "/api/machines/{machine_id}/runliveresponse"
 # https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/get-live-response-result
 LIVE_RESPONSE_GET_RESULT = "/api/machineactions/{action_id}/GetLiveResponseResultDownloadLink(index={command_index})"
 
