@@ -433,7 +433,14 @@
       "type": "type_goes_here",
       "read_only": true,
       "versions": "EQ(*)",
-      "parameters": {},
+      "parameters": {
+        "alert_id": {
+          "description": "Alert ID",
+          "data_type": "numeric",
+          "required": true,
+          "primary": false
+        }
+      },
       "render": {},
       "output": []
     },
@@ -445,7 +452,132 @@
       "type": "type_goes_here",
       "read_only": false,
       "versions": "EQ(*)",
-      "parameters": {},
+      "parameters": {
+        "alert_id": {
+          "description": "Alert ID",
+          "data_type": "numeric",
+          "required": true,
+          "primary": false
+        },
+        "status": {
+          "description": "Specifies the current status of the incident",
+          "data_type": "string",
+          "required": true,
+          "primary": false,
+          "value_list": [
+            "No Change",
+            "Active",
+            "Resolved",
+            "Redirected"
+          ],
+          "default": "No Change"
+        },
+        "assigned_to": {
+          "description": "Owner of the incident",
+          "data_type": "string",
+          "required": false,
+          "primary": false
+        },
+        "category": {
+          "description": "Classification and determination of the incident",
+          "data_type": "string",
+          "required": false,
+          "primary": false,
+          "value_list": [
+            "No Change",
+            "Informational: Security test",
+            "Informational: Line-of-business application",
+            "Informational: Confirmed activity",
+            "Informational: Other",
+            "False positive: Not malicious",
+            "False positive: Not enough data to validate",
+            "False positive: Other",
+            "True positive: Multistage attack",
+            "True positive: Malicious user activity",
+            "True positive: Compromised account",
+            "True positive: Malware",
+            "True positive: Phishing",
+            "True positive: Unwanted software",
+            "True positive: Other"
+          ],
+          "default": "No Change"
+        },
+        "comment": {
+          "description": "Comment to be added to the incident",
+          "data_type": "string",
+          "required": true,
+          "primary": false
+        }
+      },
+      "render": {},
+      "output": []
+    },
+    {
+      "action": "update alert batch",
+      "identifier": "update_alert_batch",
+      "description": "description_goes_here",
+      "verbose": "longer_more_detailed_description_goes_here",
+      "type": "type_goes_here",
+      "read_only": false,
+      "versions": "EQ(*)",
+      "parameters": {
+        "alert_list": {
+          "description": "Alert ID List",
+          "data_type": "string",
+          "required": true,
+          "primary": false,
+          "allow_list": true
+        },
+        "status": {
+          "description": "Specifies the current status of the incident",
+          "data_type": "string",
+          "required": true,
+          "primary": false,
+          "value_list": [
+            "No Change",
+            "Active",
+            "Resolved",
+            "Redirected"
+          ],
+          "default": "No Change"
+        },
+        "assigned_to": {
+          "description": "Owner of the incident",
+          "data_type": "string",
+          "required": false,
+          "primary": false
+        },
+        "category": {
+          "description": "Classification and determination of the incident",
+          "data_type": "string",
+          "required": false,
+          "primary": false,
+          "value_list": [
+            "No Change",
+            "Informational: Security test",
+            "Informational: Line-of-business application",
+            "Informational: Confirmed activity",
+            "Informational: Other",
+            "False positive: Not malicious",
+            "False positive: Not enough data to validate",
+            "False positive: Other",
+            "True positive: Multistage attack",
+            "True positive: Malicious user activity",
+            "True positive: Compromised account",
+            "True positive: Malware",
+            "True positive: Phishing",
+            "True positive: Unwanted software",
+            "True positive: Other"
+          ],
+          "default": "No Change"
+        },
+        "comment": {
+          "description": "Comment to be added to the incident",
+          "data_type": "string",
+          "required": true,
+          "primary": false
+        }
+      },
       "render": {},
       "output": []
     },
@@ -457,7 +589,14 @@
       "type": "type_goes_here",
       "read_only": true,
       "versions": "EQ(*)",
-      "parameters": {},
+      "parameters": {
+        "alert_id": {
+          "description": "Alert ID",
+          "data_type": "numeric",
+          "required": true,
+          "primary": false
+        }
+      },
       "render": {},
       "output": []
     },
@@ -474,20 +613,87 @@
       "output": []
     },
     {
-      "action": "run library script",
-      "identifier": "run_library_script",
+      "action": "run actions",
+      "identifier": "run_actions",
       "description": "description_goes_here",
       "verbose": "longer_more_detailed_description_goes_here",
       "type": "type_goes_here",
       "read_only": false,
+      "versions": "EQ(*)",
+      "parameters": {
+        "machine_id": {
+          "description": "Machine ID",
+          "data_type": "string",
+          "required": true,
+          "primary": false
+        },
+        "action_commands": {
+          "description": "Action commands",
+          "data_type": "string",
+          "required": true,
+          "primary": false
+        }
+      },
+      "render": {},
+      "output": []
+    },
+    {
+      "action": "run action",
+      "identifier": "run_action",
+      "description": "description_goes_here",
+      "verbose": "longer_more_detailed_description_goes_here",
+      "type": "type_goes_here",
+      "read_only": false,
+      "versions": "EQ(*)",
+      "parameters": {
+        "machine_id": {
+          "description": "Machine ID",
+          "data_type": "string",
+          "required": true,
+          "primary": false
+        },
+        "command_type": {
+          "description": "Command Type",
+          "data_type": "string",
+          "required": true,
+          "primary": false,
+          "value_list": [
+            "PutFile",
+            "RunScript",
+            "GetFile"
+          ]
+        },
+        "file_name": {
+          "description": "File Name/Script Name/Path",
+          "data_type": "string",
+          "required": true,
+          "primary": false
+        },
+        "arguments": {
+          "description": "Script arguments, if any",
+          "data_type": "string",
+          "required": false,
+          "primary": false
+        }
+      },
+      "render": {},
+      "output": []
+    },
+    {
+      "action": "list actions",
+      "identifier": "list_actions",
+      "description": "description_goes_here",
+      "verbose": "longer_more_detailed_description_goes_here",
+      "type": "type_goes_here",
+      "read_only": true,
       "versions": "EQ(*)",
       "parameters": {},
       "render": {},
       "output": []
     },
     {
-      "action": "get library script result",
-      "identifier": "get_library_script_result",
+      "action": "get action result",
+      "identifier": "get_action_result",
       "description": "description_goes_here",
       "verbose": "longer_more_detailed_description_goes_here",
       "type": "type_goes_here",

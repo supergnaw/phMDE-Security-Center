@@ -425,7 +425,7 @@ class MDESecurityCenter_Connector(BaseConnector):
     def _handle_list_incidents(self) -> bool:
         params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
         url = f"{self.api_uri}{INCIDENT_LIST}".format(resource='security')
-        if not self._make_rest_call(endpoint=url, params=params):
+        if not self._make_rest_call(endpoint=url, params=params, method="get"):
             return phantom.APP_ERROR
 
         [self.add_data(incident) for incident in self.r_json['value']]
@@ -471,7 +471,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
     def _handle_list_alerts(self) -> bool:
         url = f"{self.api_uri}{ALERT_LIST}".format(resource='securitycenter')
-        if not self._make_rest_call(url):
+        if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
         [self.add_data(alert) for alert in self.r_json['value']]
@@ -481,7 +481,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
     def _handle_get_alert(self) -> bool:
         url = f"{self.api_uri}{ALERT_SINGLE}".format(resource='securitycenter', alert_id=self.param['alert_id'])
-        if not self._make_rest_call(url):
+        if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
         self.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
@@ -524,18 +524,18 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_list_alert_files(self) -> bool:
-        url = f"{self.api_uri}{ALERT_FILES}".format(resource='securitycenter')
-        if not self._make_rest_call(url):
+        url = f"{self.api_uri}{ALERT_FILES}".format(resource='securitycenter', alert_id=self.param["alert_id"])
+        if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
         [self.add_data(file) for file in self.r_json['value']]
 
-        message = f"Returned {len(self.r_json['value'])} files"
+        message = f"Returned {len(self.r_json['value'])} files for alert {self.param['alert_id']}"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_list_library_scripts(self) -> bool:
         url = f"{self.api_uri}{LIVE_RESPONSE_LIST_LIBRARY}".format(resource='securitycenter')
-        if not self._make_rest_call(url):
+        if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
         [self.add_data(script) for script in self.r_json['value']]
@@ -543,9 +543,9 @@ class MDESecurityCenter_Connector(BaseConnector):
         message = f"Returned {len(self.r_json['value'])} scripts"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
-    def _handle_run_commands(self) -> bool:
-        url = f"{self.api_uri}{LIVE_RESPONSE_RUN_COMMAND}".format(resource='securitycenter',
-                                                                  machine_id=self.param['machine_id'])
+    def _handle_run_actions(self) -> bool:
+        url = f"{self.api_uri}{LIVE_RESPONSE_RUN_ACTION}".format(resource='securitycenter',
+                                                                 machine_id=self.param['machine_id'])
         commands = []
         for command in self.param.get("commands", "").split("\n"):
             command_type, command_content = command.strip().split(sep=" ", maxsplit=1)
@@ -586,17 +586,17 @@ class MDESecurityCenter_Connector(BaseConnector):
         message = f"Commands sent to '{self.param['machine_id']}':\n{json.dumps(self.r_json, indent=4)}"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
-    def _handle_run_command(self) -> bool:
-        url = f"{self.api_uri}{LIVE_RESPONSE_RUN_COMMAND}".format(resource='securitycenter',
-                                                                  machine_id=self.param['machine_id'])
+    def _handle_run_action(self) -> bool:
+        url = f"{self.api_uri}{LIVE_RESPONSE_RUN_ACTION}".format(resource='securitycenter',
+                                                                 machine_id=self.param['machine_id'])
 
         params = None
-        if "GetFile" == self.param.get("command_type", False):
+        if "PutFile" == self.param.get("command_type", False):
             params = [{"key": "FileName", "value": self.param.get("file_name", False)}]
         if "RunScript" == self.param.get("command_type", False):
             params = [
-                {"key": "ScriptName", "value": self.param.get("file_name", False)},
-                {"key": "Args", "value": self.param.get("arguments", False)}
+                {"key": "ScriptName", "value": self.param.get("file_name", "")},
+                {"key": "Args", "value": self.param.get("arguments", "")}
             ]
         if "GetFile" == self.param.get("command_type", False):
             params = [{"key": "Path", "value": self.param.get("file_name", False)}]
@@ -619,10 +619,32 @@ class MDESecurityCenter_Connector(BaseConnector):
         message = f"Command sent to '{self.param['machine_id']}':\n{json.dumps(self.r_json, indent=4)}"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
-    def _handle_get_library_script_result(self) -> object:
-        url = f"{self.api_uri}{LIVE_RESPONSE_GET_RESULT}".format(action_id=self.param['action_id'],
+    def _handle_list_actions(self) -> bool:
+        url = f"{self.api_uri}{LIVE_RESPONSE_ACTIONS}".format(resource="securitycenter")
+        if not self._make_rest_call(url, method="get"):
+            return phantom.APP_ERROR
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
+
+        message = f"{self.action_id} complete"
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+
+    def _handle_get_action(self) -> bool:
+        url = f"{self.api_uri}{LIVE_RESPONSE_ACTION}".format(resource="securitycenter",
+                                                             action_id=self.param['action_id'])
+        if not self._make_rest_call(url, method="get"):
+            return phantom.APP_ERROR
+
+        self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
+
+        message = f"{self.action_id} complete"
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+
+    def _handle_get_action_result(self) -> object:
+        url = f"{self.api_uri}{LIVE_RESPONSE_ACTION_RESULT}".format(resource="securitycenter",
+                                                                 action_id=self.param['action_id'],
                                                                  command_index=self.param['command_index'])
-        if not self._make_rest_call(url):
+        if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
         self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")

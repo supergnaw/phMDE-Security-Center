@@ -36,10 +36,14 @@ ALERT_FILES = "/api/alerts/{alert_id}/files"
 """
 # https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/list-library-files
 LIVE_RESPONSE_LIST_LIBRARY = "/api/libraryfiles"
+# https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/get-machineaction-object?view=o365-worldwide
+LIVE_RESPONSE_ACTIONS = "/api/machineactions"
+LIVE_RESPONSE_ACTION = "/api/machineactions/{action_id}"
 # https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/run-live-response
-LIVE_RESPONSE_RUN_COMMAND = "/api/machines/{machine_id}/runliveresponse"
+LIVE_RESPONSE_RUN_ACTION = "/api/machines/{machine_id}/runliveresponse"
 # https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/get-live-response-result
-LIVE_RESPONSE_GET_RESULT = "/api/machineactions/{action_id}/GetLiveResponseResultDownloadLink(index={command_index})"
+# https://github.com/MicrosoftDocs/microsoft-365-docs/blob/public/microsoft-365/security/defender-endpoint/get-live-response-result.md
+LIVE_RESPONSE_ACTION_RESULT = "/api/machineactions/{action_id}/GetLiveResponseResultDownloadLink(index={command_index})"
 
 """
     INVESTIGATIONS
