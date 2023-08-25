@@ -21,13 +21,13 @@
         padding: 6px calc(9px + 1.5em) 6px 9px;
         background-color: #3c444d;
         color: #ffffff !important;
-        background-color: hsl(198, 55%, 90%);
         background-color: hsl(198, 55%, 35%);
         color: white !important;
+        border-radius: 4px;
     }
     a[target="_blank"]:hover {
+        background-color: hsl(198, 55%, 90%);
         color: #338ab0 !important;
-        border-radius: 4px;
     }
     a[target="_blank"]:after {
         content: "";
@@ -42,7 +42,8 @@
     }
 </style>
 <h3>MDE Required Permissions</h3>
-<p>Each action requires the minimum permissions listed below to assigned in the app settings within Microsoft Azure</p>
+<p>This table lists minimum-level permissions required for the app configuration within Microsoft Azure</p>
+
 <table>
     <thead>
     <tr>
@@ -54,22 +55,16 @@
     </thead>
     <tbody>
     <tr>
-        <td>list incidents</td>
+        <td>get alert</td>
         <td>Application</td>
-        <td>Incident.Read.All</td>
-        <td>Read all incidents</td>
+        <td>Alert.Read.All</td>
+        <td>Read all alerts</td>
     </tr>
     <tr>
-        <td>get incident</td>
+        <td>get investigation</td>
         <td>Application</td>
-        <td>Incident.Read.All</td>
-        <td>Read all incidents</td>
-    </tr>
-    <tr>
-        <td>update incident</td>
-        <td>Application</td>
-        <td>Incident.ReadWrite.All</td>
-        <td>Read and write all incidents</td>
+        <td>Alert.Read.All</td>
+        <td>Read all alerts</td>
     </tr>
     <tr>
         <td>list alerts</td>
@@ -78,10 +73,16 @@
         <td>Read all alerts</td>
     </tr>
     <tr>
-        <td>get alert</td>
+        <td>list investigations</td>
         <td>Application</td>
         <td>Alert.Read.All</td>
         <td>Read all alerts</td>
+    </tr>
+    <tr>
+        <td>start investigation</td>
+        <td>Application</td>
+        <td>Alerts.ReadWrite.All</td>
+        <td>Read and write all alerts</td>
     </tr>
     <tr>
         <td>update alert</td>
@@ -96,10 +97,40 @@
         <td>Read and write all alerts</td>
     </tr>
     <tr>
+        <td>get file info</td>
+        <td>Application</td>
+        <td>File.Read.All</td>
+        <td>Read file profiles</td>
+    </tr>
+    <tr>
+        <td>get file stats</td>
+        <td>Application</td>
+        <td>File.Read.All</td>
+        <td>Read file profiles</td>
+    </tr>
+    <tr>
         <td>list alert files</td>
         <td>Application</td>
         <td>File.Read.All</td>
         <td>Read file profiles</td>
+    </tr>
+    <tr>
+        <td>get incident</td>
+        <td>Application</td>
+        <td>Incident.Read.All</td>
+        <td>Read all incidents</td>
+    </tr>
+    <tr>
+        <td>list incidents</td>
+        <td>Application</td>
+        <td>Incident.Read.All</td>
+        <td>Read all incidents</td>
+    </tr>
+    <tr>
+        <td>update incident</td>
+        <td>Application</td>
+        <td>Incident.ReadWrite.All</td>
+        <td>Read and write all incidents</td>
     </tr>
     <tr>
         <td>list library scripts</td>
@@ -108,10 +139,22 @@
         <td>Manage live response library</td>
     </tr>
     <tr>
-        <td>run actions</td>
+        <td>collect investigation package</td>
         <td>Application</td>
-        <td>Machine.LiveResponse</td>
-        <td>Run live response on a specific machine</td>
+        <td>Machine.CollectForensics</td>
+        <td>Collect forensics</td>
+    </tr>
+    <tr>
+        <td>isolate machine</td>
+        <td>Application</td>
+        <td>Machine.Isolate</td>
+        <td>Isolate machine</td>
+    </tr>
+    <tr>
+        <td>unisolate machine</td>
+        <td>Application</td>
+        <td>Machine.Isolate</td>
+        <td>Isolate machine</td>
     </tr>
     <tr>
         <td>run action</td>
@@ -120,10 +163,40 @@
         <td>Run live response on a specific machine</td>
     </tr>
     <tr>
+        <td>run actions</td>
+        <td>Application</td>
+        <td>Machine.LiveResponse</td>
+        <td>Run live response on a specific machine</td>
+    </tr>
+    <tr>
+        <td>get action</td>
+        <td>Application</td>
+        <td>Machine.Read.All</td>
+        <td>Read all machine profiles</td>
+    </tr>
+    <tr>
+        <td>get action result</td>
+        <td>Application</td>
+        <td>Machine.Read.All</td>
+        <td>Read all machine profiles</td>
+    </tr>
+    <tr>
         <td>list actions</td>
         <td>Application</td>
         <td>Machine.Read.All</td>
         <td>Read all machine profiles</td>
+    </tr>
+    <tr>
+        <td>list machine actions</td>
+        <td>Application</td>
+        <td>Machine.Read.All</td>
+        <td>Read all machine profiles</td>
+    </tr>
+    <tr>
+        <td>quarantine file</td>
+        <td>Application</td>
+        <td>Machine.StopAndQuarantine</td>
+        <td>Stop And Quarantine</td>
     </tr>
     </tbody>
 </table>

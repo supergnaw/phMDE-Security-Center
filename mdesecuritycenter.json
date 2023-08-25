@@ -436,7 +436,7 @@
       "parameters": {
         "alert_id": {
           "description": "Alert ID",
-          "data_type": "numeric",
+          "data_type": "string",
           "required": true,
           "primary": false
         }
@@ -455,7 +455,7 @@
       "parameters": {
         "alert_id": {
           "description": "Alert ID",
-          "data_type": "numeric",
+          "data_type": "string",
           "required": true,
           "primary": false
         },
@@ -592,7 +592,7 @@
       "parameters": {
         "alert_id": {
           "description": "Alert ID",
-          "data_type": "numeric",
+          "data_type": "string",
           "required": true,
           "primary": false
         }
@@ -684,7 +684,7 @@
       "identifier": "list_actions",
       "description": "Retrieves a collection of Machine Actions.",
       "verbose": "<a class='external' href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/get-machineactions-collection' target='_blank'>Microsoft Docs - List MachineActions API</a>",
-      "type": "type_goes_here",
+      "type": "information",
       "read_only": true,
       "versions": "EQ(*)",
       "parameters": {
@@ -693,11 +693,11 @@
           "data_type": "string",
           "required": false
         },
-        "stop": {
+        "top": {
           "description": "limit results to the first x results with max value of 10,000",
           "data_type": "numeric",
           "required": false,
-          "default": 50
+          "default": 10000
         },
         "skip": {
           "description": "skip the first x results",
@@ -710,134 +710,295 @@
       "output": []
     },
     {
-      "action": "get action result",
-      "identifier": "get_action_result",
-      "description": "description_goes_here",
-      "verbose": "<a href='url_goes_here' target='_blank'>Microsoft Docs - title_goes_here</a>",
-      "type": "type_goes_here",
+      "action": "get action",
+      "identifier": "get_action",
+      "description": "Retrieves specific Machine Action by its ID.",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/get-machineaction-object' target='_blank'>Microsoft Docs - Get machineAction API</a>",
+      "type": "forensic",
       "read_only": true,
       "versions": "EQ(*)",
-      "parameters": {},
+      "parameters": {
+        "action_id": {
+          "description": "Action ID",
+          "data_type": "string",
+          "required": true,
+          "primary": false
+        }
+      },
+      "render": {},
+      "output": []
+    },
+    {
+      "action": "get action result",
+      "identifier": "get_action_result",
+      "description": "Retrieves specific Machine Action by its ID.",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/get-live-response-result' target='_blank'>Microsoft Docs - Get live response results</a>",
+      "type": "forensic",
+      "read_only": true,
+      "versions": "EQ(*)",
+      "parameters": {
+        "action_id": {
+          "description": "Action ID",
+          "data_type": "string",
+          "required": true,
+          "primary": false
+        },
+        "command_index": {
+          "description": "Command Index",
+          "data_type": "numeric",
+          "required": true,
+          "primary": false
+        }
+      },
       "render": {},
       "output": []
     },
     {
       "action": "list investigations",
       "identifier": "list_investigations",
-      "description": "description_goes_here",
-      "verbose": "<a href='url_goes_here' target='_blank'>Microsoft Docs - title_goes_here</a>",
-      "type": "type_goes_here",
+      "description": "Retrieves a collection of Investigations.",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/get-investigation-collection' target='_blank'>Microsoft Docs - List Investigations API</a>",
+      "type": "investigative",
       "read_only": true,
       "versions": "EQ(*)",
-      "parameters": {},
+      "parameters": {
+        "filter": {
+          "description": "filters to apply: (startTime ge 2023-08-21T12:00:00Z and state eq 'Succeeded')",
+          "data_type": "string",
+          "required": false
+        },
+        "top": {
+          "description": "limit results to the first x results with max value of 10,000",
+          "data_type": "numeric",
+          "required": false,
+          "default": 10000
+        },
+        "skip": {
+          "description": "skip the first x results",
+          "data_type": "numeric",
+          "required": false,
+          "default": 0
+        }
+      },
       "render": {},
       "output": []
     },
     {
       "action": "get investigation",
       "identifier": "get_investigation",
-      "description": "description_goes_here",
-      "verbose": "<a href='url_goes_here' target='_blank'>Microsoft Docs - title_goes_here</a>",
-      "type": "type_goes_here",
+      "description": "Retrieves specific Investigation by its ID.",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/get-investigation-object' target='_blank'>Microsoft Docs - Get Investigation API</a>",
+      "type": "investigative",
       "read_only": true,
       "versions": "EQ(*)",
-      "parameters": {},
+      "parameters": {
+        "investigation_id": {
+          "description": "Investigation ID",
+          "data_type": "string",
+          "required": true,
+          "primary": false
+        }
+      },
       "render": {},
       "output": []
     },
     {
       "action": "start investigation",
       "identifier": "start_investigation",
-      "description": "description_goes_here",
-      "verbose": "<a href='url_goes_here' target='_blank'>Microsoft Docs - title_goes_here</a>",
-      "type": "type_goes_here",
+      "description": "Start automated investigation on a device.",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/initiate-autoir-investigation' target='_blank'>Microsoft Docs - Start Investigation API</a>",
+      "type": "investigative",
       "read_only": false,
       "versions": "EQ(*)",
-      "parameters": {},
+      "parameters": {
+        "machine_id": {
+          "description": "Machine ID",
+          "data_type": "string",
+          "required": true,
+          "primary": false
+        },
+        "comment": {
+          "description": "comment",
+          "data_type": "string",
+          "required": true,
+          "primary": false
+        }
+      },
       "render": {},
       "output": []
     },
     {
       "action": "collect investigation package",
       "identifier": "collect_investigation_package",
-      "description": "description_goes_here",
-      "verbose": "<a href='url_goes_here' target='_blank'>Microsoft Docs - title_goes_here</a>",
-      "type": "type_goes_here",
+      "description": "Collect investigation package from a device.",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/collect-investigation-package' target='_blank'>Microsoft Docs - Collect investigation package API</a>",
+      "type": "forensic",
       "read_only": false,
       "versions": "EQ(*)",
-      "parameters": {},
+      "parameters": {
+        "machine_id": {
+          "description": "Machine ID",
+          "data_type": "string",
+          "required": true,
+          "primary": false
+        },
+        "comment": {
+          "description": "comment",
+          "data_type": "string",
+          "required": true,
+          "primary": false
+        }
+      },
       "render": {},
       "output": []
     },
     {
       "action": "list machine actions",
       "identifier": "list_machine_actions",
-      "description": "description_goes_here",
-      "verbose": "<a href='url_goes_here' target='_blank'>Microsoft Docs - title_goes_here</a>",
-      "type": "type_goes_here",
+      "description": "Retrieves a collection of Machine Actions.",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/get-machineactions-collection' target='_blank'>Microsoft Docs - List MachineActions API</a>",
+      "type": "information",
       "read_only": true,
       "versions": "EQ(*)",
-      "parameters": {},
+      "parameters": {
+        "machine_id": {
+          "description": "Machine ID",
+          "data_type": "string",
+          "required": true,
+          "primary": false
+        },
+        "filter": {
+          "description": "filters to apply: (creationDateTimeUtc ge 2023-08-21T12:00:00Z and status eq 'Succeeded')",
+          "data_type": "string",
+          "required": false
+        },
+        "top": {
+          "description": "limit results to the first x results with max value of 10,000",
+          "data_type": "numeric",
+          "required": false,
+          "default": 10000
+        },
+        "skip": {
+          "description": "skip the first x results",
+          "data_type": "numeric",
+          "required": false,
+          "default": 0
+        }
+      },
       "render": {},
       "output": []
     },
     {
       "action": "isolate machine",
       "identifier": "isolate_machine",
-      "description": "description_goes_here",
-      "verbose": "<a href='url_goes_here' target='_blank'>Microsoft Docs - title_goes_here</a>",
-      "type": "type_goes_here",
+      "description": "Isolates a device from accessing external network.",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/isolate-machine' target='_blank'>Microsoft Docs - Isolate machine API\n</a>",
+      "type": "endpoint",
       "read_only": false,
       "versions": "EQ(*)",
-      "parameters": {},
+      "parameters": {
+        "machine_id": {
+          "description": "Machine ID",
+          "data_type": "string",
+          "required": true,
+          "primary": false
+        }
+      },
       "render": {},
       "output": []
     },
     {
       "action": "unisolate machine",
       "identifier": "unisolate_machine",
-      "description": "description_goes_here",
-      "verbose": "<a href='url_goes_here' target='_blank'>Microsoft Docs - title_goes_here</a>",
-      "type": "type_goes_here",
+      "description": "Undo isolation of a device.",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/unisolate-machine' target='_blank'>Microsoft Docs - Release device from isolation API\n</a>",
+      "type": "endpoint",
       "read_only": false,
       "versions": "EQ(*)",
-      "parameters": {},
+      "parameters": {
+        "machine_id": {
+          "description": "Machine ID",
+          "data_type": "string",
+          "required": true,
+          "primary": false
+        }
+      },
       "render": {},
       "output": []
     },
     {
       "action": "get file info",
       "identifier": "get_file_info",
-      "description": "description_goes_here",
-      "verbose": "<a href='url_goes_here' target='_blank'>Microsoft Docs - title_goes_here</a>",
-      "type": "type_goes_here",
+      "description": "Retrieves a File by identifier Sha1, or Sha256.",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/get-file-information' target='_blank'>Microsoft Docs - Get file information API</a>",
+      "type": "reputation",
       "read_only": true,
       "versions": "EQ(*)",
-      "parameters": {},
+      "parameters": {
+        "file_hash": {
+          "description": "file SHA1 or SHA256 hash",
+          "data_type": "string",
+          "required": true,
+          "primary": false
+        }
+      },
       "render": {},
       "output": []
     },
     {
       "action": "get file stats",
       "identifier": "get_file_stats",
-      "description": "description_goes_here",
-      "verbose": "<a href='url_goes_here' target='_blank'>Microsoft Docs - title_goes_here</a>",
-      "type": "type_goes_here",
+      "description": "Retrieves the statistics for the given file.",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/get-file-statistics' target='_blank'>Microsoft Docs - Get file statistics API</a>",
+      "type": "information",
       "read_only": true,
       "versions": "EQ(*)",
-      "parameters": {},
+      "parameters": {
+        "file_hash": {
+          "description": "file SHA1 or SHA256 hash",
+          "data_type": "string",
+          "required": true,
+          "primary": false
+        },
+        "look_back_hours": {
+          "description": "Defines the hours we search back to get the statistics.",
+          "data_type": "numeric",
+          "required": false,
+          "primary": false,
+          "default": 720
+        }
+      },
       "render": {},
       "output": []
     },
     {
       "action": "quarantine file",
       "identifier": "quarantine_file",
-      "description": "description_goes_here",
-      "verbose": "<a href='url_goes_here' target='_blank'>Microsoft Docs - title_goes_here</a>",
-      "type": "type_goes_here",
+      "description": "Stop execution of a file on a device and delete it.",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/stop-and-quarantine-file' target='_blank'>Microsoft Docs - Stop and quarantine file API</a>",
+      "type": "endpoint",
       "read_only": false,
       "versions": "EQ(*)",
-      "parameters": {},
+      "parameters": {
+        "machine_id": {
+          "description": "Machine ID",
+          "data_type": "string",
+          "required": true,
+          "primary": false
+        },
+        "sha1_hash": {
+          "description": "file SHA1 hash",
+          "data_type": "string",
+          "required": true,
+          "primary": false
+        },
+        "comment": {
+          "description": "comment",
+          "data_type": "string",
+          "required": true,
+          "primary": false
+        }
+      },
       "render": {},
       "output": []
     }

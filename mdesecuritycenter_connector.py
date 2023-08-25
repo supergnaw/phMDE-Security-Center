@@ -160,6 +160,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.response = None
         self.r_json = None
         self.live_response = {}
+        self._action_start_time = datetime.datetime.now()
 
         # Input validation helper variables
         self.statuses = {
@@ -208,7 +209,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             return self._process_empty_response()
 
         message = f"Can't process response from server [{self.response.status_code}]: {self.response}"
-        return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
+        return self.save_progstat(phantom.APP_ERROR, status_message=message)
 
     def _process_json_response(self) -> bool:
         """
@@ -220,20 +221,19 @@ class MDESecurityCenter_Connector(BaseConnector):
             self.r_json = self.response.json()
         except Exception as e:
             message = f"Unable to parse JSON response: {self._get_exception_message(e, self.line_no)}"
-            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
+            return self.save_progstat(phantom.APP_ERROR, status_message=message)
 
         # We have a successful response, albeit a redirect is possible...
         if 200 <= self.response.status_code < 400:
             message = f"Status code {self.response.status_code} received and JSON response parsed"
-            self.save_progress(message)
-            return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+            return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
         # There's a generic error in our midst
         message = (
             f"!!! {str(self.r_json.get('error', {}).get('code', 'Unknown'))} error occurred [{self.response.status_code}]:"
             f"{str(self.r_json.get('error', {}).get('message', 'No message available'))}"
         )
-        return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
+        return self.save_progstat(phantom.APP_ERROR, status_message=message)
 
     def _process_html_response(self) -> bool:
         """
@@ -260,8 +260,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         # Use f-strings, we are not uncivilized heathens.
         message = f"Status Code: {self.response.status_code}. Raw data from server:\n{error_text}\n"
-
-        return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
+        return self.save_progstat(phantom.APP_ERROR, status_message=message)
 
     def _process_empty_response(self) -> bool:
         """
@@ -271,10 +270,10 @@ class MDESecurityCenter_Connector(BaseConnector):
         """
 
         if self.response.status_code in [200, 204]:
-            return self.set_status_save_progress(phantom.APP_SUCCESS)
+            return self.save_progstat(phantom.APP_SUCCESS)
 
         message = f"Status Code: {self.response.status_code}. Error: Empty response and no information in the header"
-        return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
+        return self.save_progstat(phantom.APP_ERROR, status_message=message)
 
     def _get_exception_message(self, e: Exception, line_no: int = 0) -> str:
         """
@@ -319,7 +318,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         # Hey now, you can't do that type of REST call
         if not hasattr(phantom.requests, method):
             message = f"Invalid method sent to '_make_rest_call': {method}"
-            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
+            return self.save_progstat(phantom.APP_ERROR, status_message=message)
 
         resource = rp.search(pattern="/\.([^\.]+)\.microsoft/i", string=endpoint).group(1)
         if not self._authenticate(resource=resource):
@@ -350,17 +349,17 @@ class MDESecurityCenter_Connector(BaseConnector):
                                                               params=params, timeout=timeout)
         except Exception as e:
             message = f"Exception occurred while connecting to server: {self._get_exception_message(e, self.line_no)}"
-            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message, exception=e)
+            return self.save_progstat(phantom.APP_ERROR, status_message=message, exception=e)
 
         if 429 == self.response.status_code and 300 < int(self.response.headers.get('Retry-After', 301)):
             message = f"Error occurred [{self.response.status_code}]: {str(self.response.text)}"
-            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
+            return self.save_progstat(phantom.APP_ERROR, status_message=message)
 
         if 429 == self.response.status_code and 300 >= int(self.response.headers.get('Retry-After', 301)):
             self.save_progress(f"Retrying after {self.response.headers.get('Retry-After', 301)} seconds")
             time.sleep(int(self.response.headers['Retry-After']) + 1)
             return self._make_rest_call(endpoint, headers=headers, params=params, data=data, method=method,
-                                        verify=verify)
+                                        verify=verify, timeout=timeout)
 
         return self._process_response()
 
@@ -373,7 +372,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         if self.tokens[resource].token:
             summary = self.tokens[resource].summary()
             message = f"Authentication for {resource} valid until {summary['expires_on']} ({summary['expires_in']})"
-            return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+            return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
         # Prepare to request a new token
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
@@ -392,23 +391,20 @@ class MDESecurityCenter_Connector(BaseConnector):
             self.r_json = self.response.json()
         except Exception as e:
             message = self._get_exception_message(e, (self.line_no - 3))
-            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
+            return self.save_progstat(phantom.APP_ERROR, status_message=message)
 
         if 200 != self.response.status_code:
             message = f"Failed to authenticate [{self.r_json['error']}]: {self.r_json['error_description']}"
-            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
+            return self.save_progstat(phantom.APP_ERROR, status_message=message)
 
         token = str(self.r_json.get('access_token', ''))
         expires_on = int(self.r_json.get('expires_on', 0))
         self.tokens[resource].update(token=token, expires_on=expires_on)
 
         summary = self.tokens[resource].summary()
-        message = f"Authentication successful for {resource}: expires {summary['expires_on']} ({summary['expires_in']})"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
-
-    def _parse_tokens(self) -> dict:
-        # Return a dictionary of "active" authentication tokens and a summary of their details
-        return {resource: token.summary() for resource, token in self.tokens.items() if 0 < token.expires_on}
+        message = f"Authentication successful for {resource}: expires on {summary['expires_on']} ({summary['expires_in']})"
+        self.save_progress(message)
+        return self.action_result.set_status(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_test_connectivity(self) -> bool:
         """
@@ -420,8 +416,9 @@ class MDESecurityCenter_Connector(BaseConnector):
         for resource in self.resources:
             self._authenticate(resource=resource)
 
-        message = f"Active access tokens:\n{json.dumps(self._parse_tokens(), indent=4)}"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        tokens = {resource: token.summary() for resource, token in self.tokens.items() if 0 < token.expires_on}
+        message = f"Active access tokens:\n{json.dumps(tokens, indent=4)}"
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_list_incidents(self) -> bool:
         params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
@@ -432,7 +429,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         [self.action_result.add_data(incident) for incident in self.r_json['value']]
 
         message = f"Returned {len(self.r_json['value'])} incidents"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_get_incident(self) -> bool:
         url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security', incident_id=self.param['incident_id'])
@@ -442,7 +439,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
         message = f"Retrieved incident {self.param['incident_id']}"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_update_incident(self) -> bool:
         if self.param.get("remove_tags", False):
@@ -468,7 +465,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             return phantom.APP_ERROR
 
         message = f"Updated incident {self.param['incident_id']}:\n{json.dumps(self.r_json, indent=4)}"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_list_alerts(self) -> bool:
         url = f"{self.api_uri}{ALERT_LIST}".format(resource='securitycenter')
@@ -478,7 +475,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         [self.action_result.add_data(alert) for alert in self.r_json['value']]
 
         message = f"Returned {len(self.r_json['value'])} alerts"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_get_alert(self) -> bool:
         url = f"{self.api_uri}{ALERT_SINGLE}".format(resource='securitycenter', alert_id=self.param['alert_id'])
@@ -488,7 +485,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
         message = f"Retrieved alert {self.param['alert_id']}"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_update_alert(self) -> bool:
         body = {
@@ -505,7 +502,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             return phantom.APP_ERROR
 
         message = f"Updated alert {self.param['alert_id']}:\n{json.dumps(self.r_json, indent=4)}"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_update_alert_batch(self) -> bool:
         body = {
@@ -522,7 +519,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             return phantom.APP_ERROR
 
         message = f"Updated {len(self.param['alert_list'])} alerts:\n{json.dumps(self.r_json, indent=4)}"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_list_alert_files(self) -> bool:
         url = f"{self.api_uri}{ALERT_FILES}".format(resource='securitycenter', alert_id=self.param["alert_id"])
@@ -532,7 +529,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         [self.action_result.add_data(file) for file in self.r_json['value']]
 
         message = f"Returned {len(self.r_json['value'])} files for alert {self.param['alert_id']}"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_list_library_scripts(self) -> bool:
         url = f"{self.api_uri}{LIVE_RESPONSE_LIST_LIBRARY}".format(resource='securitycenter')
@@ -542,7 +539,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         [self.action_result.add_data(script) for script in self.r_json['value']]
 
         message = f"Returned {len(self.r_json['value'])} scripts"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_run_actions(self) -> bool:
         url = f"{self.api_uri}{LIVE_RESPONSE_RUN_ACTION}".format(resource='securitycenter',
@@ -571,7 +568,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         if not commands:
             message = f"No valid commands found in {self.param.get('commands', '')}"
-            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
+            return self.save_progstat(phantom.APP_ERROR, status_message=message)
 
         body = {
             'comment': self.param.get("comment", False),
@@ -585,7 +582,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
 
         message = f"Commands sent to '{self.param['machine_id']}':\n{json.dumps(self.r_json, indent=4)}"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_run_action(self) -> bool:
         url = f"{self.api_uri}{LIVE_RESPONSE_RUN_ACTION}".format(resource='securitycenter',
@@ -604,7 +601,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         if not params:
             message = f"You somehow managed to input an invalid command:\n{json.dumps(self.param, indent=4)}"
-            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
+            return self.save_progstat(phantom.APP_ERROR, status_message=message)
 
         body = {
             'Commands': [{"type": self.param["command_type"], "params": params}],
@@ -619,7 +616,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
 
         message = f"Command sent to '{self.param['machine_id']}':\n{json.dumps(self.r_json, indent=4)}"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_list_actions(self) -> bool:
         params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
@@ -627,10 +624,11 @@ class MDESecurityCenter_Connector(BaseConnector):
         if not self._make_rest_call(url, params=params, method="get", timeout=120):
             return phantom.APP_ERROR
 
-        self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
+        [self.action_result.add_data(action) for action in self.r_json['value']]
 
-        message = f"{self.action_id} complete"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        message = f"Returned {len(self.r_json['value'])} actions"
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.action_result.set_status(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_get_action(self) -> bool:
         url = f"{self.api_uri}{LIVE_RESPONSE_ACTION}".format(resource="securitycenter",
@@ -641,119 +639,120 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
 
         message = f"{self.action_id} complete"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_get_action_result(self) -> object:
         url = f"{self.api_uri}{LIVE_RESPONSE_ACTION_RESULT}".format(resource="securitycenter",
-                                                                 action_id=self.param['action_id'],
-                                                                 command_index=self.param['command_index'])
+                                                                    action_id=self.param['action_id'],
+                                                                    command_index=self.param['command_index'])
         if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
         self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
 
         message = f"{self.action_id} complete"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_list_investigations(self) -> object:
         url = f"{self.api_uri}{INVESTIGATION_LIST}"
-        if not self._make_rest_call(url):
+        if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
         self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
 
         message = f"{self.action_id} complete"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_get_investigation(self) -> object:
         url = f"{self.api_uri}{INVESTIGATION_SINGLE}".format(investigation_id=self.param['investigation_id'])
-        if not self._make_rest_call(url):
+        if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
         self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
 
         message = f"{self.action_id} complete"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_start_investigation(self) -> object:
         url = f"{self.api_uri}{INVESTIGATION_START}".format(machine_id=self.param['machine_id'])
-        if not self._make_rest_call(url):
+        if not self._make_rest_call(url, method="post"):
             return phantom.APP_ERROR
 
         self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
 
         message = f"{self.action_id} complete"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_collect_investigation_package(self) -> object:
         url = f"{self.api_uri}{INVESTIGATION_COLLECT_PACKAGE}".format(machine_id=self.param['machine_id'])
-        if not self._make_rest_call(url):
+        if not self._make_rest_call(url, method="post"):
             return phantom.APP_ERROR
 
         self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
 
         message = f"{self.action_id} complete"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_list_machine_actions(self) -> object:
+        params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
         url = f"{self.api_uri}{MACHINE_LIST_ACTIONS}".format(machine_id=self.param['machine_id'])
-        if not self._make_rest_call(url):
+        if not self._make_rest_call(url, params=params, method="post"):
             return phantom.APP_ERROR
 
         self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
 
         message = f"{self.action_id} complete"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_isolate_machine(self) -> object:
         url = f"{self.api_uri}{MACHINE_ISOLATE}".format(machine_id=self.param['machine_id'])
-        if not self._make_rest_call(url):
+        if not self._make_rest_call(url, method="post"):
             return phantom.APP_ERROR
 
         self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
 
         message = f"{self.action_id} complete"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_unisolate_machine(self) -> object:
         url = f"{self.api_uri}{MACHINE_UNISOLATE}".format(machine_id=self.param['machine_id'])
-        if not self._make_rest_call(url):
+        if not self._make_rest_call(url, method="post"):
             return phantom.APP_ERROR
 
         self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
 
         message = f"{self.action_id} complete"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_get_file_info(self) -> object:
-        url = f"{self.api_uri}{FILE_INFO}".format(file_id=self.param['file_id'])
-        if not self._make_rest_call(url):
+        url = f"{self.api_uri}{FILE_INFO}".format(file_id=self.param['file_hash'])
+        if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
         self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
 
         message = f"{self.action_id} complete"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_get_file_stats(self) -> object:
         url = f"{self.api_uri}{FILE_STATS}".format(file_id=self.param['file_id'])
-        if not self._make_rest_call(url):
+        if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
         self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
 
         message = f"{self.action_id} complete"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_quarantine_file(self) -> object:
         url = f"{self.api_uri}{FILE_QUARANTINE}".format(machine_id=self.param['machine_id'])
-        if not self._make_rest_call(url):
+        if not self._make_rest_call(url, method="post"):
             return phantom.APP_ERROR
 
         self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
 
         message = f"{self.action_id} complete"
-        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def handle_action(self, param) -> bool:
         self.param = param
@@ -762,6 +761,10 @@ class MDESecurityCenter_Connector(BaseConnector):
         getattr(self, f"_handle_{self.action_id}")()
 
         return self.get_status()
+
+    def save_progstat(self, status_code: bool, status_message: str = None) -> bool:
+        self.save_progress(progress_str_const=status_message)
+        return self.action_result.set_status(status_code=status_code, status_message=status_message)
 
     def initialize(self):
         # Load the state in initialize, use it to store data that needs to be accessed across actions
@@ -773,6 +776,9 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         if not self._state.get('live_response', False):
             self._state['live_response'] = {}
+
+        if not self._state.get('isolated_devices', False):
+            self._state['isolated_devices'] = []
 
         for resource, token in self._state['tokens'].items():
             if resource not in self.resources:
@@ -794,6 +800,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         # Save the state, this data is saved across actions and app upgrades
         self.save_state(self._state)
+        self.save_progress(f"Action execution time: {datetime.datetime.now() - self._action_start_time} seconds")
         return phantom.APP_SUCCESS
 
 
