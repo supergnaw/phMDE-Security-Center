@@ -159,6 +159,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.tokens = {}
         self.response = None
         self.r_json = None
+        self.live_response = {}
 
         # Input validation helper variables
         self.statuses = {
@@ -301,7 +302,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         return debug_message
 
     def _make_rest_call(self, endpoint: str, headers: dict = {}, params: dict = {}, data: dict or str = None,
-                        method: str = "get", verify: bool = True) -> bool:
+                        method: str = "get", verify: bool = True, timeout: int = 30) -> bool:
         """
         This function makes the REST call to the Microsoft API
 
@@ -346,7 +347,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         try:
             self.response = getattr(phantom.requests, method)(endpoint, data=data, headers=headers, verify=verify,
-                                                              params=params, timeout=30)
+                                                              params=params, timeout=timeout)
         except Exception as e:
             message = f"Exception occurred while connecting to server: {self._get_exception_message(e, self.line_no)}"
             return self.set_status_save_progress(phantom.APP_ERROR, status_message=message, exception=e)
@@ -364,17 +365,17 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self._process_response()
 
     def _authenticate(self, resource: str) -> bool:
-        # Instantiate new AuthenticationToken object if not exists
+        # Instantiate new AuthenticationToken object as needed
         if not self.tokens.get(resource, False):
             self.tokens[resource] = AuthenticationToken(token="", expires_on=0)
 
-        # Resource already has a token allocated which has not yet expired
+        # AuthenticationToken allocated has not yet expired
         if self.tokens[resource].token:
             summary = self.tokens[resource].summary()
             message = f"Authentication for {resource} valid until {summary['expires_on']} ({summary['expires_in']})"
             return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
-        # Request properties
+        # Prepare to request a new token
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
         body = {
             'client_id': self.client_id,
@@ -428,7 +429,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         if not self._make_rest_call(endpoint=url, params=params, method="get"):
             return phantom.APP_ERROR
 
-        [self.add_data(incident) for incident in self.r_json['value']]
+        [self.action_result.add_data(incident) for incident in self.r_json['value']]
 
         message = f"Returned {len(self.r_json['value'])} incidents"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
@@ -438,7 +439,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
-        self.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
+        self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
         message = f"Retrieved incident {self.param['incident_id']}"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
@@ -474,7 +475,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
-        [self.add_data(alert) for alert in self.r_json['value']]
+        [self.action_result.add_data(alert) for alert in self.r_json['value']]
 
         message = f"Returned {len(self.r_json['value'])} alerts"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
@@ -484,7 +485,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
-        self.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
+        self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
         message = f"Retrieved alert {self.param['alert_id']}"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
@@ -528,7 +529,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
-        [self.add_data(file) for file in self.r_json['value']]
+        [self.action_result.add_data(file) for file in self.r_json['value']]
 
         message = f"Returned {len(self.r_json['value'])} files for alert {self.param['alert_id']}"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
@@ -538,7 +539,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
-        [self.add_data(script) for script in self.r_json['value']]
+        [self.action_result.add_data(script) for script in self.r_json['value']]
 
         message = f"Returned {len(self.r_json['value'])} scripts"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
@@ -606,11 +607,12 @@ class MDESecurityCenter_Connector(BaseConnector):
             return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
 
         body = {
-            'comment': self.param.get("comment", False),
-            'commands': [{"type": self.param["command_type"], "params": params}]
+            'Commands': [{"type": self.param["command_type"], "params": params}],
+            'Comment': self.param.get("comment", False)
         }
         data = json.dumps({key: val for key, val in body.items() if val})
 
+        self.save_progress(f"starting action:\n{json.dumps(body, indent=4)}")
         if not self._make_rest_call(url, data=data, method="post"):
             return phantom.APP_ERROR
 
@@ -620,8 +622,9 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_list_actions(self) -> bool:
+        params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
         url = f"{self.api_uri}{LIVE_RESPONSE_ACTIONS}".format(resource="securitycenter")
-        if not self._make_rest_call(url, method="get"):
+        if not self._make_rest_call(url, params=params, method="get", timeout=120):
             return phantom.APP_ERROR
 
         self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
@@ -763,10 +766,13 @@ class MDESecurityCenter_Connector(BaseConnector):
     def initialize(self):
         # Load the state in initialize, use it to store data that needs to be accessed across actions
         self.load_state()
-        self._state = {key: val for key, val in self.get_state().items() if key in ['app_version', 'tokens']}
+        self._state = {key: val for key, val in self.get_state().items()}
 
         if not self._state.get('tokens', False):
             self._state['tokens'] = {}
+
+        if not self._state.get('live_response', False):
+            self._state['live_response'] = {}
 
         for resource, token in self._state['tokens'].items():
             if resource not in self.resources:
@@ -782,6 +788,9 @@ class MDESecurityCenter_Connector(BaseConnector):
             r: {'token': encryption_helper.encrypt(str(t.token), self.asset_id), 'expires_on': t.expires_on}
             for r, t in self.tokens.items() if r in self.resources
         }
+
+        # Save any active live response actions
+        self._state['live_response'] = {k: v for k, v in self.live_response.items()}
 
         # Save the state, this data is saved across actions and app upgrades
         self.save_state(self._state)
