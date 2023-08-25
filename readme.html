@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<!--
+    File: readme.html
+
+    Licensed under the Apache License, Version 3.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    https://www.gnu.org/licenses/gpl-3.0.en.html
+
+    Unless required by applicable law or agreed to in writing, software distributed under
+    the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+    either expressed or implied. See the License for the specific language governing permissions
+    and limitations under the License.
+
+    If you find errors or would like to help contribute, please see:
+    https://github.com/supergnaw/phMDE-Security-Center
+-->
+<style>
+    a[target="_blank"] {
+        padding: 6px calc(9px + 1.5em) 6px 9px;
+        background-color: #3c444d;
+        color: #ffffff !important;
+        border-radius: 4px;
+    }
+    a[target="_blank"]:hover {
+        background-color: hsl(198, 55%, 90%);
+        color: #338ab0 !important;
+        background-color: hsl(198, 55%, 35%);
+        color: white !important;
+    }
+    a[target="_blank"]:after {
+        content: "";
+        display: inline-block;
+        height: 1.5em;
+        width: 1.5em;
+        position: absolute;
+        margin-left: 0.5em;
+        background-color: currentColor;
+        -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 2048 2048' %3E%3Cpath d='M1792 256v640h-128V475l-851 850-90-90 850-851h-421V256h640zm-512 1007h128v529H256V640h529v128H384v896h896v-401z' /%3E%3C/svg%3E");
+        mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 2048 2048' %3E%3Cpath d='M1792 256v640h-128V475l-851 850-90-90 850-851h-421V256h640zm-512 1007h128v529H256V640h529v128H384v896h896v-401z' /%3E%3C/svg%3E");
+    }
+</style>
+<h3>MDE Required Permissions</h3>
+<p>Each action requires the minimum permissions listed below to assigned in the app settings within Microsoft Azure</p>
+<table>
+    <thead>
+    <tr>
+        <th>Action</th>
+        <th>Permission type</th>
+        <th>Permission</th>
+        <th>Permission display name</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>list incidents</td>
+        <td>Application</td>
+        <td>Incident.Read.All</td>
+        <td>Read all incidents</td>
+    </tr>
+    <tr>
+        <td>get incident</td>
+        <td>Application</td>
+        <td>Incident.Read.All</td>
+        <td>Read all incidents</td>
+    </tr>
+    <tr>
+        <td>update incident</td>
+        <td>Application</td>
+        <td>Incident.ReadWrite.All</td>
+        <td>Read and write all incidents</td>
+    </tr>
+    <tr>
+        <td>list alerts</td>
+        <td>Application</td>
+        <td>Alert.Read.All</td>
+        <td>Read all alerts</td>
+    </tr>
+    <tr>
+        <td>get alert</td>
+        <td>Application</td>
+        <td>Alert.Read.All</td>
+        <td>Read all alerts</td>
+    </tr>
+    <tr>
+        <td>update alert</td>
+        <td>Application</td>
+        <td>Alerts.ReadWrite.All</td>
+        <td>Read and write all alerts</td>
+    </tr>
+    <tr>
+        <td>update alert batch</td>
+        <td>Application</td>
+        <td>Alerts.ReadWrite.All</td>
+        <td>Read and write all alerts</td>
+    </tr>
+    <tr>
+        <td>list alert files</td>
+        <td>Application</td>
+        <td>File.Read.All</td>
+        <td>Read file profiles</td>
+    </tr>
+    <tr>
+        <td>list library scripts</td>
+        <td>Application</td>
+        <td>Library.Manage</td>
+        <td>Manage live response library</td>
+    </tr>
+    <tr>
+        <td>run actions</td>
+        <td>Application</td>
+        <td>Machine.LiveResponse</td>
+        <td>Run live response on a specific machine</td>
+    </tr>
+    <tr>
+        <td>run action</td>
+        <td>Application</td>
+        <td>Machine.LiveResponse</td>
+        <td>Run live response on a specific machine</td>
+    </tr>
+    <tr>
+        <td>list actions</td>
+        <td>Application</td>
+        <td>Machine.Read.All</td>
+        <td>Read all machine profiles</td>
+    </tr>
+    </tbody>
+</table>
+
+<h3>State File Details</h3>
+
+<h3>Explanation of Authentication During REST Calls</h3>
+
+<h3>Port Information</h3>
+<p>The app uses HTTP/S to make REST calls to MDE. Below are the default ports used by Splunk SOAR.</p>
+<table>
+    <thead>
+    <tr>
+        <th>Service</th>
+        <th>Protocol</th>
+        <th>Port</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>HTTP</td>
+        <td>TCP</td>
+        <td>80</td>
+    </tr>
+    <tr>
+        <td>HTTPS</td>
+        <td>TCP</td>
+        <td>443</td>
+    </tr>
+    </tbody>
+</table>
