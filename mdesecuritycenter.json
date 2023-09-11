@@ -72,7 +72,13 @@
       "verbose": "Validates the asset configuration for connectivity using the supplied configuration and displays summaries of all authentication tokens",
       "type": "test",
       "read_only": true,
-      "parameters": {},
+      "parameters": {
+        "force_refresh": {
+          "description": "Remove cached tokens and revalidate credentials.",
+          "data_type": "boolean",
+          "required": false
+        }
+      },
       "output": [],
       "versions": "EQ(*)"
     },
@@ -80,7 +86,7 @@
       "action": "list incidents",
       "identifier": "list_incidents",
       "description": "Retrieves a collection of Incidents.",
-      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender/api-list-incidents?view=o365-worldwide' target='_blank'>Microsoft Docs - List incidents API in Microsoft 365 Defender</a>",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender/api-list-incidents' target='_blank'>Microsoft Docs - List incidents API in Microsoft 365 Defender</a>",
       "type": "information",
       "read_only": true,
       "versions": "EQ(*)",
@@ -106,22 +112,64 @@
       "render": {},
       "output": [
         {
-          "data_path": "action_result.data.*.status",
+          "data_path": "action_result.data.*.source_data_identifier",
           "data_type": "string",
           "example_values": [
-            "Active"
+            "c55942da-f4c0-49ca-8fe9-1aeda73df676"
           ],
           "contains": [
+            "uuid"
           ]
         },
         {
-          "data_path": "action_result.data.*.severity",
+          "data_path": "action_result.data.*.incidentId",
+          "data_type": "numeric",
+          "example_values": [
+            68594,
+            12345,
+            54321
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.incidentUri",
+          "data_type": "string",
+          "example_values": [],
+          "contains": [
+            "url"
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.redirectIncidentId",
           "data_type": "string",
           "example_values": [
-            "Low"
+            "None"
           ],
-          "contains": [
-          ]
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.incidentName",
+          "data_type": "string",
+          "example_values": [
+            "Suspicious activity"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.createdTime",
+          "data_type": "string",
+          "example_values": [
+            "2023-08-21T18:02:40.84Z"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.lastUpdateTime",
+          "data_type": "string",
+          "example_values": [
+            "2023-08-21T18:02:46.3Z"
+          ],
+          "contains": []
         },
         {
           "data_path": "action_result.data.*.assignedTo",
@@ -135,42 +183,12 @@
           ]
         },
         {
-          "data_path": "action_result.data.*.incidentId",
-          "data_type": "numeric",
-          "example_values": [
-            68594,
-            12345,
-            54321
-          ],
-          "contains": [
-          ]
-        },
-        {
-          "data_path": "action_result.data.*.createdTime",
+          "data_path": "action_result.data.*.classification",
           "data_type": "string",
           "example_values": [
-            "2023-08-21T18:02:40.84Z"
+            "Unknown"
           ],
-          "contains": [
-          ]
-        },
-        {
-          "data_path": "action_result.data.*.incidentUri",
-          "data_type": "string",
-          "example_values": [
-          ],
-          "contains": [
-            "url"
-          ]
-        },
-        {
-          "data_path": "action_result.data.*.incidentName",
-          "data_type": "string",
-          "example_values": [
-            "Suspicious activity"
-          ],
-          "contains": [
-          ]
+          "contains": []
         },
         {
           "data_path": "action_result.data.*.determination",
@@ -178,35 +196,491 @@
           "example_values": [
             "NotAvailable"
           ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.detectionSource",
+          "data_type": "string",
+          "example_values": [
+            "Defender for Cloud Apps"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.status",
+          "data_type": "string",
+          "example_values": [
+            "Active"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.severity",
+          "data_type": "string",
+          "example_values": [
+            "Low","Medium"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.tags.*",
+          "data_type": "string",
+          "example_values": [
+            "tag a", "Tag B"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.comments.*",
+          "data_type": "string",
+          "example_values": [
+            "Interesting comment goes here."
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.source_data_identifier",
+          "data_type": "string",
+          "example_values": [
+            "53347d49-f83e-4569-9866-86f62977986b"
+          ],
           "contains": [
+            "uuid"
           ]
         },
         {
-          "data_path": "action_result.data.*.classification",
+          "data_path": "action_result.data.*.alerts.*.alertId",
           "data_type": "string",
           "example_values": [
-            "Unknown"
+            "caD70CFEE2-1F54-32DB-9988-3A868A1EBFAC"
           ],
-          "contains": [
-          ]
+          "contains": []
         },
         {
-          "data_path": "action_result.data.*.lastUpdateTime",
+          "data_path": "action_result.data.*.alerts.*.providerAlertId",
           "data_type": "string",
-          "example_values": [
-            "2023-08-21T18:02:46.3Z"
-          ],
-          "contains": [
-          ]
+          "example_values": [],
+          "contains": []
         },
         {
-          "data_path": "action_result.data.*.redirectIncidentId",
+          "data_path": "action_result.data.*.alerts.*.incidentId",
+          "data_type": "numeric",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.serviceSource",
           "data_type": "string",
-          "example_values": [
-            "None"
-          ],
-          "contains": [
-          ]
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.creationTime",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.lastUpdatedTime",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.resolvedTime",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.firstActivity",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.lastActivity",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.title",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.description",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.category",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.status",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.severity",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.investigationId",
+          "data_type": "numeric",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.investigationState",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.classification",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.determination",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.detectionSource",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.detectorId",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.assignedTo",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.actorName",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.threatFamilyName",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.mitreTechniques",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.devices.*.mdatpDeviceId",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.devices.*.aadDeviceId",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.devices.*.deviceDnsName",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.devices.*.osPlatform",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.devices.*.version",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.devices.*.osProcessor",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.devices.*.osBuild",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.devices.*.healthStatus",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.devices.*.riskScore",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.devices.*.rbacGroupName",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.devices.*.firstSeen",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.devices.*.tags.*",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.devices.*.defenderAvStatus",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.devices.*.onboardingStatus",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.devices.*.vmMetadata",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.devices.*.loggedOnUsers.*.accountName",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.devices.*.loggedOnUsers.*.domainName",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.entityType",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.sha1",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.sha256",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.fileName",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.filePath",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.processId",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.processCommandLine",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.processCreationTime",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.parentProcessId",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.parentProcessCreationTime",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.ipAddress",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.url",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.accountName",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.domainName",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.userSid",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.aadUserId",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.userPrincipalName",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.mailboxDisplayName",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.mailboxAddress",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.clusterBy",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.sender",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.recipient",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.subject",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.deliveryAction",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.securityGroupId",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.securityGroupName",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.registryHive",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.registryKey",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.registryValueType",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.registryValue",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.alerts.*.entities.*.deviceId",
+          "data_type": "string",
+          "example_values": [],
+          "contains": []
         }
       ]
     },
@@ -214,7 +688,7 @@
       "action": "get incident",
       "identifier": "get_incident",
       "description": "Retrieves a specific incident by its ID.",
-      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender/api-get-incident?view=o365-worldwide' target='_blank'>Microsoft Docs - Get incident information API</a>",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender/api-get-incident' target='_blank'>Microsoft Docs - Get incident information API</a>",
       "type": "information",
       "read_only": true,
       "versions": "EQ(*)",
@@ -234,8 +708,7 @@
           "example_values": [
             "Active"
           ],
-          "contains": [
-          ]
+          "contains": []
         },
         {
           "data_path": "action_result.data.*.severity",
@@ -243,8 +716,7 @@
           "example_values": [
             "Low"
           ],
-          "contains": [
-          ]
+          "contains": []
         },
         {
           "data_path": "action_result.data.*.assignedTo",
@@ -265,8 +737,7 @@
             12345,
             54321
           ],
-          "contains": [
-          ]
+          "contains": []
         },
         {
           "data_path": "action_result.data.*.createdTime",
@@ -274,14 +745,12 @@
           "example_values": [
             "2023-08-21T18:02:40.84Z"
           ],
-          "contains": [
-          ]
+          "contains": []
         },
         {
           "data_path": "action_result.data.*.incidentUri",
           "data_type": "string",
-          "example_values": [
-          ],
+          "example_values": [],
           "contains": [
             "url"
           ]
@@ -292,8 +761,7 @@
           "example_values": [
             "Suspicious activity"
           ],
-          "contains": [
-          ]
+          "contains": []
         },
         {
           "data_path": "action_result.data.*.determination",
@@ -301,8 +769,7 @@
           "example_values": [
             "NotAvailable"
           ],
-          "contains": [
-          ]
+          "contains": []
         },
         {
           "data_path": "action_result.data.*.classification",
@@ -310,8 +777,7 @@
           "example_values": [
             "Unknown"
           ],
-          "contains": [
-          ]
+          "contains": []
         },
         {
           "data_path": "action_result.data.*.lastUpdateTime",
@@ -319,8 +785,7 @@
           "example_values": [
             "2023-08-21T18:02:46.3Z"
           ],
-          "contains": [
-          ]
+          "contains": []
         },
         {
           "data_path": "action_result.data.*.redirectIncidentId",
@@ -328,8 +793,7 @@
           "example_values": [
             "None"
           ],
-          "contains": [
-          ]
+          "contains": []
         }
       ]
     },
@@ -337,7 +801,7 @@
       "action": "update incident",
       "identifier": "update_incident",
       "description": "Updates properties of existing incident.",
-      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender/api-update-incidents?view=o365-worldwide' target='_blank'>Microsoft Docs - Update incidents API</a>",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender/api-update-incidents' target='_blank'>Microsoft Docs - Update incidents API</a>",
       "type": "investigative",
       "read_only": false,
       "versions": "EQ(*)",
@@ -411,13 +875,78 @@
         }
       },
       "render": {},
-      "output": []
+      "output": [
+        {
+          "data_path": "action_result.data.status",
+          "data_type": "string",
+          "example_values": [
+            "Resolved", "Active"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.assignedTo",
+          "data_type": "string",
+          "example_values": [
+            "secop2@contoso.com"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.classification",
+          "data_type": "string",
+          "example_values": [
+            "TruePositive"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.determination",
+          "data_type": "string",
+          "example_values": [
+            "Malware"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.tags.*",
+          "data_type": "string",
+          "example_values": [
+            "Yossi's playground", "Don't mess with the Zohan"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.comments.*.comment",
+          "data_type": "string",
+          "example_values": [
+            "pen testing", "valid incident"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.comments.*.createdBy",
+          "data_type": "string",
+          "example_values": [
+            "secop2@contoso.com"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.comments.*.createdTime",
+          "data_type": "string",
+          "example_values": [
+            "2021-05-02T09:34:21.5519738Z", "2021-05-02-T09:36:27.6652581Z"
+          ],
+          "contains": []
+        }
+      ]
     },
     {
       "action": "list alerts",
       "identifier": "list_alerts",
       "description": "Retrieves a collection of Alerts.",
-      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/get-alerts?view=o365-worldwide' target='_blank'>Microsoft Docs - List alerts API</a>",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/get-alerts' target='_blank'>Microsoft Docs - List alerts API</a>",
       "type": "informational",
       "read_only": true,
       "versions": "EQ(*)",
@@ -429,7 +958,7 @@
       "action": "get alert",
       "identifier": "get_alert",
       "description": "Retrieves specific Alert by its ID.",
-      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/get-alert-info-by-id?view=o365-worldwide' target='_blank'>Microsoft Docs - Get alert information by ID API</a>",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/get-alert-info-by-id' target='_blank'>Microsoft Docs - Get alert information by ID API</a>",
       "type": "informational",
       "read_only": true,
       "versions": "EQ(*)",
@@ -448,7 +977,7 @@
       "action": "update alert",
       "identifier": "update_alert",
       "description": "Updates properties of existing Alert.",
-      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/update-alert?view=o365-worldwide' target='_blank'>Microsoft Docs - Update alert</a>",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/update-alert' target='_blank'>Microsoft Docs - Update alert</a>",
       "type": "investigative",
       "read_only": false,
       "versions": "EQ(*)",
@@ -516,7 +1045,7 @@
       "action": "update alert batch",
       "identifier": "update_alert_batch",
       "description": "Updates properties of a batch of existing Alerts.",
-      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/batch-update-alerts?view=o365-worldwide' target='_blank'>Microsoft Docs - Batch update alerts</a>",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/batch-update-alerts' target='_blank'>Microsoft Docs - Batch update alerts</a>",
       "type": "investigative",
       "read_only": false,
       "versions": "EQ(*)",
@@ -585,7 +1114,7 @@
       "action": "list alert files",
       "identifier": "list_alert_files",
       "description": "Retrieves all files related to a specific alert.",
-      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/get-alert-related-files-info?view=o365-worldwide' target='_blank'>Microsoft Docs - Get alert related files information API</a>",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/get-alert-related-files-info' target='_blank'>Microsoft Docs - Get alert related files information API</a>",
       "type": "investigative",
       "read_only": true,
       "versions": "EQ(*)",
@@ -604,7 +1133,7 @@
       "action": "list library scripts",
       "identifier": "list_library_scripts",
       "description": "List live response library files.",
-      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/list-library-files?view=o365-worldwide' target='_blank'>Microsoft Docs - List library files</a>",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/list-library-files' target='_blank'>Microsoft Docs - List library files</a>",
       "type": "forensic",
       "read_only": true,
       "versions": "EQ(*)",
@@ -616,7 +1145,7 @@
       "action": "run actions",
       "identifier": "run_actions",
       "description": "Runs a sequence of live response commands on a device.",
-      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/run-live-response?view=o365-worldwide' target='_blank'>Microsoft Docs - Run live response commands on a device</a>",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/run-live-response' target='_blank'>Microsoft Docs - Run live response commands on a device</a>",
       "type": "forensic",
       "read_only": false,
       "versions": "EQ(*)",
@@ -641,7 +1170,7 @@
       "action": "run action",
       "identifier": "run_action",
       "description": "Runs a single live response commands on a device.",
-      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/run-live-response?view=o365-worldwide' target='_blank'>Microsoft Docs - Run live response commands on a device</a>",
+      "verbose": "<a href='https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/run-live-response' target='_blank'>Microsoft Docs - Run live response commands on a device</a>",
       "type": "forensic",
       "read_only": false,
       "versions": "EQ(*)",

@@ -27,6 +27,7 @@ import time
 import datetime
 import urllib
 import base64
+import uuid, random
 import replus as rp
 from inspect import currentframe
 
@@ -413,6 +414,9 @@ class MDESecurityCenter_Connector(BaseConnector):
         :return: status(phantom.APP_SUCCESS/phantom.APP_ERROR)
         """
 
+        if self.param.get("force_refresh", False):
+            self.tokens = {}
+
         for resource in self.resources:
             self._authenticate(resource=resource)
 
@@ -427,7 +431,15 @@ class MDESecurityCenter_Connector(BaseConnector):
         if not self._make_rest_call(endpoint=url, params=params, method="get"):
             return phantom.APP_ERROR
 
-        [self.action_result.add_data(incident) for incident in self.r_json['value']]
+        rd = random.Random()
+        for incident in self.r_json['value']:
+            rd.seed(incident["incidentId"])
+            incident["source_data_identifier"] = str(uuid.UUID(version=4, int=rd.getrandbits(128)))
+            for i, alert in enumerate(incident["alerts"]):
+                rd.seed(alert["alertId"])
+                incident["alerts"][i]["source_data_identifier"] = str(uuid.UUID(version=4, int=rd.getrandbits(128)))
+            self.action_result.add_data(incident)
+
 
         message = f"Returned {len(self.r_json['value'])} incidents"
         return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
@@ -439,13 +451,18 @@ class MDESecurityCenter_Connector(BaseConnector):
         if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
+        rd = random.Random()
+        rd.seed(self.r_json["incidentId"])
+        self.r_json["source_data_identifier"] = str(uuid.UUID(version=4, int=rd.getrandbits(128)))
+        self.debug_print(self.r_json)
+
         self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
         message = f"Retrieved incident {self.param['incident_id']}"
         return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_update_incident(self) -> bool:
-        if self.param.get("remove_tags", False):
+        if not self.param.get("remove_tags", False):
             url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security',
                                                             incident_id=self.param['incident_id'])
 
@@ -471,7 +488,14 @@ class MDESecurityCenter_Connector(BaseConnector):
         if not self._make_rest_call(url, data=data, method="patch"):
             return phantom.APP_ERROR
 
-        message = f"Updated incident {self.param['incident_id']}:\n{json.dumps(self.r_json, indent=4)}"
+        rd = random.Random()
+        rd.seed(self.r_json["incidentId"])
+        self.r_json["source_data_identifier"] = str(uuid.UUID(version=4, int=rd.getrandbits(128)))
+        self.debug_print(self.r_json)
+
+        self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
+
+        message = f"Updated incident: {self.param['incident_id']}:\n{self.r_json}"
         return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_list_alerts(self) -> bool:
