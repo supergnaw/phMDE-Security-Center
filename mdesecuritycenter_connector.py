@@ -417,12 +417,13 @@ class MDESecurityCenter_Connector(BaseConnector):
             self._authenticate(resource=resource)
 
         tokens = {resource: token.summary() for resource, token in self.tokens.items() if 0 < token.expires_on}
-        message = f"Active access tokens:\n{json.dumps(tokens, indent=4)}"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        self.save_progress(f"Active access tokens:\n{json.dumps(tokens, indent=4)}")
+        return self.action_result.set_status(phantom.APP_SUCCESS, status_message="Test complete")
 
     def _handle_list_incidents(self) -> bool:
         params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
         url = f"{self.api_uri}{INCIDENT_LIST}".format(resource='security')
+
         if not self._make_rest_call(endpoint=url, params=params, method="get"):
             return phantom.APP_ERROR
 
@@ -432,7 +433,9 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_get_incident(self) -> bool:
-        url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security', incident_id=self.param['incident_id'])
+        url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security',
+                                                        incident_id=self.param['incident_id'])
+
         if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
@@ -443,7 +446,9 @@ class MDESecurityCenter_Connector(BaseConnector):
 
     def _handle_update_incident(self) -> bool:
         if self.param.get("remove_tags", False):
-            url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security', incident_id=self.param['incident_id'])
+            url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security',
+                                                            incident_id=self.param['incident_id'])
+
             if not self._make_rest_call(url, method="get"):
                 return phantom.APP_ERROR
 
@@ -460,7 +465,9 @@ class MDESecurityCenter_Connector(BaseConnector):
         }
         data = json.dumps({key: val for key, val in body.items() if val})
 
-        url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security', incident_id=self.param['incident_id'])
+        url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security',
+                                                        incident_id=self.param['incident_id'])
+
         if not self._make_rest_call(url, data=data, method="patch"):
             return phantom.APP_ERROR
 
@@ -478,7 +485,9 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_get_alert(self) -> bool:
-        url = f"{self.api_uri}{ALERT_SINGLE}".format(resource='securitycenter', alert_id=self.param['alert_id'])
+        url = f"{self.api_uri}{ALERT_SINGLE}".format(resource='securitycenter',
+                                                     alert_id=self.param['alert_id'])
+
         if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
@@ -522,7 +531,9 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_list_alert_files(self) -> bool:
-        url = f"{self.api_uri}{ALERT_FILES}".format(resource='securitycenter', alert_id=self.param["alert_id"])
+        url = f"{self.api_uri}{ALERT_FILES}".format(resource='securitycenter',
+                                                    alert_id=self.param["alert_id"])
+
         if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
@@ -621,6 +632,7 @@ class MDESecurityCenter_Connector(BaseConnector):
     def _handle_list_actions(self) -> bool:
         params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
         url = f"{self.api_uri}{LIVE_RESPONSE_ACTIONS}".format(resource="securitycenter")
+
         if not self._make_rest_call(url, params=params, method="get", timeout=120):
             return phantom.APP_ERROR
 
@@ -645,6 +657,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         url = f"{self.api_uri}{LIVE_RESPONSE_ACTION_RESULT}".format(resource="securitycenter",
                                                                     action_id=self.param['action_id'],
                                                                     command_index=self.param['command_index'])
+
         if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
@@ -664,7 +677,9 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_get_investigation(self) -> object:
-        url = f"{self.api_uri}{INVESTIGATION_SINGLE}".format(investigation_id=self.param['investigation_id'])
+        url = f"{self.api_uri}{INVESTIGATION_SINGLE}".format(resource='securitycenter',
+                                                             investigation_id=self.param['investigation_id'])
+
         if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
@@ -674,7 +689,9 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_start_investigation(self) -> object:
-        url = f"{self.api_uri}{INVESTIGATION_START}".format(machine_id=self.param['machine_id'])
+        url = f"{self.api_uri}{INVESTIGATION_START}".format(resource='securitycenter',
+                                                            machine_id=self.param['machine_id'])
+
         if not self._make_rest_call(url, method="post"):
             return phantom.APP_ERROR
 
@@ -684,7 +701,9 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_collect_investigation_package(self) -> object:
-        url = f"{self.api_uri}{INVESTIGATION_COLLECT_PACKAGE}".format(machine_id=self.param['machine_id'])
+        url = f"{self.api_uri}{INVESTIGATION_COLLECT_PACKAGE}".format(resource='securitycenter',
+                                                                      machine_id=self.param['machine_id'])
+
         if not self._make_rest_call(url, method="post"):
             return phantom.APP_ERROR
 
@@ -695,8 +714,10 @@ class MDESecurityCenter_Connector(BaseConnector):
 
     def _handle_list_machine_actions(self) -> object:
         params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
-        url = f"{self.api_uri}{MACHINE_LIST_ACTIONS}".format(machine_id=self.param['machine_id'])
-        if not self._make_rest_call(url, params=params, method="post"):
+        url = f"{self.api_uri}{MACHINE_LIST_ACTIONS}".format(resource='securitycenter',
+                                                             machine_id=self.param['machine_id'])
+
+        if not self._make_rest_call(url, params=params, method="get"):
             return phantom.APP_ERROR
 
         self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
@@ -705,27 +726,68 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_isolate_machine(self) -> object:
-        url = f"{self.api_uri}{MACHINE_ISOLATE}".format(machine_id=self.param['machine_id'])
+        url = f"{self.api_uri}{MACHINE_ISOLATE}".format(resource='securitycenter',
+                                                        machine_id=self.param['machine_id'])
+
         if not self._make_rest_call(url, method="post"):
             return phantom.APP_ERROR
 
         self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
+
+        responses = [
+            {
+                "@odata.context": "https://api-gov.securitycenter.microsoft.us/api/$metadata#MachineActions/$entity",
+                "id": "019b023d-dfe6-4808-b02b-67248c165082",
+                "type": "Isolate",
+                "title": None,
+                "requestor": "loren.supernaw.cld@usaf.onmicrosoft.com",
+                "requestorComment": "Test isolate machine",
+                "status": "Pending",
+                "machineId": "7284ce17e3210642c2b798044ac6e7d2904c7043",
+                "computerDnsName": "mplsw-fbjs095k3.area52.afnoapps.usaf.mil",
+                "creationDateTimeUtc": "2023-08-25T19:28:23.5158134Z",
+                "lastUpdateDateTimeUtc": "2023-08-25T19:28:23.515814Z",
+                "cancellationRequestor": None,
+                "cancellationComment": None,
+                "cancellationDateTimeUtc": None,
+                "errorHResult": 0,
+                "scope": None,
+                "externalId": None,
+                "requestSource": "Portal",
+                "relatedFileInfo": None,
+                "commands": [],
+                "troubleshootInfo": None
+            }
+        ]
 
         message = f"{self.action_id} complete"
         return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_unisolate_machine(self) -> object:
-        url = f"{self.api_uri}{MACHINE_UNISOLATE}".format(machine_id=self.param['machine_id'])
+        url = f"{self.api_uri}{MACHINE_UNISOLATE}".format(resource='securitycenter',
+                                                          machine_id=self.param['machine_id'])
+
         if not self._make_rest_call(url, method="post"):
             return phantom.APP_ERROR
 
         self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
+
+        responses = [
+            {
+                "error": {
+                    "code": "BadRequest",
+                    "message": "Cannot isolate device because Isolate action: 019b023d-dfe6-4808-b02b-67248c165082 is still active.",
+                    "target": "|fdc7f392-4a4181de30a178b4."
+                }
+            }
+        ]
 
         message = f"{self.action_id} complete"
         return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_get_file_info(self) -> object:
         url = f"{self.api_uri}{FILE_INFO}".format(file_id=self.param['file_hash'])
+
         if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
@@ -736,6 +798,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
     def _handle_get_file_stats(self) -> object:
         url = f"{self.api_uri}{FILE_STATS}".format(file_id=self.param['file_id'])
+
         if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
@@ -746,6 +809,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
     def _handle_quarantine_file(self) -> object:
         url = f"{self.api_uri}{FILE_QUARANTINE}".format(machine_id=self.param['machine_id'])
+
         if not self._make_rest_call(url, method="post"):
             return phantom.APP_ERROR
 
