@@ -4886,6 +4886,70 @@
       "render": {
       },
       "output": [
+        {
+          "data_path": "action_result.data.sha1",
+          "data_type": "string",
+          "example_values": [
+            "0991a395da64e1c5fbe8732ed11e6be064081d9f"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.organizationPrevalence",
+          "data_type": "numeric",
+          "example_values": [
+            14850
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.orgFirstSeen",
+          "data_type": "string",
+          "example_values": [
+            "2019-12-07T13:44:16Z"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.orgLastSeen",
+          "data_type": "string",
+          "example_values": [
+            "2020-01-06T13:39:36Z"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.globallyPrevalence",
+          "data_type": "numeric",
+          "example_values": [
+            705012
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.globalFirstObserved",
+          "data_type": "string",
+          "example_values": [
+            "2015-03-19T12:20:07.3432441Z"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.globalLastObserved",
+          "data_type": "string",
+          "example_values": [
+            "2020-01-06T13:39:36Z"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.topFileNames.*",
+          "data_type": "string",
+          "example_values": [
+            "MREC.exe"
+          ],
+          "contains": []
+        }
       ]
     },
     {
@@ -4919,6 +4983,114 @@
       "render": {
       },
       "output": [
+        {
+          "data_path": "action_result.data.id",
+          "data_type": "string",
+          "example_values": [
+            "2e9da30d-27f6-4208-81f2-9cd3d67893ba"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.type",
+          "data_type": "string",
+          "example_values": [
+            "RunAntiVirusScan"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.scope",
+          "data_type": "string",
+          "example_values": [
+            "Full"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.requestor",
+          "data_type": "string",
+          "example_values": [
+            "Analyst@contoso.com"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.requestorComment",
+          "data_type": "string",
+          "example_values": [
+            "Check machine for viruses due to alert 3212"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.status",
+          "data_type": "string",
+          "example_values": [
+            "Succeeded"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.machineId",
+          "data_type": "string",
+          "example_values": [
+            "f46b9bb259ed4a7fb9981b73510e3cc7aa81ec1f"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.computerDnsName",
+          "data_type": "string",
+          "example_values": [
+            "desktop-39g9tgl"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.creationDateTimeUtc",
+          "data_type": "string",
+          "example_values": [
+            "2018-12-04T12:18:27.1293487Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.lastUpdateTimeUtc",
+          "data_type": "string",
+          "example_values": [
+            "2018-12-04T12:18:57.5511934Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.relatedFileInfo.fileIdentifier",
+          "data_type": "string",
+          "example_values": [
+            "a0c659857ccbe457fdaf5fe21d54efdcbf6f6508"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.relatedFileInfo.fileIdentifierType",
+          "data_type": "string",
+          "example_values": [
+            "Sha1"
+          ],
+          "contains": [
+          ]
+        }
       ]
     }
   ]

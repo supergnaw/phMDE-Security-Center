@@ -823,16 +823,6 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
-        responses = [
-            {
-                "error": {
-                    "code": "BadRequest",
-                    "message": "Cannot isolate device because Isolate action: 019b023d-dfe6-4808-b02b-67248c165082 is still active.",
-                    "target": "|fdc7f392-4a4181de30a178b4."
-                }
-            }
-        ]
-
         message = f"{self.action_id} complete"
         return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
@@ -853,7 +843,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
 
-        self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
+        self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
         message = f"{self.action_id} complete"
         return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
@@ -864,7 +854,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         if not self._make_rest_call(url, method="post"):
             return phantom.APP_ERROR
 
-        self.debug_print(f"{self.action_id} response:\n{json.dumps(self.r_json, indent=4)}")
+        self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
         message = f"{self.action_id} complete"
         return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
