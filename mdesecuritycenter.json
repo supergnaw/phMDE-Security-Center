@@ -79,7 +79,42 @@
           "required": false
         }
       },
-      "output": [],
+      "output": [
+        {
+          "data_path": "action_result.data.endpoint",
+          "data_type": "string",
+          "example_values": [
+            "https://api-gov.security.microsoft.us"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.expires_in",
+          "data_type": "string",
+          "example_values": [
+            "60m 0s"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.expires_on",
+          "data_type": "string",
+          "example_values": [
+            "2023-09-13 21:29:46"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.roles.*",
+          "data_type": "string",
+          "example_values": [
+            "Incident.ReadWrite.All",
+            "Incident.Read.All",
+            "AdvancedHunting.Read.All"
+          ],
+          "contains": []
+        }
+      ],
       "versions": "EQ(*)"
     },
     {
@@ -109,7 +144,8 @@
           "default": 0
         }
       },
-      "render": {},
+      "render": {
+      },
       "output": [
         {
           "data_path": "action_result.data.*.source_data_identifier",
@@ -129,12 +165,14 @@
             12345,
             54321
           ],
-          "contains": []
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.incidentUri",
           "data_type": "string",
-          "example_values": [],
+          "example_values": [
+          ],
           "contains": [
             "url"
           ]
@@ -145,7 +183,8 @@
           "example_values": [
             "None"
           ],
-          "contains": []
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.incidentName",
@@ -153,7 +192,8 @@
           "example_values": [
             "Suspicious activity"
           ],
-          "contains": []
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.createdTime",
@@ -161,7 +201,8 @@
           "example_values": [
             "2023-08-21T18:02:40.84Z"
           ],
-          "contains": []
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.lastUpdateTime",
@@ -169,7 +210,8 @@
           "example_values": [
             "2023-08-21T18:02:46.3Z"
           ],
-          "contains": []
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.assignedTo",
@@ -188,7 +230,8 @@
           "example_values": [
             "Unknown"
           ],
-          "contains": []
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.determination",
@@ -196,7 +239,8 @@
           "example_values": [
             "NotAvailable"
           ],
-          "contains": []
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.detectionSource",
@@ -204,7 +248,8 @@
           "example_values": [
             "Defender for Cloud Apps"
           ],
-          "contains": []
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.status",
@@ -212,23 +257,28 @@
           "example_values": [
             "Active"
           ],
-          "contains": []
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.severity",
           "data_type": "string",
           "example_values": [
-            "Low","Medium"
+            "Low",
+            "Medium"
           ],
-          "contains": []
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.tags.*",
           "data_type": "string",
           "example_values": [
-            "tag a", "Tag B"
+            "tag a",
+            "Tag B"
           ],
-          "contains": []
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.comments.*",
@@ -236,7 +286,8 @@
           "example_values": [
             "Interesting comment goes here."
           ],
-          "contains": []
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.source_data_identifier",
@@ -254,433 +305,576 @@
           "example_values": [
             "caD70CFEE2-1F54-32DB-9988-3A868A1EBFAC"
           ],
-          "contains": []
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.providerAlertId",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.incidentId",
           "data_type": "numeric",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.serviceSource",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.creationTime",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.lastUpdatedTime",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.resolvedTime",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.firstActivity",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.lastActivity",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.title",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.description",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.category",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.status",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.severity",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.investigationId",
           "data_type": "numeric",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.investigationState",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.classification",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.determination",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.detectionSource",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.detectorId",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.assignedTo",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.actorName",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.threatFamilyName",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.mitreTechniques",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.devices.*.mdatpDeviceId",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.devices.*.aadDeviceId",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.devices.*.deviceDnsName",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.devices.*.osPlatform",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.devices.*.version",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.devices.*.osProcessor",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.devices.*.osBuild",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.devices.*.healthStatus",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.devices.*.riskScore",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.devices.*.rbacGroupName",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.devices.*.firstSeen",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.devices.*.tags.*",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.devices.*.defenderAvStatus",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.devices.*.onboardingStatus",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.devices.*.vmMetadata",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.devices.*.loggedOnUsers.*.accountName",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.devices.*.loggedOnUsers.*.domainName",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.entityType",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.sha1",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.sha256",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.fileName",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.filePath",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.processId",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.processCommandLine",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.processCreationTime",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.parentProcessId",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.parentProcessCreationTime",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.ipAddress",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.url",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.accountName",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.domainName",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.userSid",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.aadUserId",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.userPrincipalName",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.mailboxDisplayName",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.mailboxAddress",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.clusterBy",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.sender",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.recipient",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.subject",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.deliveryAction",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.securityGroupId",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.securityGroupName",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.registryHive",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.registryKey",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.registryValueType",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.registryValue",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.*.alerts.*.entities.*.deviceId",
           "data_type": "string",
-          "example_values": [],
-          "contains": []
+          "example_values": [
+          ],
+          "contains": [
+          ]
         }
       ]
     },
@@ -700,26 +894,77 @@
           "primary": false
         }
       },
-      "render": {},
+      "render": {
+      },
       "output": [
         {
-          "data_path": "action_result.data.*.status",
+          "data_path": "action_result.data.source_data_identifier",
           "data_type": "string",
           "example_values": [
-            "Active"
+            "c55942da-f4c0-49ca-8fe9-1aeda73df676"
           ],
-          "contains": []
+          "contains": [
+            "uuid"
+          ]
         },
         {
-          "data_path": "action_result.data.*.severity",
+          "data_path": "action_result.data.incidentId",
+          "data_type": "numeric",
+          "example_values": [
+            68594,
+            12345,
+            54321
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.incidentUri",
           "data_type": "string",
           "example_values": [
-            "Low"
           ],
-          "contains": []
+          "contains": [
+            "url"
+          ]
         },
         {
-          "data_path": "action_result.data.*.assignedTo",
+          "data_path": "action_result.data.redirectIncidentId",
+          "data_type": "string",
+          "example_values": [
+            "None"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.incidentName",
+          "data_type": "string",
+          "example_values": [
+            "Suspicious activity"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.createdTime",
+          "data_type": "string",
+          "example_values": [
+            "2023-08-21T18:02:40.84Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.lastUpdateTime",
+          "data_type": "string",
+          "example_values": [
+            "2023-08-21T18:02:46.3Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.assignedTo",
           "data_type": "string",
           "example_values": [
             "None",
@@ -730,70 +975,656 @@
           ]
         },
         {
-          "data_path": "action_result.data.*.incidentId",
-          "data_type": "numeric",
-          "example_values": [
-            68594,
-            12345,
-            54321
-          ],
-          "contains": []
-        },
-        {
-          "data_path": "action_result.data.*.createdTime",
-          "data_type": "string",
-          "example_values": [
-            "2023-08-21T18:02:40.84Z"
-          ],
-          "contains": []
-        },
-        {
-          "data_path": "action_result.data.*.incidentUri",
-          "data_type": "string",
-          "example_values": [],
-          "contains": [
-            "url"
-          ]
-        },
-        {
-          "data_path": "action_result.data.*.incidentName",
-          "data_type": "string",
-          "example_values": [
-            "Suspicious activity"
-          ],
-          "contains": []
-        },
-        {
-          "data_path": "action_result.data.*.determination",
-          "data_type": "string",
-          "example_values": [
-            "NotAvailable"
-          ],
-          "contains": []
-        },
-        {
-          "data_path": "action_result.data.*.classification",
+          "data_path": "action_result.data.classification",
           "data_type": "string",
           "example_values": [
             "Unknown"
           ],
-          "contains": []
+          "contains": [
+          ]
         },
         {
-          "data_path": "action_result.data.*.lastUpdateTime",
+          "data_path": "action_result.data.determination",
           "data_type": "string",
           "example_values": [
-            "2023-08-21T18:02:46.3Z"
+            "NotAvailable"
           ],
-          "contains": []
+          "contains": [
+          ]
         },
         {
-          "data_path": "action_result.data.*.redirectIncidentId",
+          "data_path": "action_result.data.detectionSource",
           "data_type": "string",
           "example_values": [
-            "None"
+            "Defender for Cloud Apps"
           ],
-          "contains": []
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.status",
+          "data_type": "string",
+          "example_values": [
+            "Active"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.severity",
+          "data_type": "string",
+          "example_values": [
+            "Low",
+            "Medium"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.tags.*",
+          "data_type": "string",
+          "example_values": [
+            "tag a",
+            "Tag B"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.comments.*",
+          "data_type": "string",
+          "example_values": [
+            "Interesting comment goes here."
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.source_data_identifier",
+          "data_type": "string",
+          "example_values": [
+            "53347d49-f83e-4569-9866-86f62977986b"
+          ],
+          "contains": [
+            "uuid"
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.alertId",
+          "data_type": "string",
+          "example_values": [
+            "caD70CFEE2-1F54-32DB-9988-3A868A1EBFAC"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.providerAlertId",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.incidentId",
+          "data_type": "numeric",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.serviceSource",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.creationTime",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.lastUpdatedTime",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.resolvedTime",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.firstActivity",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.lastActivity",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.title",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.description",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.category",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.status",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.severity",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.investigationId",
+          "data_type": "numeric",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.investigationState",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.classification",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.determination",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.detectionSource",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.detectorId",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.assignedTo",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.actorName",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.threatFamilyName",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.mitreTechniques",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.devices.*.mdatpDeviceId",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.devices.*.aadDeviceId",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.devices.*.deviceDnsName",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.devices.*.osPlatform",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.devices.*.version",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.devices.*.osProcessor",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.devices.*.osBuild",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.devices.*.healthStatus",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.devices.*.riskScore",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.devices.*.rbacGroupName",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.devices.*.firstSeen",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.devices.*.tags.*",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.devices.*.defenderAvStatus",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.devices.*.onboardingStatus",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.devices.*.vmMetadata",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.devices.*.loggedOnUsers.*.accountName",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.devices.*.loggedOnUsers.*.domainName",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.entityType",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.sha1",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.sha256",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.fileName",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.filePath",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.processId",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.processCommandLine",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.processCreationTime",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.parentProcessId",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.parentProcessCreationTime",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.ipAddress",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.url",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.accountName",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.domainName",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.userSid",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.aadUserId",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.userPrincipalName",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.mailboxDisplayName",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.mailboxAddress",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.clusterBy",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.sender",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.recipient",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.subject",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.deliveryAction",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.securityGroupId",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.securityGroupName",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.registryHive",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.registryKey",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.registryValueType",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.registryValue",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alerts.*.entities.*.deviceId",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
         }
       ]
     },
@@ -838,6 +1669,7 @@
           "primary": false,
           "value_list": [
             "No Change",
+            "None (removes current classification/determination)",
             "Informational: Security test",
             "Informational: Line-of-business application",
             "Informational: Confirmed activity",
@@ -874,15 +1706,18 @@
           "primary": false
         }
       },
-      "render": {},
+      "render": {
+      },
       "output": [
         {
           "data_path": "action_result.data.status",
           "data_type": "string",
           "example_values": [
-            "Resolved", "Active"
+            "Resolved",
+            "Active"
           ],
-          "contains": []
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.assignedTo",
@@ -890,7 +1725,8 @@
           "example_values": [
             "secop2@contoso.com"
           ],
-          "contains": []
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.classification",
@@ -898,7 +1734,8 @@
           "example_values": [
             "TruePositive"
           ],
-          "contains": []
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.determination",
@@ -906,23 +1743,28 @@
           "example_values": [
             "Malware"
           ],
-          "contains": []
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.tags.*",
           "data_type": "string",
           "example_values": [
-            "Yossi's playground", "Don't mess with the Zohan"
+            "Yossi's playground",
+            "Don't mess with the Zohan"
           ],
-          "contains": []
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.comments.*.comment",
           "data_type": "string",
           "example_values": [
-            "pen testing", "valid incident"
+            "pen testing",
+            "valid incident"
           ],
-          "contains": []
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.comments.*.createdBy",
@@ -930,15 +1772,18 @@
           "example_values": [
             "secop2@contoso.com"
           ],
-          "contains": []
+          "contains": [
+          ]
         },
         {
           "data_path": "action_result.data.comments.*.createdTime",
           "data_type": "string",
           "example_values": [
-            "2021-05-02T09:34:21.5519738Z", "2021-05-02-T09:36:27.6652581Z"
+            "2021-05-02T09:34:21.5519738Z",
+            "2021-05-02-T09:36:27.6652581Z"
           ],
-          "contains": []
+          "contains": [
+          ]
         }
       ]
     },
@@ -950,9 +1795,275 @@
       "type": "informational",
       "read_only": true,
       "versions": "EQ(*)",
-      "parameters": {},
-      "render": {},
-      "output": []
+      "parameters": {
+        "filter": {
+          "description": "filters to apply: (createdTime ge 2023-08-21T12:00:00Z and status eq 'active')",
+          "data_type": "string",
+          "required": false
+        },
+        "top": {
+          "description": "limit results to the top x results",
+          "data_type": "numeric",
+          "required": false,
+          "default": 1000
+        },
+        "skip": {
+          "description": "skip the first x results",
+          "data_type": "numeric",
+          "required": false,
+          "default": 0
+        }
+      },
+      "render": {
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.*.id",
+          "data_type": "string",
+          "example_values": [
+            "da637472900382838869_1364969609"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.alertId",
+          "data_type": "string",
+          "example_values": [
+            "da637472900382838869_1364969609"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.source_data_identifier",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.title",
+          "data_type": "string",
+          "example_values": [
+            "Low-reputation arbitrary code executed by signed executable"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.description",
+          "data_type": "string",
+          "example_values": [
+            "Binaries signed by Microsoft can be used to run low-reputation arbitrary code. This technique hides the execution of malicious code within a trusted process. As a result, the trusted process might exhibit suspicious behaviors, such as opening a listening port or connecting to a command-and-control (C&C) server."
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.alertCreationTime",
+          "data_type": "string",
+          "example_values": [
+            "2021-01-26T20:33:57.7220239Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.lastEventTime",
+          "data_type": "string",
+          "example_values": [
+            "2021-01-26T20:31:33.0577322Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.firstEventTime",
+          "data_type": "string",
+          "example_values": [
+            "2021-01-26T20:31:32.9562661Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.lastUpdateTime",
+          "data_type": "string",
+          "example_values": [
+            "2021-01-26T20:33:59.2Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.resolvedTime",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.incidentId",
+          "data_type": "numeric",
+          "example_values": [
+            1126093
+          ],
+          "contains": [
+            "url"
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.investigationId",
+          "data_type": "numeric",
+          "example_values": [
+            null
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.investigationState",
+          "data_type": "string",
+          "example_values": [
+            "Unknown",
+            "Terminated",
+            "SuccessfullyRemediated",
+            "Benign",
+            "Failed",
+            "PartiallyRemediated",
+            "Running",
+            "PendingApproval",
+            "PendingResource",
+            "PartiallyInvestigated",
+            "TerminatedByUser",
+            "TerminatedBySystem",
+            "Queued",
+            "InnerFailure",
+            "PreexistingAlert",
+            "UnsupportedOs",
+            "UnsupportedAlertType",
+            "SuppressedAlert"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.assignedTo",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.rbacGroupName",
+          "data_type": "string",
+          "example_values": [
+            "A"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.mitreTechniques",
+          "data_type": "string",
+          "example_values": [
+            "T1064",
+            "T1085",
+            "T1220"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.severity",
+          "data_type": "string",
+          "example_values": [
+            "UnSpecified",
+            "Informational",
+            "Low",
+            "Medium",
+            "High"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.status",
+          "data_type": "string",
+          "example_values": [
+            "Unknown",
+            "New",
+            "InProgress",
+            "Resolved"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.classification",
+          "data_type": "string",
+          "example_values": [
+            "TruePositive",
+            "InformationalExpectedActivity",
+            "FalsePositive"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.determination",
+          "data_type": "string",
+          "example_values": [
+            "MultiStagedAttack",
+            "MaliciousUserActivity",
+            "CompromisedUser",
+            "Malware",
+            "Phishing",
+            "UnwantedSoftware",
+            "SecurityTesting",
+            "LineOfBusinessApplication",
+            "ConfirmedUserActivity",
+            "Clean",
+            "InsufficientData",
+            "Other"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.category",
+          "data_type": "string",
+          "example_values": [
+            "Execution"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.detectionSource",
+          "data_type": "string",
+          "example_values": [
+            "WindowsDefenderAtp"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.threatFamilyName",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": [
+          ]
+        }
+      ]
     },
     {
       "action": "get alert",
@@ -970,8 +2081,256 @@
           "primary": false
         }
       },
-      "render": {},
-      "output": []
+      "render": {
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.id",
+          "data_type": "string",
+          "example_values": [
+            "da637472900382838869_1364969609"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alertId",
+          "data_type": "string",
+          "example_values": [
+            "da637472900382838869_1364969609"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.source_data_identifier",
+          "data_type": "string",
+          "example_values": [
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.title",
+          "data_type": "string",
+          "example_values": [
+            "Low-reputation arbitrary code executed by signed executable"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.description",
+          "data_type": "string",
+          "example_values": [
+            "Binaries signed by Microsoft can be used to run low-reputation arbitrary code. This technique hides the execution of malicious code within a trusted process. As a result, the trusted process might exhibit suspicious behaviors, such as opening a listening port or connecting to a command-and-control (C&C) server."
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.alertCreationTime",
+          "data_type": "string",
+          "example_values": [
+            "2021-01-26T20:33:57.7220239Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.lastEventTime",
+          "data_type": "string",
+          "example_values": [
+            "2021-01-26T20:31:33.0577322Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.firstEventTime",
+          "data_type": "string",
+          "example_values": [
+            "2021-01-26T20:31:32.9562661Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.lastUpdateTime",
+          "data_type": "string",
+          "example_values": [
+            "2021-01-26T20:33:59.2Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.resolvedTime",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.incidentId",
+          "data_type": "numeric",
+          "example_values": [
+            1126093
+          ],
+          "contains": [
+            "url"
+          ]
+        },
+        {
+          "data_path": "action_result.data.investigationId",
+          "data_type": "numeric",
+          "example_values": [
+            null
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.investigationState",
+          "data_type": "string",
+          "example_values": [
+            "Unknown",
+            "Terminated",
+            "SuccessfullyRemediated",
+            "Benign",
+            "Failed",
+            "PartiallyRemediated",
+            "Running",
+            "PendingApproval",
+            "PendingResource",
+            "PartiallyInvestigated",
+            "TerminatedByUser",
+            "TerminatedBySystem",
+            "Queued",
+            "InnerFailure",
+            "PreexistingAlert",
+            "UnsupportedOs",
+            "UnsupportedAlertType",
+            "SuppressedAlert"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.assignedTo",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.rbacGroupName",
+          "data_type": "string",
+          "example_values": [
+            "A"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.mitreTechniques",
+          "data_type": "string",
+          "example_values": [
+            "T1064",
+            "T1085",
+            "T1220"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.severity",
+          "data_type": "string",
+          "example_values": [
+            "UnSpecified",
+            "Informational",
+            "Low",
+            "Medium",
+            "High"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.status",
+          "data_type": "string",
+          "example_values": [
+            "Unknown",
+            "New",
+            "InProgress",
+            "Resolved"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.classification",
+          "data_type": "string",
+          "example_values": [
+            "TruePositive",
+            "InformationalExpectedActivity",
+            "FalsePositive"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.determination",
+          "data_type": "string",
+          "example_values": [
+            "MultiStagedAttack",
+            "MaliciousUserActivity",
+            "CompromisedUser",
+            "Malware",
+            "Phishing",
+            "UnwantedSoftware",
+            "SecurityTesting",
+            "LineOfBusinessApplication",
+            "ConfirmedUserActivity",
+            "Clean",
+            "InsufficientData",
+            "Other"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.category",
+          "data_type": "string",
+          "example_values": [
+            "Execution"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.detectionSource",
+          "data_type": "string",
+          "example_values": [
+            "WindowsDefenderAtp"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.threatFamilyName",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": [
+          ]
+        }
+      ]
     },
     {
       "action": "update alert",
@@ -995,9 +2354,9 @@
           "primary": false,
           "value_list": [
             "No Change",
-            "Active",
-            "Resolved",
-            "Redirected"
+            "New",
+            "In Progress",
+            "Resolved"
           ],
           "default": "No Change"
         },
@@ -1038,8 +2397,56 @@
           "primary": false
         }
       },
-      "render": {},
-      "output": []
+      "render": {
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.status",
+          "data_type": "string",
+          "example_values": [
+            "Resolved"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.assignedTo",
+          "data_type": "string",
+          "example_values": [
+            "secop2@contoso.com"
+          ],
+          "contains": [
+            "email"
+          ]
+        },
+        {
+          "data_path": "action_result.data.classification",
+          "data_type": "string",
+          "example_values": [
+            "FalsePositive"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.determination",
+          "data_type": "string",
+          "example_values": [
+            "Malware"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.comment",
+          "data_type": "string",
+          "example_values": [
+            "Resolve my alert and assign to secop2"
+          ],
+          "contains": [
+          ]
+        }
+      ]
     },
     {
       "action": "update alert batch",
@@ -1107,8 +2514,66 @@
           "primary": false
         }
       },
-      "render": {},
-      "output": []
+      "render": {
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.alertIds.*",
+          "data_type": "string",
+          "example_values": [
+            "da637399794050273582_760707377",
+            "da637399989469816469_51697947354"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.status",
+          "data_type": "string",
+          "example_values": [
+            "Resolved"
+          ],
+          "contains": [
+            "email"
+          ]
+        },
+        {
+          "data_path": "action_result.data.assignedTo",
+          "data_type": "string",
+          "example_values": [
+            "secop2@contoso.com"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.classification",
+          "data_type": "string",
+          "example_values": [
+            "FalsePositive"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.determination",
+          "data_type": "string",
+          "example_values": [
+            "Malware"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.comment",
+          "data_type": "string",
+          "example_values": [
+            "Resolve my alert and assign to secop2"
+          ],
+          "contains": [
+          ]
+        }
+      ]
     },
     {
       "action": "list alert files",
@@ -1126,8 +2591,169 @@
           "primary": false
         }
       },
-      "render": {},
-      "output": []
+      "render": {
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.*.sha1",
+          "data_type": "string",
+          "example_values": [
+            "f2a00fd2f2de1be0214b8529f1e9f67096c1aa70"
+          ],
+          "contains": [
+            "sha1"
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.sha256",
+          "data_type": "string",
+          "example_values": [
+            "dcd71ef5fff4362a9f64cf3f96f14f2b11d6f428f3badbedcb9ff3361e7079aa"
+          ],
+          "contains": [
+            "sha256"
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.md5",
+          "data_type": "string",
+          "example_values": [
+            "8d5b7cc9a832e21d22503057e1fec8e9"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.globalPrevalence",
+          "data_type": "numeric",
+          "example_values": [
+            29
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.globalFirstObserved",
+          "data_type": "string",
+          "example_values": [
+            "2019-03-23T23:54:06.0135204Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.globalLastObserved",
+          "data_type": "string",
+          "example_values": [
+            "2019-04-23T00:43:20.0489831Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.size",
+          "data_type": "numeric",
+          "example_values": [
+            113984
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.fileType",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.isPeFile",
+          "data_type": "boolean",
+          "example_values": [
+            true,
+            false
+          ],
+          "contains": [
+            "url"
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.filePublisher",
+          "data_type": "string",
+          "example_values": [
+            "Microsoft Corporation"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.fileProductName",
+          "data_type": "string",
+          "example_values": [
+            "Microsoft© Windows© Operating System"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.signer",
+          "data_type": "string",
+          "example_values": [
+            "Microsoft Corporation"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.issuer",
+          "data_type": "string",
+          "example_values": [
+            "Microsoft Code Signing PCA"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.signerHash",
+          "data_type": "string",
+          "example_values": [
+            "9dc17888b5cfad98b3cb35c1994e96227f061675"
+          ],
+          "contains": [
+            "sha1"
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.isValidCertificate",
+          "data_type": "boolean",
+          "example_values": [
+            true,
+            false
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.determinationType",
+          "data_type": "string",
+          "example_values": [
+            "Unknown"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.determinationValue",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": [
+          ]
+        }
+      ]
     },
     {
       "action": "list library scripts",
@@ -1137,9 +2763,86 @@
       "type": "forensic",
       "read_only": true,
       "versions": "EQ(*)",
-      "parameters": {},
-      "render": {},
-      "output": []
+      "parameters": {
+      },
+      "render": {
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.*.fileName",
+          "data_type": "string",
+          "example_values": [
+            "script1.ps1"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.sha256",
+          "data_type": "string",
+          "example_values": [
+            "6e212a0db618507c44e4ec8ee7499dfef7e5767e5f8d31144df3b96fd1145caf"
+          ],
+          "contains": [
+            "sha256"
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.description",
+          "data_type": "string",
+          "example_values": [
+            "description goes here"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.creationTime",
+          "data_type": "string",
+          "example_values": [
+            "2019-10-24T10:54:23.2009016Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.lastUpdatedTime",
+          "data_type": "string",
+          "example_values": [
+            "2019-10-24T10:54:23.2009016Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.createdBy",
+          "data_type": "string",
+          "example_values": [
+            "admin"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.hasParameters",
+          "data_type": "boolean",
+          "example_values": [
+            true,
+            false
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.parametersDescription",
+          "data_type": "string",
+          "example_values": [
+            "test"
+          ],
+          "contains": [
+          ]
+        }
+      ]
     },
     {
       "action": "run actions",
@@ -1163,8 +2866,178 @@
           "primary": false
         }
       },
-      "render": {},
-      "output": []
+      "render": {
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.*.id",
+          "data_type": "string",
+          "example_values": [
+            "{machine_action_id}"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.type",
+          "data_type": "string",
+          "example_values": [
+            "LiveResponse"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.requestor",
+          "data_type": "string",
+          "example_values": [
+            "analyst@microsoft.com"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.requestorComment",
+          "data_type": "string",
+          "example_values": [
+            "Testing Live Response API"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.status",
+          "data_type": "string",
+          "example_values": [
+            "Pending"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.machineId",
+          "data_type": "string",
+          "example_values": [
+            "{machine_id}"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.computerDnsName",
+          "data_type": "string",
+          "example_values": [
+            "hostname"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.creationDateTimeUtc",
+          "data_type": "string",
+          "example_values": [
+            "2021-02-04T15:36:52.7788848Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.lastUpdateDateTimeUtc",
+          "data_type": "string",
+          "example_values": [
+            "2021-02-04T15:36:52.7788848Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.errorHResult",
+          "data_type": "numeric",
+          "example_values": [
+            0
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.index",
+          "data_type": "numeric",
+          "example_values": [
+            0
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.startTime",
+          "data_type": "string",
+          "example_values": [
+            "2023-02-06T17:19:52.7788848Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.endTime",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.commandStatus",
+          "data_type": "string",
+          "example_values": [
+            "Created"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.errors.*",
+          "data_type": "string",
+          "example_values": [
+            ""
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.type",
+          "data_type": "string",
+          "example_values": [
+            "PutFile",
+            "RunScript",
+            "GetFile"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.params.*.key",
+          "data_type": "string",
+          "example_values": [
+            "ScriptName",
+            "Args",
+            "path"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.params.*.value",
+          "data_type": "string",
+          "example_values": [
+            "minidump.ps1",
+            "OfficeClickToRun",
+            "C:\\windows\\TEMP\\OfficeClickToRun.dmp.zip"
+          ],
+          "contains": [
+          ]
+        }
+      ]
     },
     {
       "action": "run action",
@@ -1205,8 +3078,178 @@
           "primary": false
         }
       },
-      "render": {},
-      "output": []
+      "render": {
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.*.id",
+          "data_type": "string",
+          "example_values": [
+            "{machine_action_id}"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.type",
+          "data_type": "string",
+          "example_values": [
+            "LiveResponse"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.requestor",
+          "data_type": "string",
+          "example_values": [
+            "analyst@microsoft.com"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.requestorComment",
+          "data_type": "string",
+          "example_values": [
+            "Testing Live Response API"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.status",
+          "data_type": "string",
+          "example_values": [
+            "Pending"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.machineId",
+          "data_type": "string",
+          "example_values": [
+            "{machine_id}"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.computerDnsName",
+          "data_type": "string",
+          "example_values": [
+            "hostname"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.creationDateTimeUtc",
+          "data_type": "string",
+          "example_values": [
+            "2021-02-04T15:36:52.7788848Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.lastUpdateDateTimeUtc",
+          "data_type": "string",
+          "example_values": [
+            "2021-02-04T15:36:52.7788848Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.errorHResult",
+          "data_type": "numeric",
+          "example_values": [
+            0
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.index",
+          "data_type": "numeric",
+          "example_values": [
+            0
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.startTime",
+          "data_type": "string",
+          "example_values": [
+            "2023-02-06T17:19:52.7788848Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.endTime",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.commandStatus",
+          "data_type": "string",
+          "example_values": [
+            "Created"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.errors.*",
+          "data_type": "string",
+          "example_values": [
+            ""
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.type",
+          "data_type": "string",
+          "example_values": [
+            "PutFile",
+            "RunScript",
+            "GetFile"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.params.*.key",
+          "data_type": "string",
+          "example_values": [
+            "ScriptName",
+            "Args",
+            "path"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.params.*.value",
+          "data_type": "string",
+          "example_values": [
+            "minidump.ps1",
+            "OfficeClickToRun",
+            "C:\\windows\\TEMP\\OfficeClickToRun.dmp.zip"
+          ],
+          "contains": [
+          ]
+        }
+      ]
     },
     {
       "action": "list actions",
@@ -1235,8 +3278,118 @@
           "default": 0
         }
       },
-      "render": {},
-      "output": []
+      "render": {
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.*.id",
+          "data_type": "string",
+          "example_values": [
+            "2e9da30d-27f6-4208-81f2-9cd3d67893ba"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.type",
+          "data_type": "string",
+          "example_values": [
+            "RunAntiVirusScan"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.scope",
+          "data_type": "string",
+          "example_values": [
+            "Full"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.requestor",
+          "data_type": "string",
+          "example_values": [
+            "Analyst@contoso.com"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.requestorComment",
+          "data_type": "string",
+          "example_values": [
+            "Check machine for viruses due to alert 3212"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.status",
+          "data_type": "string",
+          "example_values": [
+            "Succeeded"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.machineId",
+          "data_type": "string",
+          "example_values": [
+            "f46b9bb259ed4a7fb9981b73510e3cc7aa81ec1f"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.computerDnsName",
+          "data_type": "string",
+          "example_values": [
+            "desktop-39g9tgl"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.creationDateTimeUtc",
+          "data_type": "string",
+          "example_values": [
+            "2018-12-04T12:18:27.1293487Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.lastUpdateTimeUtc",
+          "data_type": "string",
+          "example_values": [
+            "2018-12-04T12:18:57.5511934Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.relatedFileInfo.fileIdentifier",
+          "data_type": "string",
+          "example_values": [
+            "a0c659857ccbe457fdaf5fe21d54efdcbf6f6508"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.relatedFileInfo.fileIdentifierType",
+          "data_type": "string",
+          "example_values": [
+            "Sha1"
+          ],
+          "contains": [
+          ]
+        }
+      ]
     },
     {
       "action": "get action",
@@ -1254,8 +3407,118 @@
           "primary": false
         }
       },
-      "render": {},
-      "output": []
+      "render": {
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.id",
+          "data_type": "string",
+          "example_values": [
+            "2e9da30d-27f6-4208-81f2-9cd3d67893ba"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.type",
+          "data_type": "string",
+          "example_values": [
+            "RunAntiVirusScan"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.scope",
+          "data_type": "string",
+          "example_values": [
+            "Full"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.requestor",
+          "data_type": "string",
+          "example_values": [
+            "Analyst@contoso.com"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.requestorComment",
+          "data_type": "string",
+          "example_values": [
+            "Check machine for viruses due to alert 3212"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.status",
+          "data_type": "string",
+          "example_values": [
+            "Succeeded"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.machineId",
+          "data_type": "string",
+          "example_values": [
+            "f46b9bb259ed4a7fb9981b73510e3cc7aa81ec1f"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.computerDnsName",
+          "data_type": "string",
+          "example_values": [
+            "desktop-39g9tgl"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.creationDateTimeUtc",
+          "data_type": "string",
+          "example_values": [
+            "2018-12-04T12:18:27.1293487Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.lastUpdateTimeUtc",
+          "data_type": "string",
+          "example_values": [
+            "2018-12-04T12:18:57.5511934Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.relatedFileInfo.fileIdentifier",
+          "data_type": "string",
+          "example_values": [
+            "a0c659857ccbe457fdaf5fe21d54efdcbf6f6508"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.relatedFileInfo.fileIdentifierType",
+          "data_type": "string",
+          "example_values": [
+            "Sha1"
+          ],
+          "contains": [
+          ]
+        }
+      ]
     },
     {
       "action": "get action result",
@@ -1279,8 +3542,46 @@
           "primary": false
         }
       },
-      "render": {},
-      "output": []
+      "render": {
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.script_name",
+          "data_type": "string",
+          "example_values": [
+            "minidump.ps1"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.exit_code",
+          "data_type": "string",
+          "example_values": [
+            "0"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.script_output",
+          "data_type": "string",
+          "example_values": [
+            "Transcript started, output file is C:\\ProgramData\\Microsoft\\Windows Defender Advanced Threat Protection\\Temp\\PSScriptOutputs\\PSScript_Transcript_{TRANSCRIPT_ID}.txt\\nC:\\windows\\TEMP\\OfficeClickToRun.dmp.zip\n51 MB"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.script_errors",
+          "data_type": "string",
+          "example_values": [
+            ""
+          ],
+          "contains": [
+          ]
+        }
+      ]
     },
     {
       "action": "list investigations",
@@ -1309,8 +3610,92 @@
           "default": 0
         }
       },
-      "render": {},
-      "output": []
+      "render": {
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.*.id",
+          "data_type": "numeric",
+          "example_values": [
+            63017
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.startTime",
+          "data_type": "string",
+          "example_values": [
+            "2020-01-06T14:11:34Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.endTime",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.state",
+          "data_type": "string",
+          "example_values": [
+            "Running",
+            "Benign"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.cancelledBy",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.statusDetails",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.machineId",
+          "data_type": "string",
+          "example_values": [
+            "a69a22debe5f274d8765ea3c368d00762e057b30"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.computerDnsName",
+          "data_type": "string",
+          "example_values": [
+            "desktop-gtrcon0"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.triggeringAlertId",
+          "data_type": "string",
+          "example_values": [
+            "da637139166940871892_-598649278"
+          ],
+          "contains": [
+          ]
+        }
+      ]
     },
     {
       "action": "get investigation",
@@ -1328,8 +3713,91 @@
           "primary": false
         }
       },
-      "render": {},
-      "output": []
+      "render": {
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.id",
+          "data_type": "numeric",
+          "example_values": [
+            63017
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.startTime",
+          "data_type": "string",
+          "example_values": [
+            "2020-01-06T14:11:34Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.endTime",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.state",
+          "data_type": "string",
+          "example_values": [
+            "Running"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.cancelledBy",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.statusDetails",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.machineId",
+          "data_type": "string",
+          "example_values": [
+            "a69a22debe5f274d8765ea3c368d00762e057b30"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.computerDnsName",
+          "data_type": "string",
+          "example_values": [
+            "desktop-gtrcon0"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.triggeringAlertId",
+          "data_type": "string",
+          "example_values": [
+            "da637139166940871892_-598649278"
+          ],
+          "contains": [
+          ]
+        }
+      ]
     },
     {
       "action": "start investigation",
@@ -1353,8 +3821,91 @@
           "primary": false
         }
       },
-      "render": {},
-      "output": []
+      "render": {
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.id",
+          "data_type": "numeric",
+          "example_values": [
+            63017
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.startTime",
+          "data_type": "string",
+          "example_values": [
+            "2020-01-06T14:11:34Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.endTime",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.state",
+          "data_type": "string",
+          "example_values": [
+            "Running"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.cancelledBy",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.statusDetails",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.machineId",
+          "data_type": "string",
+          "example_values": [
+            "a69a22debe5f274d8765ea3c368d00762e057b30"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.computerDnsName",
+          "data_type": "string",
+          "example_values": [
+            "desktop-gtrcon0"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.triggeringAlertId",
+          "data_type": "string",
+          "example_values": [
+            "da637139166940871892_-598649278"
+          ],
+          "contains": [
+          ]
+        }
+      ]
     },
     {
       "action": "collect investigation package",
@@ -1378,8 +3929,240 @@
           "primary": false
         }
       },
-      "render": {},
-      "output": []
+      "render": {
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.id",
+          "data_type": "string",
+          "example_values": [
+            "d4390a5d-12c1-4735-be12-4c8a5724cdee"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.type",
+          "data_type": "string",
+          "example_values": [
+            "CollectInvestigationPackage"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.title",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.requestor",
+          "data_type": "string",
+          "example_values": [
+            ""
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.requestorComment",
+          "data_type": "string",
+          "example_values": [
+            "Testing"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.status",
+          "data_type": "string",
+          "example_values": [
+            "Pending"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.machineId",
+          "data_type": "string",
+          "example_values": [
+            "943b78f183c4d61222c9af01190ab7388394f637"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.computerDnsName",
+          "data_type": "string",
+          "example_values": [
+            "anzww-xl2112l9z.area52.afnoapps.usaf.mil my-computer.domain.com"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.creationDateTimeUtc",
+          "data_type": "string",
+          "example_values": [
+            "2023-09-15T19:04:19.8699263Z"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.lastUpdateDateTimeUtc",
+          "data_type": "string",
+          "example_values": [
+            "2023-09-15T19:04:19.8699269Z"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.cancellationRequestor",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.cancellationComment",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.cancellationDateTimeUtc",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.errorHResult",
+          "data_type": "numeric",
+          "example_values": [
+            0
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.scope",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.externalId",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.requestSource",
+          "data_type": "string",
+          "example_values": [
+            "PublicApi"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.relatedFileInfo",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.index",
+          "data_type": "numeric",
+          "example_values": [
+            0
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.startTime",
+          "data_type": "string",
+          "example_values": [
+            "2023-02-06T17:19:52.7788848Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.endTime",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.commandStatus",
+          "data_type": "string",
+          "example_values": [
+            "Created"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.errors.*",
+          "data_type": "string",
+          "example_values": [
+            ""
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.type",
+          "data_type": "string",
+          "example_values": [
+            "PutFile",
+            "RunScript",
+            "GetFile"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.params.*.key",
+          "data_type": "string",
+          "example_values": [
+            "ScriptName",
+            "Args",
+            "path"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.params.*.value",
+          "data_type": "string",
+          "example_values": [
+            "minidump.ps1",
+            "OfficeClickToRun",
+            "C:\\windows\\TEMP\\OfficeClickToRun.dmp.zip"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.troubleshootInfo",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": []
+        }
+      ]
     },
     {
       "action": "list machine actions",
@@ -1414,8 +4197,240 @@
           "default": 0
         }
       },
-      "render": {},
-      "output": []
+      "render": {
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.id",
+          "data_type": "string",
+          "example_values": [
+            "d4390a5d-12c1-4735-be12-4c8a5724cdee"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.type",
+          "data_type": "string",
+          "example_values": [
+            "CollectInvestigationPackage"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.title",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.requestor",
+          "data_type": "string",
+          "example_values": [
+            ""
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.requestorComment",
+          "data_type": "string",
+          "example_values": [
+            "Testing"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.status",
+          "data_type": "string",
+          "example_values": [
+            "Pending"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.machineId",
+          "data_type": "string",
+          "example_values": [
+            "943b78f183c4d61222c9af01190ab7388394f637"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.computerDnsName",
+          "data_type": "string",
+          "example_values": [
+            "anzww-xl2112l9z.area52.afnoapps.usaf.mil my-computer.domain.com"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.creationDateTimeUtc",
+          "data_type": "string",
+          "example_values": [
+            "2023-09-15T19:04:19.8699263Z"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.lastUpdateDateTimeUtc",
+          "data_type": "string",
+          "example_values": [
+            "2023-09-15T19:04:19.8699269Z"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.cancellationRequestor",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.cancellationComment",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.cancellationDateTimeUtc",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.errorHResult",
+          "data_type": "numeric",
+          "example_values": [
+            0
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.scope",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.externalId",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.requestSource",
+          "data_type": "string",
+          "example_values": [
+            "PublicApi"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.relatedFileInfo",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": []
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.index",
+          "data_type": "numeric",
+          "example_values": [
+            0
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.startTime",
+          "data_type": "string",
+          "example_values": [
+            "2023-02-06T17:19:52.7788848Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.endTime",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.commandStatus",
+          "data_type": "string",
+          "example_values": [
+            "Created"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.errors.*",
+          "data_type": "string",
+          "example_values": [
+            ""
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.type",
+          "data_type": "string",
+          "example_values": [
+            "PutFile",
+            "RunScript",
+            "GetFile"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.params.*.key",
+          "data_type": "string",
+          "example_values": [
+            "ScriptName",
+            "Args",
+            "path"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.*.commands.*.params.*.value",
+          "data_type": "string",
+          "example_values": [
+            "minidump.ps1",
+            "OfficeClickToRun",
+            "C:\\windows\\TEMP\\OfficeClickToRun.dmp.zip"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.troubleshootInfo",
+          "data_type": "string",
+          "example_values": [
+            "null"
+          ],
+          "contains": []
+        }
+      ]
     },
     {
       "action": "isolate machine",
@@ -1433,8 +4448,119 @@
           "primary": false
         }
       },
-      "render": {},
-      "output": []
+      "render": {
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.id",
+          "data_type": "string",
+          "example_values": [
+            "2e9da30d-27f6-4208-81f2-9cd3d67893ba"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.type",
+          "data_type": "string",
+          "example_values": [
+            "Isolate"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.scope",
+          "data_type": "string",
+          "example_values": [
+            "Selective"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.requestor",
+          "data_type": "string",
+          "example_values": [
+            "Analyst@contoso.com"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.requestorComment",
+          "data_type": "string",
+          "example_values": [
+            "Check machine for viruses due to alert 3212"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.status",
+          "data_type": "string",
+          "example_values": [
+            "Pending",
+            "Succeeded"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.machineId",
+          "data_type": "string",
+          "example_values": [
+            "f46b9bb259ed4a7fb9981b73510e3cc7aa81ec1f"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.computerDnsName",
+          "data_type": "string",
+          "example_values": [
+            "desktop-39g9tgl"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.creationDateTimeUtc",
+          "data_type": "string",
+          "example_values": [
+            "2018-12-04T12:18:27.1293487Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.lastUpdateTimeUtc",
+          "data_type": "string",
+          "example_values": [
+            "2018-12-04T12:18:57.5511934Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.relatedFileInfo.fileIdentifier",
+          "data_type": "string",
+          "example_values": [
+            "a0c659857ccbe457fdaf5fe21d54efdcbf6f6508"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.relatedFileInfo.fileIdentifierType",
+          "data_type": "string",
+          "example_values": [
+            "Sha1"
+          ],
+          "contains": [
+          ]
+        }
+      ]
     },
     {
       "action": "unisolate machine",
@@ -1452,8 +4578,118 @@
           "primary": false
         }
       },
-      "render": {},
-      "output": []
+      "render": {
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.id",
+          "data_type": "string",
+          "example_values": [
+            "2e9da30d-27f6-4208-81f2-9cd3d67893ba"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.type",
+          "data_type": "string",
+          "example_values": [
+            "RunAntiVirusScan"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.scope",
+          "data_type": "string",
+          "example_values": [
+            "Full"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.requestor",
+          "data_type": "string",
+          "example_values": [
+            "Analyst@contoso.com"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.requestorComment",
+          "data_type": "string",
+          "example_values": [
+            "Check machine for viruses due to alert 3212"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.status",
+          "data_type": "string",
+          "example_values": [
+            "Succeeded"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.machineId",
+          "data_type": "string",
+          "example_values": [
+            "f46b9bb259ed4a7fb9981b73510e3cc7aa81ec1f"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.computerDnsName",
+          "data_type": "string",
+          "example_values": [
+            "desktop-39g9tgl"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.creationDateTimeUtc",
+          "data_type": "string",
+          "example_values": [
+            "2018-12-04T12:18:27.1293487Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.lastUpdateTimeUtc",
+          "data_type": "string",
+          "example_values": [
+            "2018-12-04T12:18:57.5511934Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.relatedFileInfo.fileIdentifier",
+          "data_type": "string",
+          "example_values": [
+            "a0c659857ccbe457fdaf5fe21d54efdcbf6f6508"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.relatedFileInfo.fileIdentifierType",
+          "data_type": "string",
+          "example_values": [
+            "Sha1"
+          ],
+          "contains": [
+          ]
+        }
+      ]
     },
     {
       "action": "get file info",
@@ -1471,8 +4707,158 @@
           "primary": false
         }
       },
-      "render": {},
-      "output": []
+      "render": {
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.sha1",
+          "data_type": "string",
+          "example_values": [
+            "4388963aaa83afe2042a46a3c017ad50bdcdafb3"
+          ],
+          "contains": [
+            "Sha1"
+          ]
+        },
+        {
+          "data_path": "action_result.data.sha256",
+          "data_type": "string",
+          "example_values": [
+            "413c58c8267d2c8648d8f6384bacc2ae9c929b2b96578b6860b5087cd1bd6462"
+          ],
+          "contains": [
+            "Sha256"
+          ]
+        },
+        {
+          "data_path": "action_result.data.globalPrevalence",
+          "data_type": "numeric",
+          "example_values": [
+            180022
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.globalFirstObserved",
+          "data_type": "string",
+          "example_values": [
+            "2017-09-19T03:51:27.6785431Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.globalLastObserved",
+          "data_type": "string",
+          "example_values": [
+            "2020-01-06T03:59:21.3229314Z"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.size",
+          "data_type": "numeric",
+          "example_values": [
+            22139496
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.fileType",
+          "data_type": "string",
+          "example_values": [
+            "APP"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.isPeFile",
+          "data_type": "boolean",
+          "example_values": [
+            true,
+            false
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.filePublisher",
+          "data_type": "string",
+          "example_values": [
+            "CHENGDU YIWO Tech Development Co., Ltd."
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.fileProductName",
+          "data_type": "string",
+          "example_values": [
+            "EaseUS MobiSaver for Android"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.signer",
+          "data_type": "string",
+          "example_values": [
+            "CHENGDU YIWO Tech Development Co., Ltd."
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.issuer",
+          "data_type": "string",
+          "example_values": [
+            "VeriSign Class 3 Code Signing 2010 CA"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.signerHash",
+          "data_type": "string",
+          "example_values": [
+            "6c3245d4a9bc0244d99dff27af259cbbae2e2d16"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.isValidCertificate",
+          "data_type": "boolean",
+          "example_values": [
+            true,
+            false
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.determinationType",
+          "data_type": "string",
+          "example_values": [
+            "Pua"
+          ],
+          "contains": [
+          ]
+        },
+        {
+          "data_path": "action_result.data.determinationValue",
+          "data_type": "string",
+          "example_values": [
+            "PUA:Win32/FusionCore"
+          ],
+          "contains": [
+          ]
+        }
+      ]
     },
     {
       "action": "get file stats",
@@ -1497,8 +4883,10 @@
           "default": 720
         }
       },
-      "render": {},
-      "output": []
+      "render": {
+      },
+      "output": [
+      ]
     },
     {
       "action": "quarantine file",
@@ -1528,8 +4916,10 @@
           "primary": false
         }
       },
-      "render": {},
-      "output": []
+      "render": {
+      },
+      "output": [
+      ]
     }
   ]
 }
