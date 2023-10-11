@@ -1805,7 +1805,7 @@
           "description": "limit results to the top x results",
           "data_type": "numeric",
           "required": false,
-          "default": 100
+          "default": 500
         },
         "skip": {
           "description": "skip the first x results",
