@@ -4,7 +4,7 @@
   "description": "Splunk SOAR connector module for interacting with the Microsoft Defender for Endpoint Security Center API.",
   "type": "endpoint",
   "main_module": "mdesecuritycenter_connector.py",
-  "app_version": "1.0.0",
+  "app_version": "1.0.1",
   "product_vendor": "Microsoft",
   "product_name": "Microsoft 365 Defender for Endpoint",
   "product_version_regex": ".*",
@@ -135,7 +135,7 @@
           "description": "limit results to the top x results",
           "data_type": "numeric",
           "required": false,
-          "default": 1000
+          "default": 100
         },
         "skip": {
           "description": "skip the first x results",
@@ -1805,7 +1805,7 @@
           "description": "limit results to the top x results",
           "data_type": "numeric",
           "required": false,
-          "default": 1000
+          "default": 100
         },
         "skip": {
           "description": "skip the first x results",
@@ -5090,6 +5090,42 @@
           ],
           "contains": [
           ]
+        }
+      ]
+    },
+    {
+      "action": "widget update",
+      "identifier": "widget_update",
+      "description": "Create or update a container's widget.",
+      "verbose": "",
+      "type": "informational",
+      "read_only": true,
+      "versions": "EQ(*)",
+      "parameters": {
+        "incident_id": {
+          "description": "Incident ID",
+          "data_type": "string",
+          "required": true,
+          "primary": true
+        }
+      },
+      "render": {
+        "type": "table",
+        "width": 2,
+        "height": 5,
+        "title": "TITLE_GOES_HERE",
+        "menu_name": "menu_name"
+      },
+      "output": [
+        {
+          "data_path": "action_result.data.alert.*.alert_link",
+          "data_type": "string",
+          "example_values": [],
+          "contains": [
+            "url"
+          ],
+          "column_name": "Alert Link",
+          "column_order": 0
         }
       ]
     }

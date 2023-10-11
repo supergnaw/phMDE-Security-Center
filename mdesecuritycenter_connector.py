@@ -440,19 +440,41 @@ class MDESecurityCenter_Connector(BaseConnector):
 
     def _handle_list_incidents(self) -> bool:
         params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
+        param_set = []
+
+        if not params.get("$skip", False):
+            params["$skip"] = 0
+
+        target = params["$top"] * 1
+        params["$top"] = min(params["$top"], LIST_INCIDENTS_LIMIT)
+
+        param_set = []
+
+        while params["$skip"] < target:
+            param_set.append({k: v for k, v in params.items()})
+            params["$skip"] += min(LIST_INCIDENTS_LIMIT, target - params["$skip"])
+            if target < LIST_INCIDENTS_LIMIT + params["$skip"]:
+                params["$top"] = target % LIST_INCIDENTS_LIMIT
+            else:
+                params["$top"] = LIST_INCIDENTS_LIMIT
+
         url = f"{self.api_uri}{INCIDENT_LIST}".format(resource='security')
+        incident_count = 0
 
-        if not self._make_rest_call(url, params=params, method="get"):
-            return phantom.APP_ERROR
+        for param in param_set:
+            self.debug_print(f"using param set: {param}")
+            if not self._make_rest_call(url, params=param, method="get"):
+                return phantom.APP_ERROR
 
-        for incident in self.r_json['value']:
-            incident["source_data_identifier"] = self._sdi(incident["incidentId"])
-            for i, alert in enumerate(incident["alerts"]):
-                incident["alerts"][i]["source_data_identifier"] = self._sdi(alert["alertId"])
-            self.action_result.add_data(incident)
+            for incident in self.r_json['value']:
+                incident["source_data_identifier"] = self._sdi(incident["incidentId"])
+                for i, alert in enumerate(incident["alerts"]):
+                    incident["alerts"][i]["source_data_identifier"] = self._sdi(alert["alertId"])
+                self.action_result.add_data(incident)
 
+            incident_count += len(self.r_json.get("value", []))
 
-        message = f"Returned {len(self.r_json['value'])} incidents"
+        message = f"Returned {incident_count} incidents"
         return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_get_incident(self) -> bool:
@@ -493,7 +515,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             'tags': [tag.strip() for tag in self.param.get("tags", "").split(",") if tag.strip()],
             'comment': self.param.get("comment", False)
         }
-        body = {key: val for key, val in body.items() if val or "" == f"{val}"}
+        body = {key: val for key, val in body.items() if val and "" != f"{val}"}
         data = json.dumps(body)
 
         # !! InvalidRequestBody error occurred [400]:Request body is incorrect
@@ -514,18 +536,41 @@ class MDESecurityCenter_Connector(BaseConnector):
 
     def _handle_list_alerts(self) -> bool:
         params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
+
+        if not params.get("$skip", False):
+            params["$skip"] = 0
+
+        target = params["$top"] * 1
+        params["$top"] = min(params["$top"], LIST_ALERTS_LIMIT)
+
+        param_set = []
+
+        while params["$skip"] < target:
+            param_set.append({k: v for k, v in params.items()})
+            params["$skip"] += min(LIST_ALERTS_LIMIT, target - params["$skip"])
+            if target < LIST_ALERTS_LIMIT + params["$skip"]:
+                params["$top"] = target % LIST_ALERTS_LIMIT
+            else:
+                params["$top"] = LIST_ALERTS_LIMIT
+
         url = f"{self.api_uri}{ALERT_LIST}".format(resource='securitycenter')
+        alert_count = 0
 
         if not self._make_rest_call(url, params=params, method="get"):
             return phantom.APP_ERROR
 
-        rd = random.Random()
-        for alert in self.r_json['value']:
-            alert["alertId"] = alert["id"]
-            alert["source_data_identifier"] = self._sdi(alert["alertId"])
-            self.action_result.add_data(alert)
+        for param in param_set:
+            self.debug_print(f"using param set: {param}")
+            if not self._make_rest_call(url, params=param, method="get"):
+                return phantom.APP_ERROR
 
-        message = f"Returned {len(self.r_json['value'])} alerts"
+            for alert in self.r_json['value']:
+                alert["source_data_identifier"] = self._sdi(alert["id"])
+                self.action_result.add_data(alert)
+
+            alert_count += len(self.r_json.get("value", []))
+
+        message = f"Returned {alert} alerts"
         return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_get_alert(self) -> bool:
@@ -857,6 +902,23 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
         message = f"{self.action_id} complete"
+        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+
+    def _handle_widget_update(self) -> bool:
+        url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security',
+                                                        incident_id=self.param['incident_id'])
+
+        if not self._make_rest_call(url, method="get"):
+            return phantom.APP_ERROR
+
+        self.r_json["source_data_identifier"] = self._sdi(self.r_json["incidentId"])
+
+        uri_prefix = rp.split("incident", self.r_json["incidentUri"])[0]
+        alert_links = {"alert_link": f"{uri_prefix}alerts/{alert['alertId']}" for alert in self.r_json["alerts"]}
+
+        self.action_result.add_data(alert_links)
+
+        message = f"Updated widget for {self.param['incident_id']}"
         return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
     def handle_action(self, param) -> bool:
