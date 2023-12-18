@@ -462,6 +462,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         incident_count = 0
 
         for param in param_set:
+            self.debug_print(f"using param set: {param}")
             if not self._make_rest_call(url, params=param, method="get"):
                 return phantom.APP_ERROR
 
@@ -518,6 +519,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         data = json.dumps(body)
 
         # !! InvalidRequestBody error occurred [400]:Request body is incorrect
+        self.debug_print(f"data sent in request: {data}")
 
         url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security',
                                                         incident_id=self.param['incident_id'])
@@ -551,6 +553,8 @@ class MDESecurityCenter_Connector(BaseConnector):
             else:
                 params["$top"] = LIST_ALERTS_LIMIT
 
+        self.debug_print(f"param sets: {json.dumps(param_set, indent=4)}")
+
         url = f"{self.api_uri}{ALERT_LIST}".format(resource='securitycenter')
         alert_count = 0
 
@@ -558,10 +562,12 @@ class MDESecurityCenter_Connector(BaseConnector):
             return phantom.APP_ERROR
 
         for param in param_set:
+            self.debug_print(f"using param set: {param}")
             if not self._make_rest_call(url, params=param, method="get"):
                 return phantom.APP_ERROR
 
             for alert in self.r_json['value']:
+                self.debug_print(self.r_json["value"])
                 alert["source_data_identifier"] = self._sdi(alert["id"])
                 self.action_result.add_data(alert)
 
@@ -603,6 +609,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         data = json.dumps(body)
 
         # !! InvalidRequestBody error occurred [400]:Request body is incorrect
+        self.debug_print(f"data sent in request: {data}")
 
         if not self._make_rest_call(url, data=data, method="patch"):
             return phantom.APP_ERROR
@@ -614,6 +621,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             'determination': self.r_json.get("determination", False),
             'comment': self.r_json.get("comments", [{}])[-1].get("comment", False)
         }
+        self.debug_print(f"response items: {response}")
 
         updates = {}
         for key, val in response.items():
