@@ -15,7 +15,7 @@
 # https://github.com/supergnaw/phMDE-Security-Center
 
 """
-    API CALL PAGE SIZE LIMITS
+    CALL PAGE SIZE LIMITS
 """
 LIST_INCIDENTS_LIMIT = 100
 LIST_ALERTS_LIMIT = 10000
