@@ -13,7 +13,6 @@ re_flags = {
 
 if not hasattr(re, 'NOFLAG'): setattr(re, 'NOFLAG', 0)
 
-
 # SPECIALTY INTERNAL FUNCTIONS
 
 def _parse_regex(pattern: Pattern[AnyStr], pre_flags: int = re.NOFLAG) -> Pattern[Any] or Pattern[str or Any]:
