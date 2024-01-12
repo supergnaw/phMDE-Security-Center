@@ -467,7 +467,6 @@ class MDESecurityCenter_Connector(BaseConnector):
 
     def _handle_list_incidents(self) -> bool:
         params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
-        param_set = []
 
         if not params.get("$skip", False):
             params["$skip"] = 0
