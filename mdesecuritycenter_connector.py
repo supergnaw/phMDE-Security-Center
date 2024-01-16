@@ -10,6 +10,7 @@
 # the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
 # either expressed or implied. See the License for the specific language governing permissions
 # and limitations under the License.
+import hashlib
 
 # If you find errors or would like to help contribute, please see:
 # https://github.com/supergnaw/phMDE-Security-Center
@@ -977,15 +978,16 @@ class MDESecurityCenter_Connector(BaseConnector):
         for incident in incidents:
 
             # check if the incident has already been ingested
-            container_search = (
+            container_search_url = (
                 f"{phanrules.build_phantom_rest_url('container')}"
                 f"?_filter_source_data_identifier=\"{incident['source_data_identifier']}\""
             )
 
             # update parity between SOAR and MDE
-            container_results = phantom.requests.get(container_search, verify=False).json()
+            container_results = phantom.requests.get(container_search_url, verify=False).json()
             existing_container = None
             if 0 != container_results.get("count", 0):
+                # todo: this is where parity is checked upon ingestion
                 self._update_parity(incident, container_results["data"][0])
 
             # create container to possibly save
@@ -1001,6 +1003,8 @@ class MDESecurityCenter_Connector(BaseConnector):
             }
 
             # create artifacts as haven't skipped anything yet
+            # todo: add source_data_identifier
+            # todo: hash dictionary
             incident_artifact = {"cef": {}, "data": {}}
             for artifact_name, artifact_value in incident.items():
                 artifact_name = field_map.get(artifact_name, artifact_name)
@@ -1157,10 +1161,18 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self._validate_filter_list()
 
     def _dict_hash(self, dictionary: dict) -> dict:
-        return {}
+        """
+        Takes a dictionary input, sorts the keys so {'a': 1, 'b': 2} is the same as {'b': 2, 'a': 1} and returns the
+        hash of the resulting json string.
+
+        :param dictionary: input dictionary to be hashed
+        :return: md5 hex hash of dictionary
+        """
+        {k: dictionary[k] for k in sorted(dictionary)}
+        dictionary_hash = hashlib.md5(str(dictionary).encode(), usedforsecurity=False)
+        return dictionary_hash.hexdigest()
 
     def _validate_filter_list(self, filter_list: list) -> list:
-        print(f"filter_list: {filter_list}")
 
         filter_rules = [{filter_list[0][index]: value for index, value in enumerate(row)} for row in filter_list[1:]]
         validated_rules = []
@@ -1247,6 +1259,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         container, verify the title has not changed, as when more alerts are added to an existing incident, the name
         will often change.
         """
+        # todo: the below logic
         # is resolved
         # - container exists?
         # - - close container if not closed
