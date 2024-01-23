@@ -4,7 +4,7 @@
   "description": "Splunk SOAR connector module for interacting with the Microsoft Defender for Endpoint Security Center API.",
   "type": "endpoint",
   "main_module": "mdesecuritycenter_connector.py",
-  "app_version": "1.0.2",
+  "app_version": "1.0.4",
   "product_vendor": "Microsoft",
   "product_name": "Microsoft 365 Defender for Endpoint",
   "product_version_regex": ".*",
@@ -68,19 +68,43 @@
       "default": 250,
       "order": 5
     },
+    "placeholder_7": {
+      "data_type": "ph",
+      "order": 6
+    },
+    "placeholder_7": {
+      "data_type": "ph",
+      "order": 7
+    },
+    "mde_ingest_comment": {
+      "data_type": "string",
+      "description": "Default MDE comment to add on incident ingest",
+      "required": false,
+      "order": 8
+    },
+    "mde_closure_comment": {
+      "data_type": "string",
+      "description": "Default MDE comment to add on incident closure",
+      "required": false,
+      "order": 9
+    },
     "filter_list": {
       "data_type": "string",
       "description": "Filter rules custom list (default: 'MDE Security Center Ingest Filter')",
       "required": false,
       "default": "MDE Security Center Ingest Filter",
-      "order": 6
+      "order": 10
+    },
+    "placeholder_7": {
+      "data_type": "ph",
+      "order": 11
     },
     "field_mapping": {
       "data_type": "string",
       "description": "Field Mapping: A JSON string of {'old_field_name':'new_field_name'} for on-the-fly field renaming",
       "required": false,
       "default": "",
-      "order": 7
+      "order": 12
     },
     "on_poll_behavior": {
       "data_type": "string",
@@ -91,7 +115,7 @@
         "ignore"
       ],
       "default": "ingest",
-      "order": 8
+      "order": 13
     }
   },
   "actions": [

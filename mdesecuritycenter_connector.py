@@ -10,7 +10,6 @@
 # the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
 # either expressed or implied. See the License for the specific language governing permissions
 # and limitations under the License.
-import hashlib
 
 # If you find errors or would like to help contribute, please see:
 # https://github.com/supergnaw/phMDE-Security-Center
@@ -29,7 +28,7 @@ import time
 from datetime import datetime, timezone, timedelta
 import urllib
 import base64
-import uuid, random
+import hashlib, uuid, random
 import replus as rp
 from inspect import currentframe
 
@@ -42,6 +41,7 @@ class AuthenticationToken:
         self._expires_on = 0
         self._endpoint = ""
         self.update(token=token, expires_on=expires_on)
+        self.debug_print = False
 
     @property
     def token(self) -> str or bool:
@@ -76,7 +76,7 @@ class AuthenticationToken:
     def expires_timestamp(self) -> str:
         pass
 
-    def details(self) -> dict:
+    def details(self) -> list:
         details = [json.loads(base64.b64decode(part + ('=' * (-len(part) % 4))).decode('utf-8')) for part
                    in self._token.split('.')[0:2]]
         return details
@@ -164,6 +164,18 @@ class MDESecurityCenter_Connector(BaseConnector):
         self._param = param
 
     @property
+    def cef(self) -> list:
+        if 0 == len(self._cef):
+            uri = phanrules.build_phantom_rest_url("cef") + "?page_size=0"
+            response = phantom.requests.get(uri, verify=False)
+
+            if 200 > response.status_code or 299 < response.status_code:
+                return self._cef
+
+            self._cef = [cef['name'] for cef in json.loads(response.text)['data']]
+        return self._cef
+
+    @property
     def action_result(self) -> object:
         if not self._action_result:
             self._action_result = self.add_action_result(ActionResult(self.param))
@@ -184,6 +196,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.live_response = {}
         self._action_start_time = datetime.now()
         self._rd = random.Random()
+        self._cef = []
 
         # Input validation helper variables
         self.statuses = {
@@ -212,7 +225,8 @@ class MDESecurityCenter_Connector(BaseConnector):
             "Informational: Security test": ["InformationalExpectedActivity", "SecurityTesting"],
             "Informational: Line-of-business application": ["InformationalExpectedActivity",
                                                             "LineOfBusinessApplication"],
-            "Informational: Confirmed activity": ["InformationalExpectedActivity", "ConfirmedUserActivity"],
+            "Informational: Confirmed activity": ["InformationalExpectedActivity",
+                                                  "ConfirmedUserActivity"],
             "Informational: Other": ["InformationalExpectedActivity", "Other"],
             "False positive: Not malicious": ["FalsePositive", "Clean"],
             "False positive: Not enough data to validate": ["FalsePositive", "InsufficientData"],
@@ -229,7 +243,6 @@ class MDESecurityCenter_Connector(BaseConnector):
     def _process_response(self) -> bool:
         """
         This function is used to process html response.
-        :param response: response data
         :return: status phantom.APP_ERROR/phantom.APP_SUCCESS(along with appropriate message)
         """
 
@@ -931,13 +944,12 @@ class MDESecurityCenter_Connector(BaseConnector):
     def _handle_on_poll(self) -> bool:
         # generate timestamp for ingestion
         x_hours_ago = (datetime.utcnow() - timedelta(hours=self.ingest_window)).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-        cef_list = self._get_cef_list()
         container_label = self._get_asset_label()
         container_tags = self._get_asset_tags()
-        field_map = self.field_map
-        print(f"cef_list: {cef_list}")
-        print(f"container_label: {container_label}")
-        print(f"container_tags: {container_tags}")
+        if self.debug_print:
+            print(f"container_label: {container_label}")
+        if self.debug_print:
+            print(f"container_tags: {container_tags}")
 
         # fetch the incidents
         url = f"{self.api_uri}{INCIDENT_LIST}".format(resource='security')
@@ -970,7 +982,8 @@ class MDESecurityCenter_Connector(BaseConnector):
             return_message = f"MDE returned {incident_count} incident"
         else:
             return_message = f"MDE returned {incident_count} incidents"
-        print(return_message)
+        if self.debug_print:
+            print(return_message)
 
         # get filter list rules
         filter_list = self._get_filter_list()
@@ -984,56 +997,26 @@ class MDESecurityCenter_Connector(BaseConnector):
             )
 
             # update parity between SOAR and MDE
-            container_results = phantom.requests.get(container_search_url, verify=False).json()
             existing_container = None
-            if 0 != container_results.get("count", 0):
-                # todo: this is where parity is checked upon ingestion
-                self._update_parity(incident, container_results["data"][0])
+            container_results = phantom.requests.get(container_search_url, verify=False).json()
+            if 0 < container_results.get("count", 0):
+                existing_container = container_results["data"][0]
+                self._update_parity(incident, existing_container)
+
+            if "redirected" == incident['status'].lower():
+                # redirected incidents have no data of value
+                print(f"skipping redirected incident: {incident['incidentId']}")
+                continue
 
             # create container to possibly save
-            print(f"incident: {incident}")
-            new_container = {
-                "label": container_label,
-                "name": incident["incidentName"],
-                "severity": incident["severity"],
-                "source_data_identifier": incident["source_data_identifier"],
-                "status": self.statuses['container'].get(self.param.get("status", "default"), False),
-                "artifacts": [],
-                "tags": container_tags,
-            }
+            new_container = {"label": container_label, "name": incident["incidentName"],
+                             "severity": incident["severity"],
+                             "source_data_identifier": incident["source_data_identifier"],
+                             "status": self.statuses['container'].get(self.param.get("status", "default"), False),
+                             "tags": container_tags, 'artifacts': self._compile_artifacts(incident)}
 
-            # create artifacts as haven't skipped anything yet
-            # todo: add source_data_identifier
-            # todo: hash dictionary
-            incident_artifact = {"cef": {}, "data": {}}
-            for artifact_name, artifact_value in incident.items():
-                artifact_name = field_map.get(artifact_name, artifact_name)
-                if "alerts" == artifact_name:
-                    for alert in artifact_value:
-                        alert_artifact = {"cef": {}, "data": {}}
-                        artifact_name = field_map.get(artifact_name, artifact_name)
-                        for artifact_name, artifact_value in alert.items():
-                            if artifact_name in ["entities", "devices"]:
-                                sub_artifact = {"cef": {}, "data": {}}
-                                for devitity in artifact_value:
-                                    for artifact_name, artifact_value in devitity.items():
-                                        artifact_name = field_map.get(artifact_name, artifact_name)
-                                        if artifact_name in cef_list:
-                                            sub_artifact["cef"][artifact_name] = artifact_value
-                                        sub_artifact["data"] = artifact_value
-                                new_container["artifacts"].append(sub_artifact)
-                            else:
-                                if artifact_name in cef_list:
-                                    alert_artifact["cef"][artifact_name] = artifact_value
-                                alert_artifact["data"][artifact_name] = artifact_value
-                        new_container["artifacts"].append(alert_artifact)
-                else:
-                    if artifact_name in cef_list:
-                        incident_artifact["cef"][artifact_name] = artifact_value
-                    incident_artifact["data"][artifact_name] = artifact_value
-            new_container["artifacts"].append(incident_artifact)
-
-            print(f"new_container: {json.dumps(new_container, indent=4)}")
+            if self.debug_print:
+                print(f"new_container: {json.dumps(new_container, indent=4)}")
 
             # loop through each row in the filter rules
             for filter_rule in filter_list:
@@ -1084,14 +1067,16 @@ class MDESecurityCenter_Connector(BaseConnector):
                 if pass_incident and pass_alert and pass_entity and pass_device:
 
                     if "ignore" == rule_action:
-                        print(f"Incident ignored: {incident['incidentId']}")
+                        if self.debug_print:
+                            print(f"Incident ignored: {incident['incidentId']}")
                         continue
 
                     if "close" == rule_action and "active" == incident['status'].lower():
                         if existing_container:
                             # close existing container
                             pass
-                        print(f"Incident to be closed: {incident['incidentId']}")
+                        if self.debug_print:
+                            print(f"Incident to be closed: {incident['incidentId']}")
                         body = {
                             "status": "Resolved",
                             "assignedTo": self.param.get("assigned_to", False),
@@ -1111,32 +1096,39 @@ class MDESecurityCenter_Connector(BaseConnector):
 
                         if not self._make_rest_call(url, data=data, method="patch"):
                             return phantom.APP_ERROR
+                        continue
 
                     if "ingest" == rule_action and "active" == incident['status'].lower():
                         if existing_container:
                             # parity updates handled by _update_parity() function
                             continue
-                        save_container_result = self.save_container(new_container)
-                        print(f"save_container_result: {save_container_result}")
-
-                        for artifact_name, artifact_value in incident.keys():
-                            print(f"{artifact_name}: {artifact_value}")
-
-                        print(f"Incident ingested: {incident['incidentId']}")
+                        save_container_uri = phanrules.build_phantom_rest_url("container")
+                        response = phantom.requests.post(save_container_uri, json=new_container, verify=False)
+                        if self.debug_print:
+                            print(f"Incident ingested: {incident['incidentId']}")
                         continue
 
                     if "case" == rule_action:
-                        print(f"Incident is a case: {incident['incidentId']}")
+                        if self.debug_print:
+                            print(f"Incident is a case: {incident['incidentId']}")
+                        if existing_container and "case" == existing_container['container_type']:
+                            container_edit_uri = phanrules.build_phantom_rest_url('container', existing_container['id'])
+                            data = {"id": existing_container['id'], "container_type": "case"}
+                            response = phantom.requests.post(container_edit_uri, json=data, verify=False)
+                            continue
+                        phanrules.build_phantom_rest_url('container')
+                        new_container['container_type'] = "case"
+                        response = phantom.requests.post(container_edit_uri, json=data, verify=False)
                         continue
-                        url = phanrules.build_phantom_rest_url("container")
 
             # no rule matches, continue with default behavior for the current incident
-            # print(f"Incident following default behavior ({self.on_poll_behavior()}): {incident['incidentId']}")
             if "ignore" == self.on_poll_behavior:
                 continue
             else:
-                save_container_result = self.save_container(new_container)
-                print(f"save_container_result: {save_container_result}")
+                save_container_uri = phanrules.build_phantom_rest_url("container")
+                response = phantom.requests.post(save_container_uri, json=new_container, verify=False)
+                if self.debug_print:
+                    print(f"save_container response: {response}")
 
         # Finalize ingestion
         message = f"Ingestion complete"
@@ -1159,18 +1151,6 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         print(f"phantom.set_list results: success: {success}, message: {message}")
         return self._validate_filter_list()
-
-    def _dict_hash(self, dictionary: dict) -> dict:
-        """
-        Takes a dictionary input, sorts the keys so {'a': 1, 'b': 2} is the same as {'b': 2, 'a': 1} and returns the
-        hash of the resulting json string.
-
-        :param dictionary: input dictionary to be hashed
-        :return: md5 hex hash of dictionary
-        """
-        {k: dictionary[k] for k in sorted(dictionary)}
-        dictionary_hash = hashlib.md5(str(dictionary).encode(), usedforsecurity=False)
-        return dictionary_hash.hexdigest()
 
     def _validate_filter_list(self, filter_list: list) -> list:
 
@@ -1259,31 +1239,212 @@ class MDESecurityCenter_Connector(BaseConnector):
         container, verify the title has not changed, as when more alerts are added to an existing incident, the name
         will often change.
         """
-        # todo: the below logic
-        # is resolved
-        # - container exists?
-        # - - close container if not closed
 
-        # is redirected [[[[ redirectIncidentId ]]]]
-        # - target redirected incident has container?
-        # - - add artifact to target container
-        # - - update name of target container
+        # nobody cares
+        if "resolved" == incident['status'].lower() and "closed" == container['status'].lower():
+            return True
 
-        # is active
-        # - update name of existing container
+        # # make sure incident name and soar name are in sync
+        # if incident['incidentName'] != container['name'] and "case" != container['container_type']:
+        #     data = {
+        #         "container_id": container['id'],
+        #         "name": incident['incidentName']
+        #     }
+        #     response = phantom.requests.post(container_edit_uri, data=json.dumps(data), verify=False)
+        #     # todo: or, if case, update incident name in MDE to case name from SOAR
+        #     if "case" != container['container_type']:
+        #         # # todo: update incident name in MDE to case name from SOAR
+        #         # url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security',
+        #         #                                                 incident_id=incident['incidentId'])
+        #         # data = {"incidentName": container['name']}
+        #         # # no known way to update incident name in MDE:
+        #         # # https://learn.microsoft.com/en-us/microsoft-365/security/defender/api-update-incidents?view=o365-worldwide
+        #         # if not self._make_rest_call(url, data=data, method="patch"):
+        #         #     return phantom.APP_ERROR
+        #         pass
+        #     else:
+        #         # todo: update name in SOAR from MDE
+        #         data = {
+        #             "container_id": container['id'],
+        #             "name": incident['incidentName']
+        #         }
+        #         response = phantom.requests.post(container_edit_uri, data=json.dumps(data), verify=False)
+        #
+        # # comment parity between MDE and SOAR
+        # comments_uri = phanrules.build_phantom_rest_url("container", container['id'], "notes") + "?page_size=0"
+        # soar_notes = phantom.requests.get(comments_uri, verify=False).json().get('data', [])
+        #
+        # notes = [note['content'] for note in soar_notes]
+        # mde_comments = [comment for comment in incident['comments']]
+        #
+        # missing_soar_notes = [soar_note for soar_note in soar_notes if soar_note['content'] not in mde_comments]
+        # missing_mde_comments = [comment for comment in incident['comments'] if comment['comment'] not in notes]
+        #
+        # soar_comment_uri = phanrules.build_phantom_rest_url("container_comment")
+        # mde_edit_uri = f"{self.api_uri}/{INCIDENT_SINGLE}"
+        # mde_edit_uri = mde_edit_uri.format(resource='security', incident_id=incident['incidentId'])
+        #
+        # for soar_note in missing_soar_notes:
+        #     continue
+        #     data = {
+        #         "container_id": container['id'],
+        #         "comment": soar_note['content']
+        #     }
+        #     response = phantom.requests.post(soar_comment_uri, data=json.dumps(data), verify=False)
+        #
+        # for mde_comment in missing_mde_comments:
+        #     continue
+        #     data = {"comment": mde_comment['comment']}
+        #     if not self._make_rest_call(mde_edit_uri, data=json.dumps(data), method="patch"):
+        #         print(self.r_json)
+        #     else:
+        #         print(self.r_json)
 
         status = incident.get("status", "").lower()
-
-        if "redirected" == status:
-            print(f"Incident redirected: {incident['incidentId']}")
-        elif "resolved" == status:
+        if "resolved" == status and "closed" != container['status']:
+            soar_comment_uri = phanrules.build_phantom_rest_url("container_comment")
             print(f"Incident resolved: {incident['incidentId']}")
+            data = {
+                "tags": container['tags'] + [incident['classification'], incident['determination']],
+                "status": "Closed",
+                "comment": "Incident was resolved from MDE"
+            }
+            response = phantom.requests.post(soar_comment_uri, data=json.dumps(data), verify=False)
+
+        elif "redirected" == status:
+            self._close_redirected(container, incident)
+        #     soar_comment_uri = phanrules.build_phantom_rest_url("container_comment")
+        #     print(f"Incident redirected: {incident['incidentId']}")
+        #     container_search_url = (
+        #         f"{phanrules.build_phantom_rest_url('container')}"
+        #         f"?_filter_source_data_identifier=\"{incident['source_data_identifier']}\""
+        #     )
+        #     container_results = phantom.requests.get(container_search_url, verify=False).json()
+        #     if 0 != container_results.get("count", 0):
+        #         self._close_redirected_container()
+        #         target_container = container_results["data"][0]
+        #
+        #         # add closing comment
+        #         print(container['id'])
+        #         print(target_container['id'])
+        #         data = {
+        #             "container_id": container['id'],
+        #             "comment": (
+        #                 f"Incident was redirected MDE to incident {incident['incidentId']}, "
+        #                 f"container {target_container['id']}"
+        #             )
+        #         }
+        #         response = phantom.requests.post(soar_comment_uri, data=json.dumps(data), verify=False)
+        #
+        #         # add closing tags and status
+        #         data = json.dumps({
+        #             "tags": container['tags'] + self._get_asset_tags() + ["redirected"],
+        #             "status": "Closed",
+        #         })
+        #         response = phantom.requests.post(phanrules.build_phantom_rest_url("container"), data=data, verify=False)
+        #
+        #         # # get artifacts of redirected incident/container
+        #         # artifacts_uri = phanrules.build_phantom_rest_url("container", container['id'],
+        #         #                                                  "artifacts") + "?page_size=0"
+        #         # response = phantom.requests.get(artifacts_uri, verify=False).json()
+        #         #
+        #         # # copy the artifacts to the new container
+        #         # artifact_add_uri = phanrules.build_phantom_rest_url("artifact")
+        #         # for existing_artifact in response['data']:
+        #         #     artifact = self._compile_artifacts(existing_artifact, target_container['id'])
+        #         #     response = phantom.requests.post(artifact_add_uri, data=json.dumps(artifact), verify=False)
+
         elif "active" == status:
             print(f"Incident active: {incident['incidentId']}")
+
         else:
             print(f"Unaccounted for status: {status}")
 
         return True
+
+    def _close_redirected(self, container: dict, incident: dict):
+        soar_comment_uri = phanrules.build_phantom_rest_url("container_comment")
+        print(f"Incident redirected: {incident['incidentId']}")
+        container_search_url = (
+            f"{phanrules.build_phantom_rest_url('container')}"
+            f"?_filter_source_data_identifier=\"{incident['source_data_identifier']}\""
+        )
+        container_results = phantom.requests.get(container_search_url, verify=False).json()
+        if 0 == container_results.get("count", 0):
+            return
+        target_container = container_results["data"][0]
+
+        # add closing comment
+        print(container['id'])
+        print(target_container['id'])
+        data = {
+            "container_id": container['id'],
+            "comment": (
+                f"Incident was redirected MDE to incident {incident['incidentId']}, "
+                f"container {target_container['id']}"
+            )
+        }
+        response = phantom.requests.post(soar_comment_uri, data=json.dumps(data), verify=False)
+
+        # add closing tags and status
+        data = json.dumps({
+            "tags": container['tags'] + self._get_asset_tags() + ["redirected"],
+            "status": "Closed",
+        })
+        response = phantom.requests.post(phanrules.build_phantom_rest_url("container"), data=data, verify=False)
+
+    def _dict_hash(self, dictionary: dict) -> dict:
+        """
+        Takes a dictionary input, sorts the keys so {'a': 1, 'b': 2} is the same as {'b': 2, 'a': 1} and returns the
+        hash of the resulting json string.
+
+        :param dictionary: input dictionary to be hashed
+        :return: md5 hex hash of dictionary
+        """
+        {k: dictionary[k] for k in sorted(dictionary)}
+        dictionary_hash = hashlib.md5(str(dictionary).encode(), usedforsecurity=False)
+        return dictionary_hash.hexdigest()
+
+    def _compile_artifacts(self, dictionary: dict, container_id: int = None) -> list:
+        """
+        Takes a dictionary input of an incident and compiles them into plug-n-play artifacts based on the CEFs
+        configured in the SOAR
+
+        :param dictionary: the incident
+        :param container_id: target container ID (optional)
+        :return: list of dictionaries containing artifacts
+        """
+        # initialize vars
+        field_map = self.field_map
+        artifacts = []
+        root_artifact = {"cef": {}, "data": {}}
+
+        # loop through items to create artifacts
+        for artifact_name, artifact_value in dictionary.items():
+            artifact_name = field_map.get(artifact_name, artifact_name)
+            # sub artifacts that need to be broken down further
+            if artifact_name in ["alerts", "devices", "entities"]:
+                for sub_artifact in artifact_value:
+                    sub_artifact = self._compile_artifacts(sub_artifact, container_id)
+                    if sub_artifact:
+                        artifacts.append(sub_artifact)
+                continue
+
+            # this is basic artifact data
+            if artifact_name in self.cef:
+                root_artifact['cef'][artifact_name] = artifact_value
+            root_artifact['data'][artifact_name] = artifact_value
+
+        # hash the dictionary for source data identifier
+        root_artifact['source_data_identifier'] = self._dict_hash(root_artifact)
+
+        # add optional target container ID
+        if container_id:
+            root_artifact['id'] = container_id
+
+        # append the root artifact and return
+        artifacts.append(root_artifact)
+        return artifacts
 
     def _incident_to_container(self, incident: dict):
         pass
@@ -1382,23 +1543,9 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.save_progress(f"Action execution time: {datetime.now() - self._action_start_time} seconds")
         return phantom.APP_SUCCESS
 
-    # -------------------------#
-    #   SOAR REST API CALLS   #
-    # -------------------------#
-
-    def _get_cef_list(self):
-        # Make REST call to SOAR
-        uri = phanrules.build_phantom_rest_url("cef") + "?page_size=0"
-        response = phantom.requests.get(uri, verify=False)
-        if 200 > response.status_code or 299 < response.status_code:
-            return []
-
-        # Aggregate all CEFs into a single list
-        all_cefs = []
-        for cef in json.loads(response.text)['data']:
-            all_cefs.append(cef["name"])
-
-        return all_cefs
+    # ------------------------ #
+    #   SOAR REST API CALLS    #
+    # ------------------------ #
 
     def _get_asset_name(self):
         # Make REST call to SOAR
