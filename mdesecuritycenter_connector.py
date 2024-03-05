@@ -1023,13 +1023,16 @@ class MDESecurityCenter_Connector(BaseConnector):
                 rule_category = filter_rule.get("Rule Category", ["", ""])
                 additional_comments = filter_rule.get("Additional Comments", "")
                 if rule_action not in ["case", "close", "ingest", "ignore"]:
+
+                    if self.debug_print:
+                        print(f"Skipping rule: {rule_name} ({rule_action})")
                     continue
 
                 # get filter rule definitions
                 incident_rule = json.loads(
                     filter_rule["Incident"] if 0 < len(filter_rule["Incident"].strip()) else "{}")
                 alert_rule = json.loads(filter_rule["Alerts"] if 0 < len(filter_rule["Alerts"].strip()) else "{}")
-                entity_rule = json.loads(filter_rule["Alerts"] if 0 < len(filter_rule["Alerts"].strip()) else "{}")
+                entity_rule = json.loads(filter_rule["Entities"] if 0 < len(filter_rule["Entities"].strip()) else "{}")
                 device_rule = json.loads(filter_rule["Devices"] if 0 < len(filter_rule["Devices"].strip()) else "{}")
                 rule_count = len(incident_rule) + len(alert_rule) + len(entity_rule) + len(device_rule)
                 if 0 == rule_count: continue
@@ -1038,7 +1041,7 @@ class MDESecurityCenter_Connector(BaseConnector):
                 pass_incident = False if 0 < len(incident_rule) else True
                 pass_alert = False if 0 < len(alert_rule) else True
                 pass_entity = False if 0 < len(entity_rule) else True
-                pass_device = False if 0 < len(entity_rule) else True
+                pass_device = False if 0 < len(device_rule) else True
 
                 # check for incident rule match
                 if self._filter_rule_matches(incident_rule, incident):
@@ -1058,6 +1061,14 @@ class MDESecurityCenter_Connector(BaseConnector):
                         # check for device rule match
                         if self._filter_rule_matches(device_rule, device):
                             pass_device = True
+
+                if self.debug_print:
+                    print((
+                        f"pass_incident: "
+                        f"pass_alert: "
+                        f"pass_entity: "
+                        f"pass_device:"
+                    ))
 
                 # perform defined action if rule matches
                 if pass_incident and pass_alert and pass_entity and pass_device:
@@ -1408,14 +1419,14 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.save_progress(progress_str_const=status_message)
         return self.action_result.set_status(status_code=status_code, status_message=status_message)
 
-    def _sdi(self, input: dict) -> str:
+    def _sdi(self, input_dictionary: dict) -> str:
         # incidentId
-        if input.get("incidentId", False):
-            self._rd.seed(input["incidentId"])
+        if input_dictionary.get("incidentId", False):
+            self._rd.seed(input_dictionary["incidentId"])
 
         # alertId
-        if input.get("alertId", False):
-            self._rd.seed(input["alertId"])
+        if input_dictionary.get("alertId", False):
+            self._rd.seed(input_dictionary["alertId"])
 
         return str(uuid.UUID(version=4, int=self._rd.getrandbits(128)))
 
