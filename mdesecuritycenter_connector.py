@@ -1237,62 +1237,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         if "resolved" == incident['status'].lower() and "closed" == container['status'].lower():
             return True
 
-        # # make sure incident name and soar name are in sync
-        # if incident['incidentName'] != container['name'] and "case" != container['container_type']:
-        #     data = {
-        #         "container_id": container['id'],
-        #         "name": incident['incidentName']
-        #     }
-        #     response = phantom.requests.post(container_edit_uri, data=json.dumps(data), verify=False)
-        #     # todo: or, if case, update incident name in MDE to case name from SOAR
-        #     if "case" != container['container_type']:
-        #         # # todo: update incident name in MDE to case name from SOAR
-        #         # url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security',
-        #         #                                                 incident_id=incident['incidentId'])
-        #         # data = {"incidentName": container['name']}
-        #         # # no known way to update incident name in MDE:
-        #         # # https://learn.microsoft.com/en-us/microsoft-365/security/defender/api-update-incidents?view=o365-worldwide
-        #         # if not self._make_rest_call(url, data=data, method="patch"):
-        #         #     return phantom.APP_ERROR
-        #         pass
-        #     else:
-        #         # todo: update name in SOAR from MDE
-        #         data = {
-        #             "container_id": container['id'],
-        #             "name": incident['incidentName']
-        #         }
-        #         response = phantom.requests.post(container_edit_uri, data=json.dumps(data), verify=False)
-        #
-        # # comment parity between MDE and SOAR
-        # comments_uri = phanrules.build_phantom_rest_url("container", container['id'], "notes") + "?page_size=0"
-        # soar_notes = phantom.requests.get(comments_uri, verify=False).json().get('data', [])
-        #
-        # notes = [note['content'] for note in soar_notes]
-        # mde_comments = [comment for comment in incident['comments']]
-        #
-        # missing_soar_notes = [soar_note for soar_note in soar_notes if soar_note['content'] not in mde_comments]
-        # missing_mde_comments = [comment for comment in incident['comments'] if comment['comment'] not in notes]
-        #
-        # soar_comment_uri = phanrules.build_phantom_rest_url("container_comment")
-        # mde_edit_uri = f"{self.api_uri}/{INCIDENT_SINGLE}"
-        # mde_edit_uri = mde_edit_uri.format(resource='security', incident_id=incident['incidentId'])
-        #
-        # for soar_note in missing_soar_notes:
-        #     continue
-        #     data = {
-        #         "container_id": container['id'],
-        #         "comment": soar_note['content']
-        #     }
-        #     response = phantom.requests.post(soar_comment_uri, data=json.dumps(data), verify=False)
-        #
-        # for mde_comment in missing_mde_comments:
-        #     continue
-        #     data = {"comment": mde_comment['comment']}
-        #     if not self._make_rest_call(mde_edit_uri, data=json.dumps(data), method="patch"):
-        #         print(self.r_json)
-        #     else:
-        #         print(self.r_json)
-
         status = incident.get("status", "").lower()
         if "resolved" == status and "closed" != container['status']:
             soar_comment_uri = phanrules.build_phantom_rest_url("container_comment")
@@ -1306,46 +1250,6 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         elif "redirected" == status:
             self._close_redirected(container, incident)
-        #     soar_comment_uri = phanrules.build_phantom_rest_url("container_comment")
-        #     print(f"Incident redirected: {incident['incidentId']}")
-        #     container_search_url = (
-        #         f"{phanrules.build_phantom_rest_url('container')}"
-        #         f"?_filter_source_data_identifier=\"{incident['source_data_identifier']}\""
-        #     )
-        #     container_results = phantom.requests.get(container_search_url, verify=False).json()
-        #     if 0 != container_results.get("count", 0):
-        #         self._close_redirected_container()
-        #         target_container = container_results["data"][0]
-        #
-        #         # add closing comment
-        #         print(container['id'])
-        #         print(target_container['id'])
-        #         data = {
-        #             "container_id": container['id'],
-        #             "comment": (
-        #                 f"Incident was redirected MDE to incident {incident['incidentId']}, "
-        #                 f"container {target_container['id']}"
-        #             )
-        #         }
-        #         response = phantom.requests.post(soar_comment_uri, data=json.dumps(data), verify=False)
-        #
-        #         # add closing tags and status
-        #         data = json.dumps({
-        #             "tags": container['tags'] + self._get_asset_tags() + ["redirected"],
-        #             "status": "Closed",
-        #         })
-        #         response = phantom.requests.post(phanrules.build_phantom_rest_url("container"), data=data, verify=False)
-        #
-        #         # # get artifacts of redirected incident/container
-        #         # artifacts_uri = phanrules.build_phantom_rest_url("container", container['id'],
-        #         #                                                  "artifacts") + "?page_size=0"
-        #         # response = phantom.requests.get(artifacts_uri, verify=False).json()
-        #         #
-        #         # # copy the artifacts to the new container
-        #         # artifact_add_uri = phanrules.build_phantom_rest_url("artifact")
-        #         # for existing_artifact in response['data']:
-        #         #     artifact = self._compile_artifacts(existing_artifact, target_container['id'])
-        #         #     response = phantom.requests.post(artifact_add_uri, data=json.dumps(artifact), verify=False)
 
         elif "active" == status:
             print(f"Incident active: {incident['incidentId']}")
