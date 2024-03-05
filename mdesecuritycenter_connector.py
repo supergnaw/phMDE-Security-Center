@@ -41,7 +41,7 @@ class AuthenticationToken:
         self._expires_on = 0
         self._endpoint = ""
         self.update(token=token, expires_on=expires_on)
-        self.debug_print = False
+        self.debug_print = True
 
     @property
     def token(self) -> str or bool:
@@ -371,8 +371,6 @@ class MDESecurityCenter_Connector(BaseConnector):
             message = f"Invalid method sent to '_make_rest_call': {method}"
             return self.save_progstat(phantom.APP_ERROR, status_message=message)
 
-        # https://something.dod-graph.microsoft.us/v1.0/$batch
-        print(f"endpoint: {endpoint}")
         # resource = rp.search(pattern=r"/[^\w]([^\.]+)\.microsoft/i", string=endpoint).group(1)
         resource = rp.search(pattern=r"/[^\w]+([^\.]+)\.microsoft/i", string=endpoint).group(1)
         if not self._authenticate(resource=resource):
@@ -1000,6 +998,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             existing_container = None
             container_results = phantom.requests.get(container_search_url, verify=False).json()
             if 0 < container_results.get("count", 0):
+                print(f"incident already ingested: {incident['incidentId']}")
                 existing_container = container_results["data"][0]
                 self._update_parity(incident, existing_container)
 
@@ -1014,9 +1013,6 @@ class MDESecurityCenter_Connector(BaseConnector):
                              "source_data_identifier": incident["source_data_identifier"],
                              "status": self.statuses['container'].get(self.param.get("status", "default"), False),
                              "tags": container_tags, 'artifacts': self._compile_artifacts(incident)}
-
-            if self.debug_print:
-                print(f"new_container: {json.dumps(new_container, indent=4)}")
 
             # loop through each row in the filter rules
             for filter_rule in filter_list:
@@ -1102,10 +1098,12 @@ class MDESecurityCenter_Connector(BaseConnector):
                         if existing_container:
                             # parity updates handled by _update_parity() function
                             continue
-                        save_container_uri = phanrules.build_phantom_rest_url("container")
-                        response = phantom.requests.post(save_container_uri, json=new_container, verify=False)
+                        # save_container_uri = phanrules.build_phantom_rest_url("container")
+                        # response = phantom.requests.post(save_container_uri, json=new_container, verify=False)
+                        result = phanrules.save_container(new_container)
                         if self.debug_print:
                             print(f"Incident ingested: {incident['incidentId']}")
+                            print(f"phanrules.save_container: {result}")
                         continue
 
                     if "case" == rule_action:
@@ -1126,9 +1124,9 @@ class MDESecurityCenter_Connector(BaseConnector):
                 continue
             else:
                 save_container_uri = phanrules.build_phantom_rest_url("container")
-                response = phantom.requests.post(save_container_uri, json=new_container, verify=False)
+                response = phantom.requests.post(save_container_uri, data=json.dumps(new_container), verify=False)
                 if self.debug_print:
-                    print(f"save_container response: {response}")
+                    print(f"save_container response: {response.text}")
 
         # Finalize ingestion
         message = f"Ingestion complete"
@@ -1141,15 +1139,12 @@ class MDESecurityCenter_Connector(BaseConnector):
         if not response.get("failed", False):
             return self._validate_filter_list(response["content"])
 
-        print(response)
-
         success, message = phanrules.set_list(
             list_name=self.filter_list,
             values=[["Rule Name", "Action", "Incident", "Alerts", "Entities",
                      "Devices", "Additional Comments", "Category", "Status"]]
         )
 
-        print(f"phantom.set_list results: success: {success}, message: {message}")
         return self._validate_filter_list()
 
     def _validate_filter_list(self, filter_list: list) -> list:
@@ -1191,8 +1186,6 @@ class MDESecurityCenter_Connector(BaseConnector):
 
                 except ValueError:
                     errors.append(f"Invalid JSON in '{column}'")
-
-            print(f"valid_jsons: {valid_jsons}")
 
             # check for solely exclusion rule
             key_list = []
@@ -1401,9 +1394,18 @@ class MDESecurityCenter_Connector(BaseConnector):
         :param dictionary: input dictionary to be hashed
         :return: md5 hex hash of dictionary
         """
-        {k: dictionary[k] for k in sorted(dictionary)}
+        dictionary = self._sort_dict(dictionary)
         dictionary_hash = hashlib.md5(str(dictionary).encode(), usedforsecurity=False)
         return dictionary_hash.hexdigest()
+
+    def _sort_dict(self, dictionary: dict) -> dict:
+        {k: dictionary[k] for k in sorted(dictionary)}
+        for key, value in dictionary.items():
+            if isinstance(value, dict):
+                dictionary[key] = self._sort_dict(value)
+
+        return dictionary
+
 
     def _compile_artifacts(self, dictionary: dict, container_id: int = None) -> list:
         """
@@ -1417,33 +1419,40 @@ class MDESecurityCenter_Connector(BaseConnector):
         # initialize vars
         field_map = self.field_map
         artifacts = []
-        root_artifact = {"cef": {}, "data": {}}
+        artifact_dict = {"cef": {}, "data": {}}
 
         # loop through items to create artifacts
         for artifact_name, artifact_value in dictionary.items():
             artifact_name = field_map.get(artifact_name, artifact_name)
+
             # sub artifacts that need to be broken down further
             if artifact_name in ["alerts", "devices", "entities"]:
+                sub_artifact_dict = {"cef": {}, "data": {}}
                 for sub_artifact in artifact_value:
-                    sub_artifact = self._compile_artifacts(sub_artifact, container_id)
-                    if sub_artifact:
-                        artifacts.append(sub_artifact)
-                continue
+                    for sub_artifact_name, sub_artifact_value in sub_artifact.items():
+                        sub_artifact_name = field_map.get(sub_artifact_name, sub_artifact_name)
 
-            # this is basic artifact data
-            if artifact_name in self.cef:
-                root_artifact['cef'][artifact_name] = artifact_value
-            root_artifact['data'][artifact_name] = artifact_value
+                        if sub_artifact_name in self.cef:
+                            sub_artifact_dict['cef'][sub_artifact_name] = sub_artifact_value
+                        sub_artifact_dict['data'][artifact_name] = artifact_value
+                    sub_artifact_dict['source_data_identifier'] = self._dict_hash(sub_artifact_dict)
+                    artifacts.append(sub_artifact_dict)
+
+            # this is root artifact data
+            else:
+                if artifact_name in self.cef:
+                    artifact_dict['cef'][artifact_name] = artifact_value
+                artifact_dict['data'][artifact_name] = artifact_value
 
         # hash the dictionary for source data identifier
-        root_artifact['source_data_identifier'] = self._dict_hash(root_artifact)
+        artifact_dict['source_data_identifier'] = self._dict_hash(artifact_dict)
 
         # add optional target container ID
         if container_id:
-            root_artifact['id'] = container_id
+            artifact_dict['id'] = container_id
 
         # append the root artifact and return
-        artifacts.append(root_artifact)
+        artifacts.append(artifact_dict)
         return artifacts
 
     def _incident_to_container(self, incident: dict):
