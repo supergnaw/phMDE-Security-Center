@@ -108,13 +108,13 @@
     },
     "on_poll_behavior": {
       "data_type": "string",
-      "description": "Behavior of on poll action for incidents with no filter rule match (default: ingest)",
+      "description": "Behavior of on poll action for incidents with no filter rule match (default: ignore)",
       "required": false,
       "value_list": [
         "ingest",
         "ignore"
       ],
-      "default": "ingest",
+      "default": "ignore",
       "order": 13
     }
   },

@@ -34,14 +34,13 @@ from inspect import currentframe
 
 from mdesecuritycenter_consts import *
 
-
 class AuthenticationToken:
     def __init__(self, token: str, expires_on: int) -> None:
         self._token = ""
         self._expires_on = 0
         self._endpoint = ""
         self.update(token=token, expires_on=expires_on)
-        self.debug_print = True
+        self.debug_print = False
 
     @property
     def token(self) -> str or bool:
@@ -140,6 +139,7 @@ class MDESecurityCenter_Connector(BaseConnector):
     def field_map(self) -> dict:
         return json.loads(self.get_config().get("field_mapping", "{}"))
 
+    @property
     def on_poll_behavior(self) -> str:
         return self.get_config().get("on_poll_behavior", "ingest")
 
@@ -944,10 +944,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         x_hours_ago = (datetime.utcnow() - timedelta(hours=self.ingest_window)).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
         container_label = self._get_asset_label()
         container_tags = self._get_asset_tags()
-        if self.debug_print:
-            print(f"container_label: {container_label}")
-        if self.debug_print:
-            print(f"container_tags: {container_tags}")
 
         # fetch the incidents
         url = f"{self.api_uri}{INCIDENT_LIST}".format(resource='security')
@@ -980,13 +976,14 @@ class MDESecurityCenter_Connector(BaseConnector):
             return_message = f"MDE returned {incident_count} incident"
         else:
             return_message = f"MDE returned {incident_count} incidents"
-        if self.debug_print:
-            print(return_message)
 
         # get filter list rules
         filter_list = self._get_filter_list()
 
         for incident in incidents:
+
+            # this is how we determine an action was taken for a given incident and bypass the default on_poll behavior
+            action_taken = False
 
             # check if the incident has already been ingested
             container_search_url = (
@@ -1004,7 +1001,6 @@ class MDESecurityCenter_Connector(BaseConnector):
 
             if "redirected" == incident['status'].lower():
                 # redirected incidents have no data of value
-                print(f"skipping redirected incident: {incident['incidentId']}")
                 continue
 
             # create container to possibly save
@@ -1023,17 +1019,21 @@ class MDESecurityCenter_Connector(BaseConnector):
                 rule_category = filter_rule.get("Rule Category", ["", ""])
                 additional_comments = filter_rule.get("Additional Comments", "")
                 if rule_action not in ["case", "close", "ingest", "ignore"]:
-
-                    if self.debug_print:
-                        print(f"Skipping rule: {rule_name} ({rule_action})")
                     continue
 
                 # get filter rule definitions
-                incident_rule = json.loads(
-                    filter_rule["Incident"] if 0 < len(filter_rule["Incident"].strip()) else "{}")
-                alert_rule = json.loads(filter_rule["Alerts"] if 0 < len(filter_rule["Alerts"].strip()) else "{}")
-                entity_rule = json.loads(filter_rule["Entities"] if 0 < len(filter_rule["Entities"].strip()) else "{}")
-                device_rule = json.loads(filter_rule["Devices"] if 0 < len(filter_rule["Devices"].strip()) else "{}")
+                incident_rule = filter_rule["Incident"].strip() if filter_rule.get("Incident", False) else "{}"
+                incident_rule = json.loads(incident_rule)
+
+                alert_rule = filter_rule["Alerts"].strip() if filter_rule.get("Alerts", False) else "{}"
+                alert_rule = json.loads(alert_rule)
+
+                entity_rule = filter_rule["Entities"].strip() if filter_rule.get("Entities", False) else "{}"
+                entity_rule = json.loads(entity_rule)
+
+                device_rule = filter_rule["Devices"].strip() if filter_rule.get("Devices", False) else "{}"
+                device_rule = json.loads(device_rule)
+
                 rule_count = len(incident_rule) + len(alert_rule) + len(entity_rule) + len(device_rule)
                 if 0 == rule_count: continue
 
@@ -1062,88 +1062,75 @@ class MDESecurityCenter_Connector(BaseConnector):
                         if self._filter_rule_matches(device_rule, device):
                             pass_device = True
 
-                if self.debug_print:
-                    print((
-                        f"pass_incident: "
-                        f"pass_alert: "
-                        f"pass_entity: "
-                        f"pass_device:"
-                    ))
-
                 # perform defined action if rule matches
                 if pass_incident and pass_alert and pass_entity and pass_device:
 
                     if "ignore" == rule_action:
-                        if self.debug_print:
-                            print(f"Incident ignored: {incident['incidentId']}")
-                        continue
+                        action_taken = f"{rule_action}"
 
-                    if "close" == rule_action and "active" == incident['status'].lower():
-                        if existing_container:
-                            # close existing container
-                            pass
-                        if self.debug_print:
-                            print(f"Incident to be closed: {incident['incidentId']}")
-                        body = {
-                            "status": "Resolved",
-                            "assignedTo": self.param.get("assigned_to", False),
-                            "classification": rule_category[0],
-                            # DOESN'T LIKE:
-                            # - InformationalExpectedActivity.ConfirmedUserActivity
-                            # - FalsePositive.Clean
-                            # - FalsePositive.InsufficientData
-                            # - TruePositive.CompromisedUser
-                            "determination": rule_category[1],
-                            "comment": f"Incident closed from SOAR based on rule '{rule_name}': {additional_comments}"
-                        }
-                        data = json.dumps({key: val for key, val in body.items() if val and "" != f"{val}"})
+                    if "close" == rule_action:
+                        # close any existing container
+                        # todo: add the code to get a container with this SDI and close it if it is open
+                        # if existing_container:
+                        #     print(f"Incident to be closed: {incident['incidentId']}")
+                        #     exit()
 
-                        url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security',
-                                                                        incident_id=incident['incidentId'])
+                        # resolve incident in MDE
+                        if "active" == incident['status'].lower():
+                            self.debug_print(f"resolving incident in MDE")
+                            # close incident in MDE
+                            body = {
+                                "status": "Resolved",
+                                "assignedTo": self.param.get("assigned_to", False),
+                                "classification": rule_category[0],
+                                # DOESN'T LIKE:
+                                # - InformationalExpectedActivity.ConfirmedUserActivity
+                                # - FalsePositive.Clean
+                                # - FalsePositive.InsufficientData
+                                # - TruePositive.CompromisedUser
+                                "determination": rule_category[1],
+                                "comment": f"Incident closed from SOAR based on rule '{rule_name}': {additional_comments}"
+                            }
+                            data = json.dumps({key: val for key, val in body.items() if val and "" != f"{val}"})
 
-                        if not self._make_rest_call(url, data=data, method="patch"):
-                            return phantom.APP_ERROR
-                        continue
+                            url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security',
+                                                                            incident_id=incident['incidentId'])
+
+                            if not self._make_rest_call(url, data=data, method="patch"):
+                                return phantom.APP_ERROR
+
+                        action_taken = f"{rule_action}"
+                        self.debug_print(f"Close action taken for incident")
 
                     if "ingest" == rule_action and "active" == incident['status'].lower():
-                        if existing_container:
-                            # parity updates handled by _update_parity() function
-                            continue
-                        # save_container_uri = phanrules.build_phantom_rest_url("container")
-                        # response = phantom.requests.post(save_container_uri, json=new_container, verify=False)
-                        result = phanrules.save_container(new_container)
-                        if self.debug_print:
-                            print(f"Incident ingested: {incident['incidentId']}")
-                            print(f"phanrules.save_container: {result}")
-                        continue
+                        if not existing_container:
+                            result = self.save_container(new_container)
+
+                        action_taken = f"{rule_action}"
 
                     if "case" == rule_action:
-                        if self.debug_print:
-                            print(f"Incident is a case: {incident['incidentId']}")
                         if existing_container and "case" == existing_container['container_type']:
                             container_edit_uri = phanrules.build_phantom_rest_url('container', existing_container['id'])
                             data = {"id": existing_container['id'], "container_type": "case"}
                             response = phantom.requests.post(container_edit_uri, json=data, verify=False)
-                            continue
                         phanrules.build_phantom_rest_url('container')
                         new_container['container_type'] = "case"
                         response = phantom.requests.post(container_edit_uri, json=data, verify=False)
-                        continue
+
+                        action_taken = f"{rule_action}"
 
             # no rule matches, continue with default behavior for the current incident
-            if "ignore" == self.on_poll_behavior:
-                continue
+            if action_taken is False and "ingest" == self.on_poll_behavior:
+                result = self.save_container(new_container)
+                print(f"default 'ingest' action for new container {new_container['name']}")
             else:
-                save_container_uri = phanrules.build_phantom_rest_url("container")
-                response = phantom.requests.post(save_container_uri, data=json.dumps(new_container), verify=False)
-                if self.debug_print:
-                    print(f"save_container response: {response.text}")
+                print(f"Incident completely ignored.\n\t- action taken: {action_taken}, default behavior: {self.on_poll_behavior}")
 
         # Finalize ingestion
         message = f"Ingestion complete"
         return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
 
-    def _get_filter_list(self) -> list:
+    def _get_filter_list(self, recurse: bool = True) -> list:
         filter_url = phanrules.build_phantom_rest_url("decided_list", self.filter_list)
         response = json.loads(phantom.requests.get(filter_url, verify=False).content)
 
@@ -1156,7 +1143,11 @@ class MDESecurityCenter_Connector(BaseConnector):
                      "Devices", "Additional Comments", "Category", "Status"]]
         )
 
-        return self._validate_filter_list()
+        if recurse:
+            return self._get_filter_list(recurse=False)
+
+        # something is broken, but we don't talk about that...
+        return [{}]
 
     def _validate_filter_list(self, filter_list: list) -> list:
 
@@ -1185,7 +1176,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             for column in json_fields:
                 try:
                     content = filter_rules[r].get(column, "")
-                    content = content if content.strip() else ""  # sometimes empty values are null and just act wierd
+                    content = content.strip() if content else ""  # sometimes empty values are null and just act wierd
                     if 0 == len(content):
                         continue
 
