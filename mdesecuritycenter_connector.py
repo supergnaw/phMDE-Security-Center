@@ -34,6 +34,7 @@ from inspect import currentframe
 
 from mdesecuritycenter_consts import *
 
+
 class AuthenticationToken:
     def __init__(self, token: str, expires_on: int) -> None:
         self._token = ""
@@ -1124,7 +1125,8 @@ class MDESecurityCenter_Connector(BaseConnector):
                 result = self.save_container(new_container)
                 print(f"default 'ingest' action for new container {new_container['name']}")
             else:
-                print(f"Incident completely ignored.\n\t- action taken: {action_taken}, default behavior: {self.on_poll_behavior}")
+                print(
+                    f"Incident completely ignored.\n\t- action taken: {action_taken}, default behavior: {self.on_poll_behavior}")
 
         # Finalize ingestion
         message = f"Ingestion complete"
@@ -1251,7 +1253,8 @@ class MDESecurityCenter_Connector(BaseConnector):
             response = phantom.requests.post(soar_comment_uri, data=json.dumps(data), verify=False)
 
         elif "redirected" == status:
-            self._close_redirected(container, incident)
+            # self._close_redirected(container, incident)
+            print(f"Incident redirected: {incident['incidentId']}")
 
         elif "active" == status:
             print(f"Incident active: {incident['incidentId']}")
@@ -1279,7 +1282,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         data = {
             "container_id": container['id'],
             "comment": (
-                f"Incident was redirected MDE to incident {incident['incidentId']}, "
+                f"Incident was redirected in MDE to incident {incident['incidentId']}, "
                 f"container {target_container['id']}"
             )
         }
@@ -1312,8 +1315,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         return dictionary
 
-
-    def _compile_artifacts_old(self, dictionary: dict, container_id: int = None) -> list:
+    def _compile_artifacts_old(self, dictionary: dict, container_id: int = None, odata_type="incident") -> list:
         """
         Takes a dictionary input of an incident and compiles them into plug-n-play artifacts based on the CEFs
         configured in the SOAR
@@ -1324,14 +1326,19 @@ class MDESecurityCenter_Connector(BaseConnector):
         """
         # initialize vars
         artifact_list = []
-        artifact_dict = {"cef": {}, "data": {}}
+        artifact_dict = {"name": odata_type, "cef": {}, "data": {}}
+        odata_types = {
+            "alerts": "alert",
+            "devices": "device",
+            "entities": "entity"
+        }
 
         # loop through items to create artifacts
         for artifact_name, artifact_value in dictionary.items():
             artifact_name = self.field_map.get(artifact_name, artifact_name)
 
             # sub artifacts that need to be broken down further
-            if artifact_name in ["alerts", "devices", "entities"]:
+            if artifact_name in odata_types.keys():
                 sub_artifact_dict = {"cef": {}, "data": {}}
                 for sub_artifact in artifact_value:
                     for sub_artifact_name, sub_artifact_value in sub_artifact.items():
@@ -1363,20 +1370,74 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         return artifact_list
 
-    def _compile_artifacts(self, dictionary: dict, container_id: int = None) -> list:
+    def _compile_artifacts(self, dictionary: dict, container_id: int = None, odata_type: str = "incident") -> list:
+        # prepare variables
         artifact_list = []
         this_artifact = {"cef": {}, "data": {}}
+        odata_types = {
+            "alerts": "alert",
+            "devices": "device",
+            "entities": "entity"
+        }
 
+        # set important defaults
+        if "incident" == odata_type:
+            this_artifact["name"] = dictionary.get("incidentName", "generic incident")
+            this_artifact["description"] = dictionary.get("incidentUri", "generic incident")
+            this_artifact["label"] = "incident"
+
+        elif "alert" == odata_type:
+            this_artifact["name"] = dictionary.get("title", "generic alert")
+            this_artifact["description"] = dictionary.get("description", "generic alert")
+            this_artifact["label"] = "alert"
+
+        elif "device" == odata_type:
+            this_artifact["name"] = dictionary.get("deviceDnsName", "unknown device")
+            this_artifact["description"] = dictionary.get("rbacGroupName", "unknown device group")
+            this_artifact["label"] = "device"
+
+        elif "entity" == odata_type:
+
+            if "File" == dictionary.get("entityType"):
+                this_artifact["name"] = dictionary.get("fileName", "unknown file")
+                this_artifact["description"] = dictionary.get("filePath", "unknown file location")
+                this_artifact["label"] = "file"
+
+            elif "Process" == dictionary.get("entityType"):
+                this_artifact["name"] = dictionary.get("fileName", "unknown process")
+                this_artifact["description"] = dictionary.get("filePath", "unknown process location")
+                this_artifact["label"] = "process"
+
+            elif "Registry" == dictionary.get("entityType"):
+                this_artifact["name"] = dictionary.get("registryKey", "unknown registry key")
+                this_artifact["description"] = dictionary.get("registryHive", "unknown registry hive")
+                this_artifact["label"] = "registry"
+
+            elif "User" == dictionary.get("entityType"):
+                this_artifact["name"] = dictionary.get("userPrincipalName", "unknown user")
+                this_artifact["description"] = dictionary.get("accountName", "unknown account")
+                this_artifact["label"] = "user"
+
+            else:
+                this_artifact["name"] = dictionary.get("entityType", "unknown entity")
+
+        else:
+            this_artifact["name"] = "other"
+            this_artifact["label"] = "artifact"
+
+        # do a barrel roll!
         for artifact_name, artifact_value in dictionary.items():
-            if artifact_name in ["alerts", "devices", "entities"]:
+            if artifact_name in odata_types.keys():
                 for sub_artifact in artifact_value:
-                    artifact_list = artifact_list + self.compile_artifacts(sub_artifact, container_id)
+                    artifact_list = artifact_list + self._compile_artifacts(sub_artifact, container_id,
+                                                                            odata_types.get(artifact_name, "other"))
 
             else:
                 if artifact_name in self.cef:
                     this_artifact['cef'][artifact_name] = artifact_value
                 this_artifact['data'][artifact_name] = artifact_value
 
+        # finish up the artifact and save
         this_artifact['source_data_identifier'] = self._dict_hash(this_artifact)
 
         if container_id:
