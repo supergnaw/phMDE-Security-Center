@@ -4,7 +4,7 @@
   "description": "Splunk SOAR connector module for interacting with the Microsoft Defender for Endpoint Security Center API.",
   "type": "endpoint",
   "main_module": "mdesecuritycenter_connector.py",
-  "app_version": "1.0.6",
+  "app_version": "1.0.7",
   "product_vendor": "Microsoft",
   "product_name": "Microsoft 365 Defender for Endpoint",
   "product_version_regex": ".*",
@@ -2746,7 +2746,7 @@
           "data_path": "action_result.data.*.fileProductName",
           "data_type": "string",
           "example_values": [
-            "Microsoft© Windows© Operating System"
+            "MicrosoftÂ© WindowsÂ© Operating System"
           ],
           "contains": [
           ]

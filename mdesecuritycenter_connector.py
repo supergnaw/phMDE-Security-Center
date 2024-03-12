@@ -1313,7 +1313,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         return dictionary
 
 
-    def _compile_artifacts(self, dictionary: dict, container_id: int = None) -> list:
+    def _compile_artifacts_old(self, dictionary: dict, container_id: int = None) -> list:
         """
         Takes a dictionary input of an incident and compiles them into plug-n-play artifacts based on the CEFs
         configured in the SOAR
@@ -1323,26 +1323,25 @@ class MDESecurityCenter_Connector(BaseConnector):
         :return: list of dictionaries containing artifacts
         """
         # initialize vars
-        field_map = self.field_map
-        artifacts = []
+        artifact_list = []
         artifact_dict = {"cef": {}, "data": {}}
 
         # loop through items to create artifacts
         for artifact_name, artifact_value in dictionary.items():
-            artifact_name = field_map.get(artifact_name, artifact_name)
+            artifact_name = self.field_map.get(artifact_name, artifact_name)
 
             # sub artifacts that need to be broken down further
             if artifact_name in ["alerts", "devices", "entities"]:
                 sub_artifact_dict = {"cef": {}, "data": {}}
                 for sub_artifact in artifact_value:
                     for sub_artifact_name, sub_artifact_value in sub_artifact.items():
-                        sub_artifact_name = field_map.get(sub_artifact_name, sub_artifact_name)
+                        sub_artifact_name = self.field_map.get(sub_artifact_name, sub_artifact_name)
 
                         if sub_artifact_name in self.cef:
                             sub_artifact_dict['cef'][sub_artifact_name] = sub_artifact_value
                         sub_artifact_dict['data'][artifact_name] = artifact_value
                     sub_artifact_dict['source_data_identifier'] = self._dict_hash(sub_artifact_dict)
-                    artifacts.append(sub_artifact_dict)
+                    artifact_list.append(sub_artifact_dict)
 
             # this is root artifact data
             else:
@@ -1358,8 +1357,34 @@ class MDESecurityCenter_Connector(BaseConnector):
             artifact_dict['id'] = container_id
 
         # append the root artifact and return
-        artifacts.append(artifact_dict)
-        return artifacts
+        artifact_list.append(artifact_dict)
+
+        print(artifact_list)
+
+        return artifact_list
+
+    def _compile_artifacts(self, dictionary: dict, container_id: int = None) -> list:
+        artifact_list = []
+        this_artifact = {"cef": {}, "data": {}}
+
+        for artifact_name, artifact_value in dictionary.items():
+            if artifact_name in ["alerts", "devices", "entities"]:
+                for sub_artifact in artifact_value:
+                    artifact_list = artifact_list + self.compile_artifacts(sub_artifact, container_id)
+
+            else:
+                if artifact_name in self.cef:
+                    this_artifact['cef'][artifact_name] = artifact_value
+                this_artifact['data'][artifact_name] = artifact_value
+
+        this_artifact['source_data_identifier'] = self._dict_hash(this_artifact)
+
+        if container_id:
+            this_artifact['id'] = container_id
+
+        artifact_list.append(this_artifact)
+
+        return artifact_list
 
     def _incident_to_container(self, incident: dict):
         pass
