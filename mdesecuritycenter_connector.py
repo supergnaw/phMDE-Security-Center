@@ -1169,7 +1169,8 @@ class MDESecurityCenter_Connector(BaseConnector):
             errors = []
 
             # check action string
-            action_string = filter_rules[r].get("Action", "").lower().strip()
+            action_string = (
+                "" if not filter_rules[r].get("Action", "") else filter_rules[r].get("Action", "")).lower().strip()
             if action_string not in valid_actions:
                 errors.append(f"Unknown action: '{action_string}'")
 
@@ -1201,9 +1202,10 @@ class MDESecurityCenter_Connector(BaseConnector):
                 errors.append(f"Contains only '!exclusionary' criterion, add at least one inclusion")
 
             # check category
-            category = filter_rules[r].get("Category", "").strip()
+            category = (
+                "" if not filter_rules[r].get("Category", "") else filter_rules[r].get("Category", "")).strip()
             if "close" == action_string and category not in valid_categories:
-                errors.append("Invalid 'Category' supplied for closing action")
+                errors.append(f"Invalid 'Category' supplied for closing action: {category}")
 
             # validate and log
             if 0 == len(errors):
