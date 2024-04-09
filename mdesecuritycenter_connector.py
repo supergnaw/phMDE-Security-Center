@@ -14,9 +14,6 @@
 # If you find errors or would like to help contribute, please see:
 # https://github.com/supergnaw/phMDE-Security-Center
 
-# For more info regarding the mysterious functions and libraries within this code, please see:
-# https://docs.splunk.com/Documentation/SOARonprem/latest/DevelopApps/AppDevAPIRef
-
 import phantom.rules as phanrules
 import phantom.app as phantom
 from phantom.action_result import ActionResult

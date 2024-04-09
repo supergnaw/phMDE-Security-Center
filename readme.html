@@ -17,6 +17,9 @@
     https://github.com/supergnaw/phMDE-Security-Center
 -->
 <style>
+    /*
+     * Applies a button look and an icon to the external documentation links on the SOAR app documentation page.
+     */
     a[target="_blank"] {
         padding: 6px calc(9px + 1.5em) 6px 9px;
         background-color: #3c444d;
@@ -46,185 +49,202 @@
 
 <table>
     <thead>
-    <tr>
-        <th>Action</th>
-        <th>Permission type</th>
-        <th>Permission</th>
-        <th>Permission display name</th>
-    </tr>
+        <tr>
+            <th>Action</th>
+            <th>Permission type</th>
+            <th>Permission</th>
+            <th>Permission display name</th>
+        </tr>
     </thead>
     <tbody>
-    <tr>
-        <td>get alert</td>
-        <td>Application</td>
-        <td>Alert.Read.All</td>
-        <td>Read all alerts</td>
-    </tr>
-    <tr>
-        <td>get investigation</td>
-        <td>Application</td>
-        <td>Alert.Read.All</td>
-        <td>Read all alerts</td>
-    </tr>
-    <tr>
-        <td>list alerts</td>
-        <td>Application</td>
-        <td>Alert.Read.All</td>
-        <td>Read all alerts</td>
-    </tr>
-    <tr>
-        <td>list investigations</td>
-        <td>Application</td>
-        <td>Alert.Read.All</td>
-        <td>Read all alerts</td>
-    </tr>
-    <tr>
-        <td>start investigation</td>
-        <td>Application</td>
-        <td>Alerts.ReadWrite.All</td>
-        <td>Read and write all alerts</td>
-    </tr>
-    <tr>
-        <td>update alert</td>
-        <td>Application</td>
-        <td>Alerts.ReadWrite.All</td>
-        <td>Read and write all alerts</td>
-    </tr>
-    <tr>
-        <td>update alert batch</td>
-        <td>Application</td>
-        <td>Alerts.ReadWrite.All</td>
-        <td>Read and write all alerts</td>
-    </tr>
-    <tr>
-        <td>get file info</td>
-        <td>Application</td>
-        <td>File.Read.All</td>
-        <td>Read file profiles</td>
-    </tr>
-    <tr>
-        <td>get file stats</td>
-        <td>Application</td>
-        <td>File.Read.All</td>
-        <td>Read file profiles</td>
-    </tr>
-    <tr>
-        <td>list alert files</td>
-        <td>Application</td>
-        <td>File.Read.All</td>
-        <td>Read file profiles</td>
-    </tr>
-    <tr>
-        <td>get incident</td>
-        <td>Application</td>
-        <td>Incident.Read.All</td>
-        <td>Read all incidents</td>
-    </tr>
-    <tr>
-        <td>list incidents</td>
-        <td>Application</td>
-        <td>Incident.Read.All</td>
-        <td>Read all incidents</td>
-    </tr>
-    <tr>
-        <td>update incident</td>
-        <td>Application</td>
-        <td>Incident.ReadWrite.All</td>
-        <td>Read and write all incidents</td>
-    </tr>
-    <tr>
-        <td>list library scripts</td>
-        <td>Application</td>
-        <td>Library.Manage</td>
-        <td>Manage live response library</td>
-    </tr>
-    <tr>
-        <td>collect investigation package</td>
-        <td>Application</td>
-        <td>Machine.CollectForensics</td>
-        <td>Collect forensics</td>
-    </tr>
-    <tr>
-        <td>isolate machine</td>
-        <td>Application</td>
-        <td>Machine.Isolate</td>
-        <td>Isolate machine</td>
-    </tr>
-    <tr>
-        <td>unisolate machine</td>
-        <td>Application</td>
-        <td>Machine.Isolate</td>
-        <td>Isolate machine</td>
-    </tr>
-    <tr>
-        <td>run action</td>
-        <td>Application</td>
-        <td>Machine.LiveResponse</td>
-        <td>Run live response on a specific machine</td>
-    </tr>
-    <tr>
-        <td>run actions</td>
-        <td>Application</td>
-        <td>Machine.LiveResponse</td>
-        <td>Run live response on a specific machine</td>
-    </tr>
-    <tr>
-        <td>get action</td>
-        <td>Application</td>
-        <td>Machine.Read.All</td>
-        <td>Read all machine profiles</td>
-    </tr>
-    <tr>
-        <td>get action result</td>
-        <td>Application</td>
-        <td>Machine.Read.All</td>
-        <td>Read all machine profiles</td>
-    </tr>
-    <tr>
-        <td>list actions</td>
-        <td>Application</td>
-        <td>Machine.Read.All</td>
-        <td>Read all machine profiles</td>
-    </tr>
-    <tr>
-        <td>list machine actions</td>
-        <td>Application</td>
-        <td>Machine.Read.All</td>
-        <td>Read all machine profiles</td>
-    </tr>
-    <tr>
-        <td>quarantine file</td>
-        <td>Application</td>
-        <td>Machine.StopAndQuarantine</td>
-        <td>Stop And Quarantine</td>
-    </tr>
+        <tr>
+            <td>get alert</td>
+            <td>Application</td>
+            <td>Alert.Read.All</td>
+            <td>Read all alerts</td>
+        </tr>
+        <tr>
+            <td>get investigation</td>
+            <td>Application</td>
+            <td>Alert.Read.All</td>
+            <td>Read all alerts</td>
+        </tr>
+        <tr>
+            <td>list alerts</td>
+            <td>Application</td>
+            <td>Alert.Read.All</td>
+            <td>Read all alerts</td>
+        </tr>
+        <tr>
+            <td>list investigations</td>
+            <td>Application</td>
+            <td>Alert.Read.All</td>
+            <td>Read all alerts</td>
+        </tr>
+        <tr>
+            <td>start investigation</td>
+            <td>Application</td>
+            <td>Alerts.ReadWrite.All</td>
+            <td>Read and write all alerts</td>
+        </tr>
+        <tr>
+            <td>update alert</td>
+            <td>Application</td>
+            <td>Alerts.ReadWrite.All</td>
+            <td>Read and write all alerts</td>
+        </tr>
+        <tr>
+            <td>update alert batch</td>
+            <td>Application</td>
+            <td>Alerts.ReadWrite.All</td>
+            <td>Read and write all alerts</td>
+        </tr>
+        <tr>
+            <td>get file info</td>
+            <td>Application</td>
+            <td>File.Read.All</td>
+            <td>Read file profiles</td>
+        </tr>
+        <tr>
+            <td>get file stats</td>
+            <td>Application</td>
+            <td>File.Read.All</td>
+            <td>Read file profiles</td>
+        </tr>
+        <tr>
+            <td>list alert files</td>
+            <td>Application</td>
+            <td>File.Read.All</td>
+            <td>Read file profiles</td>
+        </tr>
+        <tr>
+            <td>get incident</td>
+            <td>Application</td>
+            <td>Incident.Read.All</td>
+            <td>Read all incidents</td>
+        </tr>
+        <tr>
+            <td>list incidents</td>
+            <td>Application</td>
+            <td>Incident.Read.All</td>
+            <td>Read all incidents</td>
+        </tr>
+        <tr>
+            <td>update incident</td>
+            <td>Application</td>
+            <td>Incident.ReadWrite.All</td>
+            <td>Read and write all incidents</td>
+        </tr>
+        <tr>
+            <td>list library scripts</td>
+            <td>Application</td>
+            <td>Library.Manage</td>
+            <td>Manage live response library</td>
+        </tr>
+        <tr>
+            <td>collect investigation package</td>
+            <td>Application</td>
+            <td>Machine.CollectForensics</td>
+            <td>Collect forensics</td>
+        </tr>
+        <tr>
+            <td>isolate machine</td>
+            <td>Application</td>
+            <td>Machine.Isolate</td>
+            <td>Isolate machine</td>
+        </tr>
+        <tr>
+            <td>unisolate machine</td>
+            <td>Application</td>
+            <td>Machine.Isolate</td>
+            <td>Isolate machine</td>
+        </tr>
+        <tr>
+            <td>run action</td>
+            <td>Application</td>
+            <td>Machine.LiveResponse</td>
+            <td>Run live response on a specific machine</td>
+        </tr>
+        <tr>
+            <td>run actions</td>
+            <td>Application</td>
+            <td>Machine.LiveResponse</td>
+            <td>Run live response on a specific machine</td>
+        </tr>
+        <tr>
+            <td>get action</td>
+            <td>Application</td>
+            <td>Machine.Read.All</td>
+            <td>Read all machine profiles</td>
+        </tr>
+        <tr>
+            <td>get action result</td>
+            <td>Application</td>
+            <td>Machine.Read.All</td>
+            <td>Read all machine profiles</td>
+        </tr>
+        <tr>
+            <td>list actions</td>
+            <td>Application</td>
+            <td>Machine.Read.All</td>
+            <td>Read all machine profiles</td>
+        </tr>
+        <tr>
+            <td>list machine actions</td>
+            <td>Application</td>
+            <td>Machine.Read.All</td>
+            <td>Read all machine profiles</td>
+        </tr>
+        <tr>
+            <td>quarantine file</td>
+            <td>Application</td>
+            <td>Machine.StopAndQuarantine</td>
+            <td>Stop And Quarantine</td>
+        </tr>
     </tbody>
 </table>
 
 <h3>State File Details</h3>
 
+<p>The app saves a perpetual state file between runes to store things such as live response actions, authentication
+    tokens, and other perpetual data that is carried over between separate runs.</p>
+
 <h3>Explanation of Authentication During REST Calls</h3>
+
+<p>The app goes through a few steps to authenticate with the Microsoft services:</p>
+
+<ol>
+    <li>Check the state file (`self._state`) for an authentication token.</li>
+    <li>Verify the authentication token:
+        <ol>
+            <li>If no current authentication token exists, request a new one.</li>
+            <li>If current authentication token is expired, request a new one.</li>
+        </ol>
+    </li>
+    <li>Use the new authentication token to continue API actions.</li>
+    <li>Save the authentication token to the state file for use on the next run.</li>
+</ol>
 
 <h3>Port Information</h3>
 <p>The app uses HTTP/S to make REST calls to MDE. Below are the default ports used by Splunk SOAR.</p>
 <table>
     <thead>
-    <tr>
-        <th>Service</th>
-        <th>Protocol</th>
-        <th>Port</th>
-    </tr>
+        <tr>
+            <th>Service</th>
+            <th>Protocol</th>
+            <th>Port</th>
+        </tr>
     </thead>
     <tbody>
-    <tr>
-        <td>HTTP</td>
-        <td>TCP</td>
-        <td>80</td>
-    </tr>
-    <tr>
-        <td>HTTPS</td>
-        <td>TCP</td>
-        <td>443</td>
-    </tr>
+        <tr>
+            <td>HTTP</td>
+            <td>TCP</td>
+            <td>80</td>
+        </tr>
+        <tr>
+            <td>HTTPS</td>
+            <td>TCP</td>
+            <td>443</td>
+        </tr>
     </tbody>
 </table>
