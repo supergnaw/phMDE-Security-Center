@@ -1160,9 +1160,9 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         for r in range(0, len(filter_rules)):
             # remove any silly wierd spacing issues due to human error
-            filter_rules[r]["Rule Name"] = rp.sub(r"/\s+", " ", filter_rules[r]["Rule Name"]).strip()
-            filter_rules[r]["Additional Comments"] = rp.sub(r"/\s+", " ",
-                                                            filter_rules[r]["Additional Comments"]).strip()
+            regex = r"/(\s|\r?\n)+/m"
+            filter_rules[r]["Rule Name"] = rp.sub(regex, " ", filter_rules[r]["Rule Name"]).strip()
+            filter_rules[r]["Additional Comments"] = rp.sub(regex, " ", filter_rules[r]["Additional Comments"]).strip()
             errors = []
 
             # check action string
@@ -1179,6 +1179,8 @@ class MDESecurityCenter_Connector(BaseConnector):
                     content = content.strip() if content else ""  # sometimes empty values are null and just act wierd
                     if 0 == len(content):
                         continue
+
+                    content = rp.sub(regex, " ", content)
 
                     while not isinstance(content, dict):
                         content = json.loads(content)
