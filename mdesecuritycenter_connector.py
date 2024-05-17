@@ -195,6 +195,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         self._action_start_time = datetime.now()
         self._rd = random.Random()
         self._cef = []
+        self.containers_to_save = []
 
         # Input validation helper variables
         self.statuses = {
@@ -258,7 +259,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             return self._process_empty_response()
 
         message = f"Can't process response from server [{self.response.status_code}]: {self.response}"
-        return self.save_progstat(phantom.APP_ERROR, status_message=message)
+        return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
 
     def _process_json_response(self) -> bool:
         """
@@ -270,19 +271,19 @@ class MDESecurityCenter_Connector(BaseConnector):
             self.r_json = self.response.json()
         except Exception as e:
             message = f"Unable to parse JSON response: {self._get_exception_message(e, self.line_no)}"
-            return self.save_progstat(phantom.APP_ERROR, status_message=message)
+            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
 
         # We have a successful response, albeit a redirect is possible...
         if 200 <= self.response.status_code < 400:
             message = f"Status code {self.response.status_code} received and JSON response parsed"
-            return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+            return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
         # There's a generic error in our midst
         message = (
             f"!!! {str(self.r_json.get('error', {}).get('code', 'Unknown'))} error occurred [{self.response.status_code}]:"
             f"{str(self.r_json.get('error', {}).get('message', 'No message available'))}"
         )
-        return self.save_progstat(phantom.APP_ERROR, status_message=message)
+        return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
 
     def _process_html_response(self) -> bool:
         """
@@ -309,7 +310,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         # Use f-strings, we are not uncivilized heathens.
         message = f"Status Code: {self.response.status_code}. Raw data from server:\n{error_text}\n"
-        return self.save_progstat(phantom.APP_ERROR, status_message=message)
+        return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
 
     def _process_empty_response(self) -> bool:
         """
@@ -319,10 +320,10 @@ class MDESecurityCenter_Connector(BaseConnector):
         """
 
         if self.response.status_code in [200, 204]:
-            return self.save_progstat(phantom.APP_SUCCESS)
+            return self.set_status_save_progress(phantom.APP_SUCCESS)
 
         message = f"Status Code: {self.response.status_code}. Error: Empty response and no information in the header"
-        return self.save_progstat(phantom.APP_ERROR, status_message=message)
+        return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
 
     def _get_exception_message(self, e: Exception, line_no: int = 0) -> str:
         """
@@ -367,7 +368,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         # Hey now, you can't do that type of REST call
         if not hasattr(phantom.requests, method):
             message = f"Invalid method sent to '_make_rest_call': {method}"
-            return self.save_progstat(phantom.APP_ERROR, status_message=message)
+            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
 
         # resource = rp.search(pattern=r"/[^\w]([^\.]+)\.microsoft/i", string=endpoint).group(1)
         resource = rp.search(pattern=r"/[^\w]+([^\.]+)\.microsoft/i", string=endpoint).group(1)
@@ -399,11 +400,11 @@ class MDESecurityCenter_Connector(BaseConnector):
                                                               params=params, timeout=timeout)
         except Exception as e:
             message = f"Exception occurred while connecting to server: {self._get_exception_message(e, self.line_no)}"
-            return self.save_progstat(phantom.APP_ERROR, status_message=message, exception=e)
+            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message, exception=e)
 
         if 429 == self.response.status_code and 300 < int(self.response.headers.get('Retry-After', 301)):
             message = f"Error occurred [{self.response.status_code}]: {str(self.response.text)}"
-            return self.save_progstat(phantom.APP_ERROR, status_message=message)
+            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
 
         if 429 == self.response.status_code and 300 >= int(self.response.headers.get('Retry-After', 301)):
             self.save_progress(f"Retrying after {self.response.headers.get('Retry-After', 301)} seconds")
@@ -422,7 +423,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         if self.tokens[resource].token:
             summary = self.tokens[resource].summary()
             message = f"Authentication for {resource} valid until {summary['expires_on']} ({summary['expires_in']})"
-            return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+            return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
         # Prepare to request a new token
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
@@ -441,11 +442,11 @@ class MDESecurityCenter_Connector(BaseConnector):
             self.r_json = self.response.json()
         except Exception as e:
             message = self._get_exception_message(e, (self.line_no - 3))
-            return self.save_progstat(phantom.APP_ERROR, status_message=message)
+            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
 
         if 200 != self.response.status_code:
             message = f"Failed to authenticate [{self.r_json['error']}]: {self.r_json['error_description']}"
-            return self.save_progstat(phantom.APP_ERROR, status_message=message)
+            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
 
         token = str(self.r_json.get('access_token', ''))
         expires_on = int(self.r_json.get('expires_on', 0))
@@ -510,7 +511,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             incident_count += len(self.r_json.get("value", []))
 
         message = f"Returned {incident_count} incidents"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_get_incident(self) -> bool:
         url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security',
@@ -524,9 +525,10 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
         message = f"Retrieved incident {self.param['incident_id']}"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_update_incident(self) -> bool:
+        # get current container tags
         if not self.param.get("remove_tags", False):
             url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security',
                                                             incident_id=self.param['incident_id'])
@@ -553,8 +555,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         body = {key: val for key, val in body.items() if val and "" != f"{val}"}
         data = json.dumps(body)
 
-        # !! InvalidRequestBody error occurred [400]:Request body is incorrect
-
         url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security',
                                                         incident_id=self.param['incident_id'])
 
@@ -566,7 +566,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
         message = f"Updated incident: {self.param['incident_id']}:\n{self.r_json}"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_list_alerts(self) -> bool:
         params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
@@ -605,7 +605,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             alert_count += len(self.r_json.get("value", []))
 
         message = f"Returned {alert} alerts"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_get_alert(self) -> bool:
         url = f"{self.api_uri}{ALERT_SINGLE}".format(resource='securitycenter',
@@ -620,7 +620,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
         message = f"Retrieved alert {self.param['alert_id']}"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_update_alert(self) -> bool:
         url = f"{self.api_uri}{ALERT_SINGLE}".format(resource='securitycenter', alert_id=self.param['alert_id'])
@@ -659,7 +659,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             updates[key] = "failed" if not body[key] == val else "success"
 
         message = f"Updated alert {self.param['alert_id']}:\n{json.dumps(updates, indent=4)}"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_update_alert_batch(self) -> bool:
         url = f"{self.api_uri}{ALERT_BATCH_UPDATE}".format(resource='securitycenter')
@@ -677,7 +677,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             return phantom.APP_ERROR
 
         message = f"Updated {len(self.param['alert_list'])} alerts:\n{json.dumps(self.r_json, indent=4)}"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_list_alert_files(self) -> bool:
         url = f"{self.api_uri}{ALERT_FILES}".format(resource='securitycenter',
@@ -689,7 +689,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         [self.action_result.add_data(file) for file in self.r_json['value']]
 
         message = f"Returned {len(self.r_json['value'])} files for alert {self.param['alert_id']}"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_list_library_scripts(self) -> bool:
         url = f"{self.api_uri}{LIVE_RESPONSE_LIST_LIBRARY}".format(resource='securitycenter')
@@ -699,7 +699,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         [self.action_result.add_data(script) for script in self.r_json['value']]
 
         message = f"Returned {len(self.r_json['value'])} scripts"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_run_actions(self) -> bool:
         url = f"{self.api_uri}{LIVE_RESPONSE_RUN_ACTION}".format(resource='securitycenter',
@@ -728,7 +728,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         if not commands:
             message = f"No valid commands found in {self.param.get('commands', '')}"
-            return self.save_progstat(phantom.APP_ERROR, status_message=message)
+            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
 
         body = {
             'comment': self.param.get("comment", False),
@@ -740,7 +740,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             return phantom.APP_ERROR
 
         message = f"Commands sent to '{self.param['machine_id']}':\n{json.dumps(self.r_json, indent=4)}"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_run_action(self) -> bool:
         url = f"{self.api_uri}{LIVE_RESPONSE_RUN_ACTION}".format(resource='securitycenter',
@@ -759,7 +759,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         if not params:
             message = f"You somehow managed to input an invalid command:\n{json.dumps(self.param, indent=4)}"
-            return self.save_progstat(phantom.APP_ERROR, status_message=message)
+            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
 
         body = {
             'Commands': [{"type": self.param["command_type"], "params": params}],
@@ -771,7 +771,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             return phantom.APP_ERROR
 
         message = f"Command sent to '{self.param['machine_id']}':\n{json.dumps(self.r_json, indent=4)}"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_list_actions(self) -> bool:
         params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
@@ -783,7 +783,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         [self.action_result.add_data(action) for action in self.r_json['value']]
 
         message = f"Returned {len(self.r_json['value'])} actions"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_get_action(self) -> bool:
         url = f"{self.api_uri}{LIVE_RESPONSE_ACTION}".format(resource="securitycenter",
@@ -794,7 +794,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
         message = f"{self.action_id} complete"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_get_action_result(self) -> object:
         url = f"{self.api_uri}{LIVE_RESPONSE_ACTION_RESULT}".format(resource="securitycenter",
@@ -807,7 +807,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
         message = f"{self.action_id} complete"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_list_investigations(self) -> object:
         params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
@@ -819,7 +819,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         [self.action_result.add_data(action) for action in self.r_json['value']]
 
         message = f"{self.action_id} complete"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_get_investigation(self) -> object:
         url = f"{self.api_uri}{INVESTIGATION_SINGLE}".format(resource='securitycenter',
@@ -831,7 +831,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
         message = f"{self.action_id} complete"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_start_investigation(self) -> object:
         url = f"{self.api_uri}{INVESTIGATION_START}".format(resource='securitycenter',
@@ -848,7 +848,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
         message = f"{self.action_id} complete"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_collect_investigation_package(self) -> object:
         url = f"{self.api_uri}{INVESTIGATION_COLLECT_PACKAGE}".format(resource='securitycenter',
@@ -865,7 +865,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
         message = f"{self.action_id} complete"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_list_machine_actions(self) -> object:
         params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
@@ -878,7 +878,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
         message = f"{self.action_id} complete"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_isolate_machine(self) -> object:
         url = f"{self.api_uri}{MACHINE_ISOLATE}".format(resource='securitycenter',
@@ -890,7 +890,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
         message = f"{self.action_id} complete"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_unisolate_machine(self) -> object:
         url = f"{self.api_uri}{MACHINE_UNISOLATE}".format(resource='securitycenter',
@@ -902,7 +902,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
         message = f"{self.action_id} complete"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_get_file_info(self) -> object:
         url = f"{self.api_uri}{FILE_INFO}".format(file_id=self.param['file_hash'])
@@ -913,7 +913,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
         message = f"{self.action_id} complete"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_get_file_stats(self) -> object:
         url = f"{self.api_uri}{FILE_STATS}".format(file_id=self.param['file_id'])
@@ -924,7 +924,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
         message = f"{self.action_id} complete"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_quarantine_file(self) -> object:
         url = f"{self.api_uri}{FILE_QUARANTINE}".format(machine_id=self.param['machine_id'])
@@ -935,7 +935,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
         message = f"{self.action_id} complete"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_on_poll(self) -> bool:
         # generate timestamp for ingestion
@@ -978,44 +978,65 @@ class MDESecurityCenter_Connector(BaseConnector):
         # get filter list rules
         filter_list = self._get_filter_list()
 
+        # search for any existing containers
+        source_data_identifiers = []
+        for incident in incidents:
+            if incident['source_data_identifier']:
+                source_data_identifiers.append(incident['source_data_identifier'])
+
+        existing_containers = {}
+        if source_data_identifiers:
+            artifact_search_uris = []
+            sdi_string = ""
+
+            # split the long list of source data identifiers into smaller chunks for URI consumption
+            chunk_size = 42
+            sdi_chunks = [
+                source_data_identifiers[i:i + chunk_size] for i in range(0, len(source_data_identifiers), chunk_size)]
+
+            for chunk in sdi_chunks:
+                query_string = '","'.join(chunk)
+                search_uri = (f"{phanrules.build_phantom_rest_url('artifact')}"
+                              f"?_filter_source_data_identifier__in=[\"{query_string}\"]")
+                for container_data in phantom.requests.get(search_uri, verify=False).json().get("data", []):
+                    existing_containers[container_data["source_data_identifier"]] = container_data
+
+        # perform actions on incidents
         for incident in incidents:
 
-            # this is how we determine an action was taken for a given incident and bypass the default on_poll behavior
+            # if an action is taken, this is set to true to bypass the default on_poll behavior
             action_taken = False
 
-            # check if the incident has already been ingested
-            container_search_url = (
-                f"{phanrules.build_phantom_rest_url('container')}"
-                f"?_filter_source_data_identifier=\"{incident['source_data_identifier']}\""
-            )
-
             # update parity between SOAR and MDE
-            existing_container = None
-            container_results = phantom.requests.get(container_search_url, verify=False).json()
-            if 0 < container_results.get("count", 0):
-                print(f"incident already ingested: {incident['incidentId']}")
-                existing_container = container_results["data"][0]
+            existing_container = existing_containers.get(incident["source_data_identifier"], None)
+            if existing_container:
+                self.debug_print(f"Incident already ingested:", incident['incidentId'])
                 self._update_parity(incident, existing_container)
 
+            # redirected incidents have no data of value
             if "redirected" == incident['status'].lower():
-                # redirected incidents have no data of value
                 continue
 
             # create container to possibly save
-            new_container = {"label": container_label, "name": incident["incidentName"],
-                             "severity": incident["severity"],
-                             "source_data_identifier": incident["source_data_identifier"],
-                             "status": self.statuses['container'].get(self.param.get("status", "default"), False),
-                             "tags": container_tags, 'artifacts': self._compile_artifacts(incident)}
+            new_container = {
+                "label": container_label,
+                "name": incident["incidentName"],
+                "severity": incident["severity"],
+                "source_data_identifier": incident["source_data_identifier"],
+                "status": self.statuses['container'].get(self.param.get("status", "default"), False),
+                "tags": container_tags,
+                'artifacts': self._compile_artifacts(incident)
+            }
 
             # loop through each row in the filter rules
             for filter_rule in filter_list:
-
-                # skip unactionable rules if they slipped through the validation cracks
+                # set default rule values
                 rule_name = filter_rule.get("Rule Name", "")
                 rule_action = filter_rule.get("Action", "").lower()
                 rule_category = filter_rule.get("Rule Category", ["", ""])
                 additional_comments = filter_rule.get("Additional Comments", "")
+
+                # skip non-actionable rules if they slipped through the validation cracks
                 if rule_action not in ["case", "close", "ingest", "ignore"]:
                     continue
 
@@ -1033,46 +1054,40 @@ class MDESecurityCenter_Connector(BaseConnector):
                 device_rule = json.loads(device_rule)
 
                 rule_count = len(incident_rule) + len(alert_rule) + len(entity_rule) + len(device_rule)
-                if 0 == rule_count: continue
+                if 0 == rule_count:
+                    continue
 
-                # initialize rule passing status
+                # initialize rule passing status, empty rules default to True
                 pass_incident = False if 0 < len(incident_rule) else True
                 pass_alert = False if 0 < len(alert_rule) else True
                 pass_entity = False if 0 < len(entity_rule) else True
                 pass_device = False if 0 < len(device_rule) else True
 
-                # check for incident rule match
+                # check to see if rules pass the match check
                 if self._filter_rule_matches(incident_rule, incident):
                     pass_incident = True
 
                 for alert in incident.get("alerts", []):
-                    # check for alert rule match
                     if self._filter_rule_matches(alert_rule, alert):
                         pass_alert = True
 
                     for entity in alert.get("entities", []):
-                        # check for entity rule match
                         if self._filter_rule_matches(entity_rule, entity):
                             pass_entity = True
 
                     for device in alert.get("devices", []):
-                        # check for device rule match
                         if self._filter_rule_matches(device_rule, device):
                             pass_device = True
 
                 # perform defined action if rule matches
                 if pass_incident and pass_alert and pass_entity and pass_device:
 
+                    # Ignore an incident, good for when different organizations handle the same incident feed
                     if "ignore" == rule_action:
                         action_taken = f"{rule_action}"
 
+                    # Close incident in SOAR, update_parity() handles local containers if any were ingested
                     if "close" == rule_action:
-                        # close any existing container
-                        # todo: add the code to get a container with this SDI and close it if it is open
-                        # if existing_container:
-                        #     print(f"Incident to be closed: {incident['incidentId']}")
-                        #     exit()
-
                         # resolve incident in MDE
                         if "active" == incident['status'].lower():
                             self.debug_print(f"resolving incident in MDE")
@@ -1094,40 +1109,53 @@ class MDESecurityCenter_Connector(BaseConnector):
                             url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security',
                                                                             incident_id=incident['incidentId'])
 
-                            if not self._make_rest_call(url, data=data, method="patch"):
-                                return phantom.APP_ERROR
+                            self._make_rest_call(url, data=data, method="patch")
+                            self.debug_print("make_rest_call response:", self.response.json())
 
                         action_taken = f"{rule_action}"
-                        self.debug_print(f"Close action taken for incident")
+                        self.debug_print(f"Close action taken for incident {incident['incidentId']}:",
+                                         incident["incidentName"])
 
+                    # Force-ingest an incident regardless of other rules
                     if "ingest" == rule_action and "active" == incident['status'].lower():
                         if not existing_container:
-                            result = self.save_container(new_container)
-
+                            self.containers_to_save.append(new_container)
+                            self.debug_print(f"Ingesting incident {incident['incidentId']} based on rule"
+                                             f" - {rule_action}:", incident['incidentName'])
+                        else:
+                            self.debug_print(f"Rule action for {incident['incidentId']} is ingest, but it's already ingested:", existing_container["container_id"])
                         action_taken = f"{rule_action}"
 
+                    # promote existing container to case or convert new container to case
                     if "case" == rule_action:
-                        if existing_container and "case" == existing_container['container_type']:
-                            container_edit_uri = phanrules.build_phantom_rest_url('container', existing_container['id'])
-                            data = {"id": existing_container['id'], "container_type": "case"}
-                            response = phantom.requests.post(container_edit_uri, json=data, verify=False)
-                        phanrules.build_phantom_rest_url('container')
-                        new_container['container_type'] = "case"
-                        response = phantom.requests.post(container_edit_uri, json=data, verify=False)
+                        if existing_container and "case" != existing_container['container_type']:
+                            phanrules.promote(existing_container)
+                        else:
+                            new_container['container_type'] = "case"
+                            self.containers_to_save.append(new_container)
 
                         action_taken = f"{rule_action}"
 
             # no rule matches, continue with default behavior for the current incident
-            if action_taken is False and "ingest" == self.on_poll_behavior:
-                result = self.save_container(new_container)
-                print(f"default 'ingest' action for new container {new_container['name']}")
-            else:
-                print(
-                    f"Incident completely ignored.\n\t- action taken: {action_taken}, default behavior: {self.on_poll_behavior}")
+            if action_taken is True:
+                continue
+
+            if "ingest" == self.on_poll_behavior:
+                self.containers_to_save.append(new_container)
+            self.debug_print(f"Default action ({self.on_poll_behavior}) "
+                             f" for incident {incident['incidentId']}:", incident["incidentName"])
+
+        # Save all containers
+        if self.containers_to_save:
+            self.debug_print("Saving containers:", len(self.containers_to_save))
+            response = self.save_containers(self.containers_to_save)
+            self.debug_print("save_containers response:", response)
+        else:
+            self.debug_print("No containers to save:", self.containers_to_save)
 
         # Finalize ingestion
         message = f"Ingestion complete"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _get_filter_list(self, recurse: bool = True) -> list:
         filter_url = phanrules.build_phantom_rest_url("decided_list", self.filter_list)
@@ -1159,6 +1187,21 @@ class MDESecurityCenter_Connector(BaseConnector):
         json_fields = ["Incident", "Alerts", "Entities", "Devices"]
 
         for r in range(0, len(filter_rules)):
+            # Skip null rows
+            null_check_list = [
+                filter_rules[r].get("Rule Name", None),
+                filter_rules[r].get("Action", None),
+                filter_rules[r].get("Incident", None),
+                filter_rules[r].get("Alerts", None),
+                filter_rules[r].get("Entities", None),
+                filter_rules[r].get("Devices", None),
+                filter_rules[r].get("Additional Comments", None),
+                filter_rules[r].get("Category", None),
+            ]
+            if any(x == None for x in null_check_list):
+                self.debug_print("Skipping rule with wierd null values", filter_rules[r])
+                continue
+
             # remove any silly wierd spacing issues due to human error
             regex = r"/(\s|\r?\n)+/m"
             filter_rules[r]["Rule Name"] = rp.sub(regex, " ", filter_rules[r]["Rule Name"]).strip()
@@ -1238,63 +1281,86 @@ class MDESecurityCenter_Connector(BaseConnector):
         will often change.
         """
 
-        # nobody cares
-        if "resolved" == incident['status'].lower() and "closed" == container['status'].lower():
+        incident_id = incident["incidentId"]
+        container_id = container["id"]
+        incident_status = incident.get("status", "").lower()
+        container_status = container['status'].lower()
+        incident_tags = incident.get("tags", [])
+        container_tags = container["tags"]
+
+        # Nobody cares
+        if "resolved" == incident_status and "closed" == container_status:
             return True
 
-        status = incident.get("status", "").lower()
-        if "resolved" == status and "closed" != container['status']:
-            soar_comment_uri = phanrules.build_phantom_rest_url("container_comment")
-            print(f"Incident resolved: {incident['incidentId']}")
+        # closed in MDE, open in SOAR
+        if "resolved" == incident_status and "closed" != container_status:
+            phanrules.add_comment(container["id"], "Incident was resolved from MDE")
+            phanrules.set_status(container["id"], "closed")
+            return True
+
+        # Open in MDE, closed in SOAR
+        if "resolved" != incident_status and "closed" == container_status:
+            # check for valid close tags in container
+            valid_classification = False
+            valid_determination = False
+            valid_classifications = []
+            valid_determinations = []
+            for category in self.categories.items():
+                classification, determination = category[1]
+                valid_classifications.append(classification)
+                valid_determinations.append(determination)
+                if classification in container["tags"]:
+                    valid_classification = classification
+                if determination in container["tags"]:
+                    valid_determination = determination
+
+            # reopen a container if it wasn't closed properly
+            if not valid_classification or not valid_determination:
+                comment = f"Container is missing required MDE tags to close and is being reopened for proper closure. "
+                if not valid_classification:
+                    comment += f"Classification tag must be one of the following: {valid_classifications}"
+                if not valid_determination:
+                    comment += f"Determination tag must be one of the following: {valid_determinations}"
+                phanrules.add_comment(container_id, comment)
+                phanrules.set_status(container, "open")
+                return False
+
+            # close MDE incident with container close tags
+            close_comment = f"Incident closed from SOAR: "
             data = {
-                "tags": container['tags'] + [incident['classification'], incident['determination']],
-                "status": "Closed",
-                "comment": "Incident was resolved from MDE"
+                'status': "Resolved",
+                'classification': classification,
+                # DOESN'T LIKE:
+                # - InformationalExpectedActivity.ConfirmedUserActivity
+                # - FalsePositive.Clean
+                # - FalsePositive.InsufficientData
+                # - TruePositive.CompromisedUser
+                'determination': determination,
+                'tags': incident_tags + container_tags,
+                'comment': close_comment
             }
-            response = phantom.requests.post(soar_comment_uri, data=json.dumps(data), verify=False)
 
-        elif "redirected" == status:
-            # self._close_redirected(container, incident)
-            print(f"Incident redirected: {incident['incidentId']}")
+            url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security', incident_id=incident_id)
 
-        elif "active" == status:
-            print(f"Incident active: {incident['incidentId']}")
+            if not self._make_rest_call(url, data=data, method="patch"):
+                return phantom.APP_ERROR
 
-        else:
-            print(f"Unaccounted for status: {status}")
+            return True
+
+        # Add redirected comment to container in SOAR
+        if "redirected" == incident_status:
+            phanrules.add_comment(f"Incident redirected: {incident_id}")
+            return True
+
+        # Copy any additional artifacts from incident to container
+        if "active" == incident_status:
+            container["artifacts"] = self._compile_artifacts(incident, container_id)
+            self.containers_to_save.append(container)
+            return True
+
+        self.debug_print("Unaccounted for status:", incident_status)
 
         return True
-
-    def _close_redirected(self, container: dict, incident: dict):
-        soar_comment_uri = phanrules.build_phantom_rest_url("container_comment")
-        print(f"Incident redirected: {incident['incidentId']}")
-        container_search_url = (
-            f"{phanrules.build_phantom_rest_url('container')}"
-            f"?_filter_source_data_identifier=\"{incident['source_data_identifier']}\""
-        )
-        container_results = phantom.requests.get(container_search_url, verify=False).json()
-        if 0 == container_results.get("count", 0):
-            return
-        target_container = container_results["data"][0]
-
-        # add closing comment
-        print(container['id'])
-        print(target_container['id'])
-        data = {
-            "container_id": container['id'],
-            "comment": (
-                f"Incident was redirected in MDE to incident {incident['incidentId']}, "
-                f"container {target_container['id']}"
-            )
-        }
-        response = phantom.requests.post(soar_comment_uri, data=json.dumps(data), verify=False)
-
-        # add closing tags and status
-        data = json.dumps({
-            "tags": container['tags'] + self._get_asset_tags() + ["redirected"],
-            "status": "Closed",
-        })
-        response = phantom.requests.post(phanrules.build_phantom_rest_url("container"), data=data, verify=False)
 
     def _dict_hash(self, dictionary: dict) -> dict:
         """
@@ -1316,62 +1382,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         return dictionary
 
-    def _compile_artifacts_old(self, dictionary: dict, container_id: int = None, odata_type="incident") -> list:
-        """
-        Takes a dictionary input of an incident and compiles them into plug-n-play artifacts based on the CEFs
-        configured in the SOAR
-
-        :param dictionary: the incident
-        :param container_id: target container ID (optional)
-        :return: list of dictionaries containing artifacts
-        """
-        # initialize vars
-        artifact_list = []
-        artifact_dict = {"name": odata_type, "cef": {}, "data": {}}
-        odata_types = {
-            "alerts": "alert",
-            "devices": "device",
-            "entities": "entity"
-        }
-
-        # loop through items to create artifacts
-        for artifact_name, artifact_value in dictionary.items():
-            artifact_name = self.field_map.get(artifact_name, artifact_name)
-
-            # sub artifacts that need to be broken down further
-            if artifact_name in odata_types.keys():
-                sub_artifact_dict = {"cef": {}, "data": {}}
-                for sub_artifact in artifact_value:
-                    for sub_artifact_name, sub_artifact_value in sub_artifact.items():
-                        sub_artifact_name = self.field_map.get(sub_artifact_name, sub_artifact_name)
-
-                        if sub_artifact_name in self.cef:
-                            sub_artifact_dict['cef'][sub_artifact_name] = sub_artifact_value
-                        sub_artifact_dict['data'][artifact_name] = artifact_value
-                    sub_artifact_dict['source_data_identifier'] = self._dict_hash(sub_artifact_dict)
-                    artifact_list.append(sub_artifact_dict)
-
-            # this is root artifact data
-            else:
-                if artifact_name in self.cef:
-                    artifact_dict['cef'][artifact_name] = artifact_value
-                artifact_dict['data'][artifact_name] = artifact_value
-
-        # hash the dictionary for source data identifier
-        artifact_dict['source_data_identifier'] = self._dict_hash(artifact_dict)
-
-        # add optional target container ID
-        if container_id:
-            artifact_dict['id'] = container_id
-
-        # append the root artifact and return
-        artifact_list.append(artifact_dict)
-
-        print(artifact_list)
-
-        return artifact_list
-
-    def _compile_artifacts(self, dictionary: dict, container_id: int = None, odata_type: str = "incident") -> list:
+    def _compile_artifacts(self, incident: dict, container_id: int = None, odata_type: str = "incident") -> list:
         # prepare variables
         artifact_list = []
         this_artifact = {"cef": {}, "data": {}}
@@ -1383,51 +1394,51 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         # set important defaults
         if "incident" == odata_type:
-            this_artifact["name"] = dictionary.get("incidentName", "generic incident")
-            this_artifact["description"] = dictionary.get("incidentUri", "generic incident")
+            this_artifact["name"] = incident.get("incidentName", "generic incident")
+            this_artifact["description"] = incident.get("incidentUri", "generic incident")
             this_artifact["label"] = "incident"
 
         elif "alert" == odata_type:
-            this_artifact["name"] = dictionary.get("title", "generic alert")
-            this_artifact["description"] = dictionary.get("description", "generic alert")
+            this_artifact["name"] = incident.get("title", "generic alert")
+            this_artifact["description"] = incident.get("description", "generic alert")
             this_artifact["label"] = "alert"
 
         elif "device" == odata_type:
-            this_artifact["name"] = dictionary.get("deviceDnsName", "unknown device")
-            this_artifact["description"] = dictionary.get("rbacGroupName", "unknown device group")
+            this_artifact["name"] = incident.get("deviceDnsName", "unknown device")
+            this_artifact["description"] = incident.get("rbacGroupName", "unknown device group")
             this_artifact["label"] = "device"
 
         elif "entity" == odata_type:
 
-            if "File" == dictionary.get("entityType"):
-                this_artifact["name"] = dictionary.get("fileName", "unknown file")
-                this_artifact["description"] = dictionary.get("filePath", "unknown file location")
+            if "File" == incident.get("entityType"):
+                this_artifact["name"] = incident.get("fileName", "unknown file")
+                this_artifact["description"] = incident.get("filePath", "unknown file location")
                 this_artifact["label"] = "file"
 
-            elif "Process" == dictionary.get("entityType"):
-                this_artifact["name"] = dictionary.get("fileName", "unknown process")
-                this_artifact["description"] = dictionary.get("filePath", "unknown process location")
+            elif "Process" == incident.get("entityType"):
+                this_artifact["name"] = incident.get("fileName", "unknown process")
+                this_artifact["description"] = incident.get("filePath", "unknown process location")
                 this_artifact["label"] = "process"
 
-            elif "Registry" == dictionary.get("entityType"):
-                this_artifact["name"] = dictionary.get("registryKey", "unknown registry key")
-                this_artifact["description"] = dictionary.get("registryHive", "unknown registry hive")
+            elif "Registry" == incident.get("entityType"):
+                this_artifact["name"] = incident.get("registryKey", "unknown registry key")
+                this_artifact["description"] = incident.get("registryHive", "unknown registry hive")
                 this_artifact["label"] = "registry"
 
-            elif "User" == dictionary.get("entityType"):
-                this_artifact["name"] = dictionary.get("userPrincipalName", "unknown user")
-                this_artifact["description"] = dictionary.get("accountName", "unknown account")
+            elif "User" == incident.get("entityType"):
+                this_artifact["name"] = incident.get("userPrincipalName", "unknown user")
+                this_artifact["description"] = incident.get("accountName", "unknown account")
                 this_artifact["label"] = "user"
 
             else:
-                this_artifact["name"] = dictionary.get("entityType", "unknown entity")
+                this_artifact["name"] = incident.get("entityType", "unknown entity")
 
         else:
             this_artifact["name"] = "other"
             this_artifact["label"] = "artifact"
 
         # do a barrel roll!
-        for artifact_name, artifact_value in dictionary.items():
+        for artifact_name, artifact_value in incident.items():
             if artifact_name in odata_types.keys():
                 for sub_artifact in artifact_value:
                     artifact_list = artifact_list + self._compile_artifacts(sub_artifact, container_id,
@@ -1447,12 +1458,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         artifact_list.append(this_artifact)
 
         return artifact_list
-
-    def _incident_to_container(self, incident: dict):
-        pass
-
-    def _incident_to_case(self, incident: dict):
-        pass
 
     def _filter_rule_matches(self, rule_definition: dict, target_dictionary: dict) -> bool:
         for rule_key, rule_value in rule_definition.items():
@@ -1482,20 +1487,16 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.action_result.add_data(alert_links)
 
         message = f"Updated widget for {self.param['incident_id']}"
-        return self.save_progstat(phantom.APP_SUCCESS, status_message=message)
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def handle_action(self, param) -> bool:
         self.param = param
         self.save_progress(f"Starting action: {self.action_id}\n{json.dumps(self.param, indent=4)}")
 
         if not getattr(self, f"_handle_{self.action_id}")() and self.r_json:
-            self.save_progstat(phantom.APP_ERROR, f"{self.action_id} has no _handler function")
+            self.set_status_save_progress(phantom.APP_ERROR, f"{self.action_id} has no _handler function")
 
         return self.get_status()
-
-    def save_progstat(self, status_code: bool, status_message: str = None) -> bool:
-        self.save_progress(progress_str_const=status_message)
-        return self.action_result.set_status(status_code=status_code, status_message=status_message)
 
     def _sdi(self, input_dictionary: dict) -> str:
         # incidentId
