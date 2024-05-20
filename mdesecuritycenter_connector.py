@@ -25,176 +25,157 @@ import time
 from datetime import datetime, timezone, timedelta
 import urllib
 import base64
+from requests import Response
 import hashlib, uuid, random
 import replus as rp
 from inspect import currentframe
 
 from mdesecuritycenter_consts import *
 
+# Custom helper classes
+from authentication_token import AuthenticationToken
+from settings_parser import SettingsParser
 
-class AuthenticationToken:
-    def __init__(self, token: str, expires_on: int) -> None:
-        self._token = ""
-        self._expires_on = 0
-        self._endpoint = ""
-        self.update(token=token, expires_on=expires_on)
-        self.debug_print = False
 
-    @property
-    def token(self) -> str or bool:
-        # expired
-        if int(datetime.now(timezone.utc).strftime("%s")) > self.expires_on - 60:
-            self._token = False
-            self._expires_on = 0
-            return False
-        # valid
-        return self._token
 
-    @token.setter
-    def token(self, token: str) -> None:
-        self._token = token
+def parse_exception_message(e: Exception) -> str:
+    try:
+        if 1 < len(e.args):
+            return f"Exception [{e.args[0]}]: {e.args[1]}"
+        return f"Exception: {e.args[0]}"
+    except Exception:
+        return "Failed to parse exception error message"
 
-    @property
-    def expires_on(self) -> int:
-        return self._expires_on
 
-    @expires_on.setter
-    def expires_on(self, expires_on: int) -> None:
-        self._expires_on = expires_on
+class RetVal(tuple):
 
-    @property
-    def endpoint(self) -> str:
-        return self.details()['endpoint']
-
-    def update(self, token: str, expires_on: int):
-        self.token = token
-        self.expires_on = expires_on
-
-    def expires_timestamp(self) -> str:
-        pass
-
-    def details(self) -> list:
-        details = [json.loads(base64.b64decode(part + ('=' * (-len(part) % 4))).decode('utf-8')) for part
-                   in self._token.split('.')[0:2]]
-        return details
-
-    def summary(self) -> dict:
-        details = self.details()
-        seconds = self.expires_on - int(datetime.now(timezone.utc).strftime("%s"))
-
-        summary = {
-            'endpoint': details[1]['aud'],
-            'expires_in': f"{seconds // 60}m {seconds % 60}s",
-            'expires_on': str(datetime.fromtimestamp(self.expires_on)),
-            'roles': details[1]['roles']
-        }
-        return summary
-
+    def __new__(cls, val1, val2=None):
+        return tuple.__new__(RetVal, (val1, val2))
 
 class MDESecurityCenter_Connector(BaseConnector):
+    """
+    Normalization Properties
+
+    Phantom has a somewhat obtuse way of accessing app information such as versions, names, etc., through the use of API
+    calls. Because of this, these properties are meant to provide a more direct way to access this data. These values
+    are stored within the class and initialized as None until they are called. After the first use, the value is updated
+    via an API call, which is then used for each successive usage, reducing internal API calls and releasing resources
+    for other computational requirements.
+
+    :property self.app_json:
+    :property self.app_id:
+    :property self.app_version:
+    :property self.asset_name:
+    :property self.label:
+    :property self.tags:
+    :property self.cef:
+    :property self.action_id:
+    :property self.action_result:
+    """
 
     @property
     def app_id(self) -> str:
-        return str(self.get_app_json().get('appid', 'Unknown ID'))
+        if not self._app_id:
+            self._app_id = str(self.get_app_json().get("appid", 'unknown app id'))
+        return self._app_id
+
+    _app_id: str = None
 
     @property
     def app_version(self) -> str:
-        return str(self.get_app_json().get('app_version', '0.0.0'))
+        if not self._app_version:
+            self._app_version = str(self.get_app_json().get("app_version", '0.0.0'))
+        return self._app_version
+
+    _app_version: str = None
 
     @property
     def asset_id(self) -> str:
-        return str(self.get_asset_id())
+        if not self._asset_id:
+            self._asset_id = str(self.get_asset_id())
+        return self._asset_id
+
+    _asset_id: str = None
 
     @property
-    def action_id(self) -> str:
-        return str(self.get_action_identifier())
+    def asset_name(self) -> str:
+        if not self._asset_name:
+            self._asset_name = phantom.requests.get(
+                phanrules.build_phantom_rest_url("asset", self.asset_id),
+                verify=self.config.verify_server_cert
+            ).json.get("name", 'unnamed_asset')
+        return self._asset_name
+
+    _asset_name: str = None
 
     @property
-    def tenant_id(self) -> str or bool:
-        return self.get_config().get("tenant_id", False)
+    def label(self) -> str:
+        if not self._label:
+            self._label = phantom.requests.get(
+                phanrules.build_phantom_rest_url("asset", self.asset_id),
+                verify=self.config.verify_server_cert
+            ).json.get("configuration", {}).get("ingest", {}).get("container_label", 'events')
+        return self._label
+
+    _label: str = None
 
     @property
-    def client_id(self) -> str or bool:
-        return self.get_config().get("client_id", False)
+    def tags(self) -> list:
+        if not self._tags:
+            self._tags = phantom.requests.get(
+                phanrules.build_phantom_rest_url("asset", self.asset_id),
+                verify=self.config.verify_server_cert
+            ).json.get("tags", [])
+        return self._tags
 
-    @property
-    def client_secret(self) -> str or bool:
-        return self.get_config().get("client_secret", False)
-
-    @property
-    def ingest_window(self) -> int:
-        return self.get_config().get("ingest_window", 24)
-
-    @property
-    def max_incidents(self) -> int:
-        return self.get_config().get("max_incidents", 250)
-
-    @property
-    def filter_list(self) -> str:
-        return self.get_config().get("filter_list", "MDE Security Center Ingest Filter")
-
-    @property
-    def field_map(self) -> dict:
-        return json.loads(self.get_config().get("field_mapping", "{}"))
-
-    @property
-    def on_poll_behavior(self) -> str:
-        return self.get_config().get("on_poll_behavior", "ingest")
-
-    @property
-    def api_uri(self) -> str or bool:
-        return self.get_config().get("api_uri", "").replace("*", "{resource}")
-
-    @property
-    def login_uri(self) -> str:
-        return "https://login.microsoftonline.com" if "api-gov" not in self.api_uri else "https://login.microsoftonline.us"
-
-    @property
-    def line_no(self) -> int:
-        return int(currentframe().f_back.f_lineno)
-
-    @property
-    def param(self) -> dict:
-        return self._param
-
-    @param.setter
-    def param(self, param: dict) -> None:
-        self._param = param
+    _tags: list = None
 
     @property
     def cef(self) -> list:
-        if 0 == len(self._cef):
+        if not self._cef:
             uri = phanrules.build_phantom_rest_url("cef") + "?page_size=0"
             response = phantom.requests.get(uri, verify=False)
 
             if 200 > response.status_code or 299 < response.status_code:
-                return self._cef
+                return []
 
             self._cef = [cef['name'] for cef in json.loads(response.text)['data']]
         return self._cef
 
+    _cef: list = None
+
     @property
-    def action_result(self) -> object:
+    def action_id(self) -> str:
+        if not self._action_id:
+            self._action_id = str(self.get_action_identifier())
+        return self._action_id
+
+    _action_id: str = None
+
+    @property
+    def action_result(self) -> ActionResult:
         if not self._action_result:
-            self._action_result = self.add_action_result(ActionResult(self.param))
-            self._action_result.add_debug_data({'action started': self.action_id})
-            self._action_result.add_debug_data({'parameters': self.param})
+            self._action_result = self.add_action_result(ActionResult({'action started': self.action_id}))
         return self._action_result
 
+    _action_result: ActionResult = None
+
     def __init__(self):
+
         # Call the BaseConnector's init first
         super(MDESecurityCenter_Connector, self).__init__()
-        self.resources = ['security', 'securitycenter']
-        self._state = None
-        self._param = None
-        self._action_result = None
-        self.tokens = {}
-        self.response = None
-        self.r_json = None
-        self.live_response = {}
+
         self._action_start_time = datetime.now()
-        self._rd = random.Random()
-        self._cef = []
+
+        self.state = None
+        self.response = None
+        self.live_response = {}
+        self.tokens = {
+            "security": AuthenticationToken(token=""),
+            "securitycenter": AuthenticationToken(token="")
+        }
+
+        self.resources = ['security', 'securitycenter']
         self.containers_to_save = []
 
         # Input validation helper variables
@@ -239,57 +220,127 @@ class MDESecurityCenter_Connector(BaseConnector):
             "True positive: Other": ["TruePositive", "Other"],
         }
 
-    def _process_response(self) -> bool:
+    # ========== #
+    # REST CALLS #
+    # ========== #
+
+    # ------------------- #
+    # Primary REST Caller #
+    # ------------------- #
+
+    def _make_rest_call(self, endpoint: str, method: str = "get", verify: bool = True, **kwargs) -> RetVal:
         """
-        This function is used to process html response.
-        :return: status phantom.APP_ERROR/phantom.APP_SUCCESS(along with appropriate message)
+        This function makes the REST call to the Microsoft API
+
+        :param endpoint: REST endpoint that needs to appended to the service address
+        :param headers: request headers
+        :param params: request parameters
+        :param data: request body
+        :param method: GET/POST/PUT/DELETE/PATCH (Default will be GET)
+        :param verify: verify server certificate (Default True)
+        :return: status phantom.APP_ERROR/phantom.APP_SUCCESS(along with appropriate message),
+        response obtained by making an API call
         """
 
-        self.action_result.add_debug_data({'r_status_code': self.response.status_code})
-        self.action_result.add_debug_data({'r_text': self.response.text})
-        self.action_result.add_debug_data({'r_headers': self.response.headers})
+        # Hey now, you can't do that type of REST call!
+        if not hasattr(phantom.requests, method):
+            message = f"Invalid method sent to '_make_rest_call': {method}"
+            return RetVal(self.set_status_save_progress(phantom.APP_ERROR, message), message)
 
-        if 'application/json' in self.response.headers.get('Content-Type', '').lower():
+        resource = rp.search(pattern=r"/[^\w]+([^\.]+)\.microsoft/i", string=endpoint).group(1)
+        if not self._authenticate(resource=resource):
+            message = f"Couldn't authenticate to retrieve {resource} token"
+            return RetVal(self.set_status_save_progress(phantom.APP_ERROR, message), message)
+
+        # Default headers and add authorization token as necessary
+        if "headers" not in kwargs:
+            kwargs["headers"] = {"Content-Type": "application/json"}
+        if "Accept" not in kwargs["headers"].keys():
+            kwargs["headers"]["Accept"] = "application/json"
+        if resource in self.resources:
+            kwargs["headers"]["Authorization"] = f"Bearer {self.tokens[resource].token}"
+
+        try:
+            self.response = getattr(phantom.requests, method)(endpoint, verify=verify, **kwargs)
+            self.save_progress(f"Made {method.upper()} request to: {endpoint}")
+        except Exception as e:
+            message = f"Exception occurred while connecting to server: {parse_exception_message(e)}"
+            return RetVal(self.set_status_save_progress(phantom.APP_ERROR, message), message)
+
+        if 429 == self.response.status_code and 300 < int(self.response.headers.get('Retry-After', 301)):
+            message = f"Error occurred [{self.response.status_code}]: {str(self.response.text)}"
+            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
+
+        if 429 == self.response.status_code and 300 >= int(self.response.headers.get('Retry-After', 301)):
+            self.save_progress(f"Retrying after {self.response.headers.get('Retry-After', 301)} seconds")
+            time.sleep(int(self.response.headers['Retry-After']) + 1)
+            return self._make_rest_call(endpoint, verify=verify, **kwargs)
+
+        return self._process_response()
+
+    # ------------------- #
+    # Response Processors #
+    # ------------------- #
+
+    def _process_response(self, response: Response = None) -> RetVal:
+        """
+        Processes a requests response object according to the content type.
+
+        :param response: requests response object
+        :return: [status, JSON|message]
+        """
+
+        if 'json' in self.response.headers.get('Content-Type', '').lower():
             return self._process_json_response()
 
-        if 'text/html' in self.response.headers.get('Content-Type', '').lower():
+        if 'html' in self.response.headers.get('Content-Type', '').lower():
             return self._process_html_response()
 
         if not self.response.text:
             return self._process_empty_response()
 
-        message = f"Can't process response from server [{self.response.status_code}]: {self.response}"
-        return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
+        # If we get here, it's because there's an error
+        if hasattr(self.action_result, 'add_debug_data'):
+            self.action_result.add_debug_data({'r_status_code': self.response.status_code})
+            self.action_result.add_debug_data({'r_text': self.response.text})
+            self.action_result.add_debug_data({'r_headers': self.response.headers})
 
-    def _process_json_response(self) -> bool:
+        message = f"Can't process response from server [{self.response.status_code}]: {self.response.text}"
+        return RetVal(self.set_status_save_progress(phantom.APP_ERROR, message), message)
+
+    def _process_json_response(self, response: Response = None) -> RetVal:
         """
-        This function is used to process json response.
-        :return: status phantom.APP_ERROR/phantom.APP_SUCCESS(along with appropriate message)
+        Attempts to parse a JSON content response.
+
+        :param response: request response object
+        :return: [status, JSON|message]
         """
+
         # Parse! That!! JSON!!! (with enthusiasm!!!!)
         try:
             self.r_json = self.response.json()
         except Exception as e:
-            message = f"Unable to parse JSON response: {self._get_exception_message(e, self.line_no)}"
-            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
+            message = f"Unable to parse JSON response: {parse_exception_message(e)}"
+            return RetVal(self.set_status_save_progress(phantom.APP_ERROR, message), message)
 
         # We have a successful response, albeit a redirect is possible...
         if 200 <= self.response.status_code < 400:
             message = f"Status code {self.response.status_code} received and JSON response parsed"
-            return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+            return RetVal(self.set_status_save_progress(phantom.APP_SUCCESS, message), message)
 
         # There's a generic error in our midst
         message = (
             f"!!! {str(self.r_json.get('error', {}).get('code', 'Unknown'))} error occurred [{self.response.status_code}]:"
             f"{str(self.r_json.get('error', {}).get('message', 'No message available'))}"
         )
-        return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
+        return RetVal(self.set_status_save_progress(phantom.APP_ERROR, message), message)
 
-    def _process_html_response(self) -> bool:
+    def _process_html_response(self, response: Response = None) -> RetVal:
         """
-        This function is used to process html response.
-        :param response: response data
-        :return: status phantom.APP_ERROR/phantom.APP_SUCCESS(along with appropriate message)
+        Treats an HTML response like an error.
+
+        :param response: request response object
+        :return: [status, message]
         """
 
         try:
@@ -312,7 +363,7 @@ class MDESecurityCenter_Connector(BaseConnector):
         message = f"Status Code: {self.response.status_code}. Raw data from server:\n{error_text}\n"
         return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
 
-    def _process_empty_response(self) -> bool:
+    def _process_empty_response(self, response: Response = None) -> RetVal:
         """
         This function is used to process empty response.
         :param response: response data
@@ -324,6 +375,46 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         message = f"Status Code: {self.response.status_code}. Error: Empty response and no information in the header"
         return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
+
+    @property
+    def tenant_id(self) -> str or bool:
+        return self.get_config().get("tenant_id", False)
+
+    @property
+    def client_id(self) -> str or bool:
+        return self.get_config().get("client_id", False)
+
+    @property
+    def client_secret(self) -> str or bool:
+        return self.get_config().get("client_secret", False)
+
+    @property
+    def ingest_window(self) -> int:
+        return self.get_config().get("ingest_window", 24)
+
+    @property
+    def max_incidents(self) -> int:
+        return self.get_config().get("max_incidents", 250)
+
+    @property
+    def filter_list(self) -> str:
+        return self.get_config().get("filter_list", "MDE Security Center Ingest Filter")
+
+    @property
+    def field_map(self) -> dict:
+        return json.loads(self.get_config().get("field_mapping", "{}"))
+
+    @property
+    def on_poll_behavior(self) -> str:
+        return self.get_config().get("on_poll_behavior", "ingest")
+
+    @property
+    def api_uri(self) -> str or bool:
+        return self.get_config().get("api_uri", "").replace("*", "{resource}")
+
+    @property
+    def login_uri(self) -> str:
+        return "https://login.microsoftonline.com" if "api-gov" not in self.api_uri else "https://login.microsoftonline.us"
 
     def _get_exception_message(self, e: Exception, line_no: int = 0) -> str:
         """
@@ -349,70 +440,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.action_result.add_debug_data({'exception debug message': debug_message})
 
         return debug_message
-
-    def _make_rest_call(self, endpoint: str, headers: dict = {}, params: dict = {}, data: dict or str = None,
-                        method: str = "get", verify: bool = True, timeout: int = 30) -> bool:
-        """
-        This function makes the REST call to the Microsoft API
-
-        :param endpoint: REST endpoint that needs to appended to the service address
-        :param headers: request headers
-        :param params: request parameters
-        :param data: request body
-        :param method: GET/POST/PUT/DELETE/PATCH (Default will be GET)
-        :param verify: verify server certificate (Default True)
-        :return: status phantom.APP_ERROR/phantom.APP_SUCCESS(along with appropriate message),
-        response obtained by making an API call
-        """
-
-        # Hey now, you can't do that type of REST call
-        if not hasattr(phantom.requests, method):
-            message = f"Invalid method sent to '_make_rest_call': {method}"
-            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
-
-        # resource = rp.search(pattern=r"/[^\w]([^\.]+)\.microsoft/i", string=endpoint).group(1)
-        resource = rp.search(pattern=r"/[^\w]+([^\.]+)\.microsoft/i", string=endpoint).group(1)
-        if not self._authenticate(resource=resource):
-            return phantom.APP_ERROR
-
-        # Global headers verification
-        if not headers.get('Content-Type', False):
-            headers["Content-Type"] = "application/json"
-        if not headers.get('Authorization', False):
-            headers["Authorization"] = f"Bearer {self.tokens[resource].token}"
-        if not headers.get('Accept', False):
-            headers["Accept"] = "application/json"
-
-        self.action_result.add_debug_data({
-            '_make_rest_call endpoint': endpoint,
-            '_make_rest_call method': method,
-            '_make_rest_call headers': headers,
-            '_make_rest_call data': data
-        })
-
-        if isinstance(data, dict):
-            data = json.dumps(data)
-
-        self.save_progress(f"Attempting {method.upper()} request to: {endpoint}")
-
-        try:
-            self.response = getattr(phantom.requests, method)(endpoint, data=data, headers=headers, verify=verify,
-                                                              params=params, timeout=timeout)
-        except Exception as e:
-            message = f"Exception occurred while connecting to server: {self._get_exception_message(e, self.line_no)}"
-            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message, exception=e)
-
-        if 429 == self.response.status_code and 300 < int(self.response.headers.get('Retry-After', 301)):
-            message = f"Error occurred [{self.response.status_code}]: {str(self.response.text)}"
-            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
-
-        if 429 == self.response.status_code and 300 >= int(self.response.headers.get('Retry-After', 301)):
-            self.save_progress(f"Retrying after {self.response.headers.get('Retry-After', 301)} seconds")
-            time.sleep(int(self.response.headers['Retry-After']) + 1)
-            return self._make_rest_call(endpoint, headers=headers, params=params, data=data, method=method,
-                                        verify=verify, timeout=timeout)
-
-        return self._process_response()
 
     def _authenticate(self, resource: str) -> bool:
         # Instantiate new AuthenticationToken object as needed
@@ -441,7 +468,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             self.response = phantom.requests.get(url, data=data, headers=headers)
             self.r_json = self.response.json()
         except Exception as e:
-            message = self._get_exception_message(e, (self.line_no - 3))
+            message = parse_exception_message(e)
             return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
 
         if 200 != self.response.status_code:
@@ -1123,7 +1150,9 @@ class MDESecurityCenter_Connector(BaseConnector):
                             self.debug_print(f"Ingesting incident {incident['incidentId']} based on rule"
                                              f" - {rule_action}:", incident['incidentName'])
                         else:
-                            self.debug_print(f"Rule action for {incident['incidentId']} is ingest, but it's already ingested:", existing_container["container_id"])
+                            self.debug_print(
+                                f"Rule action for {incident['incidentId']} is ingest, but it's already ingested:",
+                                existing_container["container_id"])
                         action_taken = f"{rule_action}"
 
                     # promote existing container to case or convert new container to case
@@ -1501,13 +1530,13 @@ class MDESecurityCenter_Connector(BaseConnector):
     def _sdi(self, input_dictionary: dict) -> str:
         # incidentId
         if input_dictionary.get("incidentId", False):
-            self._rd.seed(input_dictionary["incidentId"])
+            random.Random().seed(input_dictionary["incidentId"])
 
         # alertId
         if input_dictionary.get("alertId", False):
-            self._rd.seed(input_dictionary["alertId"])
+            random.Random().seed(input_dictionary["alertId"])
 
-        return str(uuid.UUID(version=4, int=self._rd.getrandbits(128)))
+        return str(uuid.UUID(version=4, int=random.Random().getrandbits(128)))
 
     def initialize(self):
         # Load the state in initialize, use it to store data that needs to be accessed across actions
