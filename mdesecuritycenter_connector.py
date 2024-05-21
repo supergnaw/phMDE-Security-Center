@@ -37,7 +37,6 @@ from authentication_token import AuthenticationToken
 from settings_parser import SettingsParser
 
 
-
 def parse_exception_message(e: Exception) -> str:
     try:
         if 1 < len(e.args):
@@ -51,6 +50,7 @@ class RetVal(tuple):
 
     def __new__(cls, val1, val2=None):
         return tuple.__new__(RetVal, (val1, val2))
+
 
 class MDESecurityCenter_Connector(BaseConnector):
     """
@@ -476,14 +476,14 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.save_progress(message)
         return self.action_result.set_status(phantom.APP_SUCCESS, status_message=message)
 
-    def _handle_test_connectivity(self) -> bool:
+    def _handle_test_connectivity(self, force_refresh: bool = False) -> bool:
         """
         Tests connection by attempting to authenticate to API
 
         :return: status(phantom.APP_SUCCESS/phantom.APP_ERROR)
         """
 
-        if self.param.get("force_refresh", False):
+        if force_refresh:
             self.tokens = {}
 
         for resource in self.resources:
@@ -495,11 +495,15 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.save_progress(f"Active access tokens:\n{json.dumps(tokens, indent=4)}")
         return self.action_result.set_status(phantom.APP_SUCCESS, status_message="Test complete")
 
-    def _handle_list_incidents(self) -> bool:
+    def _handle_list_incidents(self, odata_filter: str = None, top: int = 100, skip: int = 0) -> bool:
         params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
 
-        if not params.get("$skip", False):
-            params["$skip"] = 0
+        params = {
+            "$top": max(0, top),
+            "$skip": max(0, skip)
+        }
+        if odata_filter:
+            params["$filter"] = odata_filter
 
         target = params["$top"] * 1
         params["$top"] = min(params["$top"], LIST_INCIDENTS_LIMIT)
@@ -532,9 +536,8 @@ class MDESecurityCenter_Connector(BaseConnector):
         message = f"Returned {incident_count} incidents"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
-    def _handle_get_incident(self) -> bool:
-        url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security',
-                                                        incident_id=self.param['incident_id'])
+    def _handle_get_incident(self, incident_id: int) -> bool:
+        url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security', incident_id=incident_id)
 
         if not self._make_rest_call(url, method="get"):
             return phantom.APP_ERROR
@@ -543,39 +546,40 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
-        message = f"Retrieved incident {self.param['incident_id']}"
+        message = f"Retrieved incident {incident_id}"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
-    def _handle_update_incident(self) -> bool:
+    def _handle_update_incident(self, incident_id: int, comment: str, status: str = "default",
+                                assigned_to: str = None, category: str = None, tags: str = "",
+                                remove_tags: bool = False) -> bool:
         # get current container tags
-        if not self.param.get("remove_tags", False):
-            url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security',
-                                                            incident_id=self.param['incident_id'])
+        if not remove_tags:
+            url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security', incident_id=incident_id)
 
             if not self._make_rest_call(url, method="get"):
                 return phantom.APP_ERROR
 
-            self.param["tags"] = str(self.param.get("tags", "") + f",{','.join(self.r_json['tags'])}").strip(",")
-            self.save_progress(f"Joined new tags with existing tags: '{self.param['tags']}'")
+            tags = str(tags + f",{','.join(self.r_json['tags'])}").strip(",")
+            self.save_progress(f"Joined new tags with existing tags: '{tags}'")
 
         body = {
-            'status': self.statuses['incident'].get(self.param.get("status", "default"), False),
-            'assignedTo': self.param.get("assigned_to", False),
-            'classification': self.categories.get(self.param.get("category", False), [False])[0],
+            'status': self.statuses['incident'].get(status),
+            'assignedTo': assigned_to,
+            'classification': self.categories.get(category, [False])[0],
             # DOESN'T LIKE:
             # - InformationalExpectedActivity.ConfirmedUserActivity
             # - FalsePositive.Clean
             # - FalsePositive.InsufficientData
             # - TruePositive.CompromisedUser
-            'determination': self.categories.get(self.param.get("category", False), [None, False])[1],
-            'tags': [tag.strip() for tag in self.param.get("tags", "").split(",") if tag.strip()],
-            'comment': self.param.get("comment", False)
+            'determination': self.categories.get(category, [None, False])[1],
+            'tags': [tag.strip() for tag in tags.split(",") if tag.strip()],
+            'comment': comment
         }
         body = {key: val for key, val in body.items() if val and "" != f"{val}"}
         data = json.dumps(body)
 
         url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security',
-                                                        incident_id=self.param['incident_id'])
+                                                        incident_id=incident_id)
 
         if not self._make_rest_call(url, data=data, method="patch"):
             return phantom.APP_ERROR
@@ -584,15 +588,11 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
 
-        message = f"Updated incident: {self.param['incident_id']}:\n{self.r_json}"
+        message = f"Updated incident: {incident_id}:\n{self.r_json}"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
-    def _handle_list_alerts(self) -> bool:
-        params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
-        params["$expand"] = "evidence"
-
-        if not params.get("$skip", False):
-            params["$skip"] = 0
+    def _handle_list_alerts(self, odata_filter: str = None, top: int = 500, skip: int = 0) -> bool:
+        params = {"$filter": odata_filter, "$top": top, "$skip": skip, "$expand": "evidence"}
 
         target = params["$top"] * 1
         params["$top"] = min(params["$top"], LIST_ALERTS_LIMIT)
@@ -1537,36 +1537,27 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.config = SettingsParser(settings=self.get_config(), defaults=self.config_defaults)
         self.debug_print("self.config.values:", self.config.values)
 
-        if self.state.get("tokens", False):
-            self.tokens["tokens"] = self.state["tokens"]
-            self.debug_print("mde token:", self.tokens)
+        for resource in self.resources:
+            if self.state.get("tokens", {}).get(resource, False):
+                self.tokens[resource].token = encryption_helper.decrypt(self.state["tokens"][resource], self.asset_id)
 
-        if not self._state.get('live_response', False):
-            self._state['live_response'] = {}
+        if not self.state.get('live_response', False):
+            self.state['live_response'] = {}
 
-        if not self._state.get('isolated_devices', False):
-            self._state['isolated_devices'] = []
-
-        # for resource, token in self._state['tokens'].items():
-        #     if resource not in self.resources:
-        #         continue
-        #     t = str(encryption_helper.decrypt(str(token['token']), self.asset_id))
-        #     self.tokens[resource] = AuthenticationToken(token=t, expires_on=token['expires_on'])
+        if not self.state.get('isolated_devices', False):
+            self.state['isolated_devices'] = []
 
         return phantom.APP_SUCCESS
 
     def finalize(self):
-        # Save any current tokens
-        # self._state['tokens'] = {
-        #     r: {'token': encryption_helper.encrypt(str(t.token), self.asset_id), 'expires_on': t.expires_on}
-        #     for r, t in self.tokens.items() if r in self.resources
-        # }
+        for resource in self.resources:
+            self.state["tokens"][resource] = encryption_helper.encrypt(self.tokens[resource].token, self.asset_id)
 
         # Save any active live response actions
-        self._state['live_response'] = {k: v for k, v in self.live_response.items()}
+        self.state['live_response'] = {k: v for k, v in self.live_response.items()}
 
         # Save the state, this data is saved across actions and app upgrades
-        self.save_state(self._state)
+        self.save_state(self.state)
         self.save_progress(f"Action execution time: {datetime.now() - self._action_start_time} seconds")
         return phantom.APP_SUCCESS
 
