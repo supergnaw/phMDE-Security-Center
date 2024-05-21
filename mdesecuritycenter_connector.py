@@ -153,6 +153,25 @@ class MDESecurityCenter_Connector(BaseConnector):
     _action_id: str = None
 
     @property
+    def config_defaults(self) -> dict:
+        if not self._config_defaults:
+            defaults = {}
+            for default_name, meta_data in self.get_app_json("configuration", {}).items():
+                if "ph" == meta_data["data_type"]:
+                    continue
+
+                if "numeric" == meta_data["data_type"]:
+                    defaults[default_name] = int(meta_data.get("default", 0))
+                elif "boolean" == meta_data["data_type"]:
+                    defaults[default_name] = bool(meta_data.get("default", False))
+                else:
+                    defaults[default_name] = str(meta_data.get("default", "None"))
+            self._config_defaults = defaults
+        return self._config_defaults
+
+    _config_defaults: dict = None
+
+    @property
     def action_result(self) -> ActionResult:
         if not self._action_result:
             self._action_result = self.add_action_result(ActionResult({'action started': self.action_id}))
@@ -167,19 +186,20 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         self._action_start_time = datetime.now()
 
-        self.state = None
+        self.state: dict = None
         self.response = None
-        self.live_response = {}
-        self.tokens = {
+        self.live_response: dict = {}
+        self.tokens: dict = {
             "security": AuthenticationToken(token=""),
             "securitycenter": AuthenticationToken(token="")
         }
+        self.config: SettingsParser = None
 
-        self.resources = ['security', 'securitycenter']
-        self.containers_to_save = []
+        self.resources: list = ['security', 'securitycenter']
+        self.containers_to_save: list = []
 
         # Input validation helper variables
-        self.statuses = {
+        self.statuses: dict = {
             'incident': {
                 "Active": "Active",
                 "Resolved": "Resolved",
@@ -200,7 +220,7 @@ class MDESecurityCenter_Connector(BaseConnector):
             }
         }
 
-        self.categories = {
+        self.categories: dict = {
             "None (removes current classification and determination)": ["", ""],
             "Informational: Security test": ["InformationalExpectedActivity", "SecurityTesting"],
             "Informational: Line-of-business application": ["InformationalExpectedActivity",
@@ -219,6 +239,18 @@ class MDESecurityCenter_Connector(BaseConnector):
             "True positive: Unwanted software": ["TruePositive", "UnwantedSoftware"],
             "True positive: Other": ["TruePositive", "Other"],
         }
+
+    @property
+    def field_map(self) -> dict:
+        return json.loads(self.get_config().get("field_mapping", "{}"))
+
+    @property
+    def api_uri(self) -> str or bool:
+        return self.get_config().get("api_uri", "").replace("*", "{resource}")
+
+    @property
+    def login_uri(self) -> str:
+        return "https://login.microsoftonline.com" if "api-gov" not in self.api_uri else "https://login.microsoftonline.us"
 
     # ========== #
     # REST CALLS #
@@ -376,46 +408,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         message = f"Status Code: {self.response.status_code}. Error: Empty response and no information in the header"
         return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
 
-    @property
-    def tenant_id(self) -> str or bool:
-        return self.get_config().get("tenant_id", False)
-
-    @property
-    def client_id(self) -> str or bool:
-        return self.get_config().get("client_id", False)
-
-    @property
-    def client_secret(self) -> str or bool:
-        return self.get_config().get("client_secret", False)
-
-    @property
-    def ingest_window(self) -> int:
-        return self.get_config().get("ingest_window", 24)
-
-    @property
-    def max_incidents(self) -> int:
-        return self.get_config().get("max_incidents", 250)
-
-    @property
-    def filter_list(self) -> str:
-        return self.get_config().get("filter_list", "MDE Security Center Ingest Filter")
-
-    @property
-    def field_map(self) -> dict:
-        return json.loads(self.get_config().get("field_mapping", "{}"))
-
-    @property
-    def on_poll_behavior(self) -> str:
-        return self.get_config().get("on_poll_behavior", "ingest")
-
-    @property
-    def api_uri(self) -> str or bool:
-        return self.get_config().get("api_uri", "").replace("*", "{resource}")
-
-    @property
-    def login_uri(self) -> str:
-        return "https://login.microsoftonline.com" if "api-gov" not in self.api_uri else "https://login.microsoftonline.us"
-
     def _get_exception_message(self, e: Exception, line_no: int = 0) -> str:
         """
         Get appropriate error message from the exception.
@@ -455,12 +447,12 @@ class MDESecurityCenter_Connector(BaseConnector):
         # Prepare to request a new token
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
         body = {
-            'client_id': self.client_id,
-            'client_secret': self.client_secret,
+            'client_id': self.config.client_id,
+            'client_secret': self.config.client_secret,
             'resource': self.api_uri.format(resource=resource),
             'grant_type': 'client_credentials'
         }
-        url = f"{self.login_uri}/{self.tenant_id}/oauth2/token"
+        url = f"{self.login_uri}/{self.config.tenant_id}/oauth2/token"
         data = urllib.parse.urlencode(body).encode("utf-8")
 
         # The authentication request is a bit different from other REST calls so let's make a special one!
@@ -966,7 +958,7 @@ class MDESecurityCenter_Connector(BaseConnector):
 
     def _handle_on_poll(self) -> bool:
         # generate timestamp for ingestion
-        x_hours_ago = (datetime.utcnow() - timedelta(hours=self.ingest_window)).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+        x_hours_ago = (datetime.utcnow() - timedelta(hours=self.config.ingest_window)).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
         container_label = self._get_asset_label()
         container_tags = self._get_asset_tags()
 
@@ -974,10 +966,10 @@ class MDESecurityCenter_Connector(BaseConnector):
         url = f"{self.api_uri}{INCIDENT_LIST}".format(resource='security')
         incident_count = 0
         incidents = []
-        target = self.max_incidents
+        target = self.mconfig.ax_incidents
         params = {
             "$filter": f"createdTime gt {x_hours_ago}",
-            "$top": min(self.max_incidents, LIST_INCIDENTS_LIMIT),
+            "$top": min(self.config.max_incidents, LIST_INCIDENTS_LIMIT),
             "$skip": 0
         }
 
@@ -1169,9 +1161,9 @@ class MDESecurityCenter_Connector(BaseConnector):
             if action_taken is True:
                 continue
 
-            if "ingest" == self.on_poll_behavior:
+            if "ingest" == self.config.on_poll_behavior:
                 self.containers_to_save.append(new_container)
-            self.debug_print(f"Default action ({self.on_poll_behavior}) "
+            self.debug_print(f"Default action ({self.config.on_poll_behavior}) "
                              f" for incident {incident['incidentId']}:", incident["incidentName"])
 
         # Save all containers
@@ -1187,14 +1179,14 @@ class MDESecurityCenter_Connector(BaseConnector):
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _get_filter_list(self, recurse: bool = True) -> list:
-        filter_url = phanrules.build_phantom_rest_url("decided_list", self.filter_list)
+        filter_url = phanrules.build_phantom_rest_url("decided_list", self.config.filter_list)
         response = json.loads(phantom.requests.get(filter_url, verify=False).content)
 
         if not response.get("failed", False):
             return self._validate_filter_list(response["content"])
 
         success, message = phanrules.set_list(
-            list_name=self.filter_list,
+            list_name=self.config.filter_list,
             values=[["Rule Name", "Action", "Incident", "Alerts", "Entities",
                      "Devices", "Additional Comments", "Category", "Status"]]
         )
@@ -1295,7 +1287,7 @@ class MDESecurityCenter_Connector(BaseConnector):
                                "Devices", "Additional Comments", "Category", "Status"])
         for r in filter_rules:
             validated_list.append([val for key, val in r.items()])
-        phanrules.set_list(list_name=self.filter_list, values=validated_list)
+        phanrules.set_list(list_name=self.config.filter_list, values=validated_list)
 
         return validated_rules
 
@@ -1540,11 +1532,14 @@ class MDESecurityCenter_Connector(BaseConnector):
 
     def initialize(self):
         # Load the state in initialize, use it to store data that needs to be accessed across actions
-        self.load_state()
-        self._state = {key: val for key, val in self.get_state().items()}
+        self.state = self.load_state()
 
-        if not self._state.get('tokens', False):
-            self._state['tokens'] = {}
+        self.config = SettingsParser(settings=self.get_config(), defaults=self.config_defaults)
+        self.debug_print("self.config.values:", self.config.values)
+
+        if self.state.get("tokens", False):
+            self.tokens["tokens"] = self.state["tokens"]
+            self.debug_print("mde token:", self.tokens)
 
         if not self._state.get('live_response', False):
             self._state['live_response'] = {}
@@ -1552,20 +1547,20 @@ class MDESecurityCenter_Connector(BaseConnector):
         if not self._state.get('isolated_devices', False):
             self._state['isolated_devices'] = []
 
-        for resource, token in self._state['tokens'].items():
-            if resource not in self.resources:
-                continue
-            t = str(encryption_helper.decrypt(str(token['token']), self.asset_id))
-            self.tokens[resource] = AuthenticationToken(token=t, expires_on=token['expires_on'])
+        # for resource, token in self._state['tokens'].items():
+        #     if resource not in self.resources:
+        #         continue
+        #     t = str(encryption_helper.decrypt(str(token['token']), self.asset_id))
+        #     self.tokens[resource] = AuthenticationToken(token=t, expires_on=token['expires_on'])
 
         return phantom.APP_SUCCESS
 
     def finalize(self):
         # Save any current tokens
-        self._state['tokens'] = {
-            r: {'token': encryption_helper.encrypt(str(t.token), self.asset_id), 'expires_on': t.expires_on}
-            for r, t in self.tokens.items() if r in self.resources
-        }
+        # self._state['tokens'] = {
+        #     r: {'token': encryption_helper.encrypt(str(t.token), self.asset_id), 'expires_on': t.expires_on}
+        #     for r, t in self.tokens.items() if r in self.resources
+        # }
 
         # Save any active live response actions
         self._state['live_response'] = {k: v for k, v in self.live_response.items()}
