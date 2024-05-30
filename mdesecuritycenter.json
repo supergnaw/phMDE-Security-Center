@@ -4,7 +4,7 @@
   "description": "Splunk SOAR connector module for interacting with the Microsoft Defender for Endpoint Security Center API.",
   "type": "endpoint",
   "main_module": "mdesecuritycenter_connector.py",
-  "app_version": "2.0.0",
+  "app_version": "2.0.2",
   "product_vendor": "Microsoft",
   "product_name": "Microsoft 365 Defender for Endpoint",
   "product_version_regex": ".*",
@@ -23,6 +23,17 @@
   ],
   "fips_compliant": true,
   "configuration": {
+    "login_uri": {
+      "data_type": "string",
+      "description": "Endpoint for authentication",
+      "required": true,
+      "value_list": [
+        "https://login.microsoftonline.com",
+        "https://login.microsoftonline.us"
+      ],
+      "default": "https://login.microsoftonline.com",
+      "order": 0
+    },
     "api_uri": {
       "data_type": "string",
       "description": "API Endpoint Server URI",
@@ -35,76 +46,80 @@
         "https://api-us.*.microsoft.com"
       ],
       "default": "https://api-us.*.microsoft.com",
-      "order": 0
+      "order": 1
     },
     "tenant_id": {
       "data_type": "string",
       "description": "Tenant ID",
       "required": true,
-      "order": 1
+      "order": 2
+    },
+    "placeholder_1": {
+      "data_type": "ph",
+      "order": 3
     },
     "client_id": {
       "data_type": "string",
       "description": "Client ID",
       "required": true,
-      "order": 2
+      "order": 4
     },
     "client_secret": {
       "data_type": "password",
       "description": "Client Secret",
       "required": true,
-      "order": 3
+      "order": 5
     },
     "ingest_window": {
       "data_type": "numeric",
       "description": "Rolling ingestion window in hours (default: 24)",
       "required": false,
-      "order": 4
+      "order": 6
     },
     "max_incidents": {
       "data_type": "numeric",
       "description": "Max incident to parse from MDE in the ingestion window (default: 250)",
       "required": false,
       "default": 250,
-      "order": 5
-    },
-    "placeholder_7": {
-      "data_type": "ph",
-      "order": 6
-    },
-    "placeholder_7": {
-      "data_type": "ph",
       "order": 7
+    },
+    "placeholder_2": {
+      "data_type": "ph",
+      "order": 8
+    },
+    "placeholder_3": {
+      "data_type": "ph",
+      "order": 9
     },
     "mde_ingest_comment": {
       "data_type": "string",
       "description": "Default MDE comment to add on incident ingest",
       "required": false,
-      "order": 8
+      "order": 10
     },
     "mde_closure_comment": {
       "data_type": "string",
       "description": "Default MDE comment to add on incident closure",
       "required": false,
-      "order": 9
+      "order": 11
     },
     "filter_list": {
       "data_type": "string",
       "description": "Filter rules custom list (default: 'MDE Security Center Ingest Filter')",
       "required": false,
       "default": "MDE Security Center Ingest Filter",
-      "order": 10
+      "order": 12
     },
-    "placeholder_7": {
+    "placeholder_4": {
       "data_type": "ph",
-      "order": 11
+      "order": 13
     },
     "field_mapping": {
       "data_type": "string",
       "description": "Field Mapping: A JSON string of {'old_field_name':'new_field_name'} for on-the-fly field renaming",
       "required": false,
       "default": "",
-      "order": 12
+      "order": 14
     },
     "on_poll_behavior": {
       "data_type": "string",
@@ -115,10 +130,44 @@
         "ignore"
       ],
       "default": "ignore",
-      "order": 13
+      "order": 15
     }
   },
   "actions": [
+    {
+      "action": "clear authentication tokens",
+      "identifier": "clear_authentication_tokens",
+      "description": "Clears any authentication tokens stored in the state file.",
+      "verbose": "Checks the state file and clears any existing authentication tokens.",
+      "type": "test",
+      "read_only": true,
+      "versions": "EQ(*)",
+      "parameters": {},
+      "output": []
+    },
+    {
+      "action": "verify authentication tokens",
+      "identifier": "verify_authentication_tokens",
+      "description": "Verifies existing authentication tokens.",
+      "verbose": "Checks authentication tokens stored in the state file and ensures they are not expired.",
+      "type": "test",
+      "read_only": true,
+      "versions": "EQ(*)",
+      "parameters": {
+        "force_refresh": {
+          "description": "Force new token generation",
+          "data_type":  "boolean",
+          "contains": "",
+          "required": false,
+          "primary": false,
+          "value_list": [],
+          "default": false,
+          "order": 0,
+          "allow_list": false
+        }
+      },
+      "output": []
+    },
     {
       "action": "test connectivity",
       "identifier": "test_connectivity",
