@@ -10,6 +10,9 @@
 # the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
 # either expressed or implied. See the License for the specific language governing permissions
 # and limitations under the License.
+import urllib
+
+import requests
 
 # If you find errors or would like to help contribute, please see:
 # https://github.com/supergnaw/phMDE-Security-Center
@@ -22,19 +25,56 @@ import encryption_helper
 
 import json
 import time
-from datetime import datetime, timezone, timedelta
-import urllib
-import base64
+from datetime import datetime, timedelta
 from requests import Response
 import hashlib, uuid, random
 import replus as rp
-from inspect import currentframe
 
 from mdesecuritycenter_consts import *
 
 # Custom helper classes
 from authentication_token import AuthenticationToken
 from settings_parser import SettingsParser
+
+"""
+PHANTOM DECONSTRUCTOR STUFF
+"""
+import inspect
+from typing import Any
+
+
+def get_attributes(object: Any) -> dict:
+    output = {}
+    for o in dir(object):
+        if f"{o}".startswith("__"):
+            continue
+
+        attr = getattr(object, o)
+
+        if callable(attr):
+            try:
+                output[f"{o}"] = f"function{inspect.signature(attr)}"
+            except:
+                output[f"{o}"] = "uninspectable callable"
+        else:
+            output[f"{o}"] = f"({type(attr)}) {attr}"
+
+    return output
+
+
+def get_phantom_contents() -> dict:
+    input = {
+        "encryption_helper": encryption_helper
+    }
+
+    output = {
+        "encryption_helper": {}
+    }
+
+    for key, item in input.items():
+        output[key] = get_attributes(item)
+
+    return output
 
 
 def parse_exception_message(e: Exception) -> str:
@@ -156,7 +196,7 @@ class MDESecurityCenter_Connector(BaseConnector):
     def config_defaults(self) -> dict:
         if not self._config_defaults:
             defaults = {}
-            for default_name, meta_data in self.get_app_json("configuration", {}).items():
+            for default_name, meta_data in self.get_app_json().get("configuration", {}).items():
                 if "ph" == meta_data["data_type"]:
                     continue
 
@@ -275,10 +315,14 @@ class MDESecurityCenter_Connector(BaseConnector):
         """
 
         # Hey now, you can't do that type of REST call!
-        if not hasattr(phantom.requests, method):
-            message = f"Invalid method sent to '_make_rest_call': {method}"
-            return RetVal(self.set_status_save_progress(phantom.APP_ERROR, message), message)
+        try:
+            request_func = getattr(phantom.requests, method.lower())
+        except AttributeError:
+            message = f"Invalid requests method: {method}"
+            self.error_print(message)
+            return RetVal(self.action_result.set_status(phantom.APP_ERROR, message), message)
 
+        # Ensure authentication token is current
         resource = rp.search(pattern=r"/[^\w]+([^\.]+)\.microsoft/i", string=endpoint).group(1)
         if not self._authenticate(resource=resource):
             message = f"Couldn't authenticate to retrieve {resource} token"
@@ -291,24 +335,28 @@ class MDESecurityCenter_Connector(BaseConnector):
             kwargs["headers"]["Accept"] = "application/json"
         if resource in self.resources:
             kwargs["headers"]["Authorization"] = f"Bearer {self.tokens[resource].token}"
+        if "data" in kwargs and isinstance(kwargs["data"], dict):
+            kwargs["data"] = json.dumps(kwargs["data"])
 
+        # Make the REST call
         try:
-            self.response = getattr(phantom.requests, method)(endpoint, verify=verify, **kwargs)
+            response = request_func(endpoint, verify=verify, **kwargs)
             self.save_progress(f"Made {method.upper()} request to: {endpoint}")
         except Exception as e:
             message = f"Exception occurred while connecting to server: {parse_exception_message(e)}"
             return RetVal(self.set_status_save_progress(phantom.APP_ERROR, message), message)
 
-        if 429 == self.response.status_code and 300 < int(self.response.headers.get('Retry-After', 301)):
-            message = f"Error occurred [{self.response.status_code}]: {str(self.response.text)}"
-            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
+        # Response said to retry
+        if 429 == response.status_code and 300 < int(response.headers.get('Retry-After', 301)):
+            message = f"Error occurred [{response.status_code}]: {str(response.text)}"
+            return RetVal(self.set_status_save_progress(phantom.APP_ERROR, status_message=message))
 
-        if 429 == self.response.status_code and 300 >= int(self.response.headers.get('Retry-After', 301)):
-            self.save_progress(f"Retrying after {self.response.headers.get('Retry-After', 301)} seconds")
-            time.sleep(int(self.response.headers['Retry-After']) + 1)
+        if 429 == response.status_code and 300 >= int(response.headers.get('Retry-After', 301)):
+            self.save_progress(f"Retrying after {response.headers.get('Retry-After', 301)} seconds")
+            time.sleep(int(response.headers['Retry-After']) + 1)
             return self._make_rest_call(endpoint, verify=verify, **kwargs)
 
-        return self._process_response()
+        return self._process_response(response=response)
 
     # ------------------- #
     # Response Processors #
@@ -322,22 +370,22 @@ class MDESecurityCenter_Connector(BaseConnector):
         :return: [status, JSON|message]
         """
 
-        if 'json' in self.response.headers.get('Content-Type', '').lower():
-            return self._process_json_response()
+        if 'json' in response.headers.get('Content-Type', '').lower():
+            return self._process_json_response(response=response)
 
-        if 'html' in self.response.headers.get('Content-Type', '').lower():
-            return self._process_html_response()
+        if 'html' in response.headers.get('Content-Type', '').lower():
+            return self._process_html_response(response=response)
 
-        if not self.response.text:
-            return self._process_empty_response()
+        if not response.text:
+            return self._process_empty_response(response=response)
 
         # If we get here, it's because there's an error
         if hasattr(self.action_result, 'add_debug_data'):
-            self.action_result.add_debug_data({'r_status_code': self.response.status_code})
-            self.action_result.add_debug_data({'r_text': self.response.text})
-            self.action_result.add_debug_data({'r_headers': self.response.headers})
+            self.action_result.add_debug_data({'r_status_code': response.status_code})
+            self.action_result.add_debug_data({'r_text': response.text})
+            self.action_result.add_debug_data({'r_headers': response.headers})
 
-        message = f"Can't process response from server [{self.response.status_code}]: {self.response.text}"
+        message = f"Can't process response from server [{response.status_code}]: {response.text}"
         return RetVal(self.set_status_save_progress(phantom.APP_ERROR, message), message)
 
     def _process_json_response(self, response: Response = None) -> RetVal:
@@ -350,21 +398,26 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         # Parse! That!! JSON!!! (with enthusiasm!!!!)
         try:
-            self.r_json = self.response.json()
+            resp_json = response.json()
+            if 200 <= response.status_code <= 399:
+                return RetVal(self.action_result.set_status(phantom.APP_SUCCESS), resp_json)
+            return self._process_json_error_response(response)
         except Exception as e:
             message = f"Unable to parse JSON response: {parse_exception_message(e)}"
             return RetVal(self.set_status_save_progress(phantom.APP_ERROR, message), message)
 
-        # We have a successful response, albeit a redirect is possible...
-        if 200 <= self.response.status_code < 400:
-            message = f"Status code {self.response.status_code} received and JSON response parsed"
-            return RetVal(self.set_status_save_progress(phantom.APP_SUCCESS, message), message)
-
         # There's a generic error in our midst
         message = (
-            f"!!! {str(self.r_json.get('error', {}).get('code', 'Unknown'))} error occurred [{self.response.status_code}]:"
+            f"!!! {str(self.r_json.get('error', {}).get('code', 'Unknown'))} error occurred [{response.status_code}]:"
             f"{str(self.r_json.get('error', {}).get('message', 'No message available'))}"
         )
+        return RetVal(self.set_status_save_progress(phantom.APP_ERROR, message), message)
+
+    def _process_json_error_response(self, response: Response) -> RetVal:
+        resp_json = response.json()
+        error_code = resp_json.get("error", {}).get("code", "Unknown code")
+        error_message = resp_json.get("error", {}).get("message", "Unknown message")
+        message = f"Response Error [{response.status_code}]: {error_code} - {error_message}"
         return RetVal(self.set_status_save_progress(phantom.APP_ERROR, message), message)
 
     def _process_html_response(self, response: Response = None) -> RetVal:
@@ -378,22 +431,22 @@ class MDESecurityCenter_Connector(BaseConnector):
         try:
             # Remove extra elements
             content = rp.sub(
-                repl="", string=self.response.text, pattern=(
+                repl="", string=response.text, pattern=(
                     "/(<script.*?(?=<\/script>)<\/script>|<style.*?(?=<\/style>)<\/style>|"
                     "<footer.*?(?=<\/footer>)<\/footer>|<nav.*?(?=<\/nav>)<\/nav>)/sim"
                 )
             )
             # Clear out extra whitespace and empty lines
             error_text = rp.sub(pattern="/\s+/sim", repl=" ", string=content).strip()
-        except Exception:
-            error_text = "Cannot parse error details"
+        except Exception as e:
+            error_text = f"Cannot parse error details: {parse_exception_message(e)}"
 
         if not error_text:
             error_text = "Error message unavailable. Please check the asset configuration and/or the action parameters"
 
         # Use f-strings, we are not uncivilized heathens.
         message = f"Status Code: {self.response.status_code}. Raw data from server:\n{error_text}\n"
-        return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
+        return RetVal(self.set_status_save_progress(phantom.APP_ERROR, status_message=message))
 
     def _process_empty_response(self, response: Response = None) -> RetVal:
         """
@@ -403,10 +456,10 @@ class MDESecurityCenter_Connector(BaseConnector):
         """
 
         if self.response.status_code in [200, 204]:
-            return self.set_status_save_progress(phantom.APP_SUCCESS)
+            return RetVal(self.set_status_save_progress(phantom.APP_SUCCESS))
 
-        message = f"Status Code: {self.response.status_code}. Error: Empty response and no information in the header"
-        return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
+        message = f"Status Code: {response.status_code}. Error: Empty response and no information in the header"
+        return RetVal(self.set_status_save_progress(phantom.APP_ERROR, status_message=message))
 
     def _get_exception_message(self, e: Exception, line_no: int = 0) -> str:
         """
@@ -433,10 +486,21 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         return debug_message
 
-    def _authenticate(self, resource: str) -> bool:
+    # ============== #
+    # AUTHENTICATION #
+    # ============== #
+
+    def _authenticate(self, resource: str, force_refresh: bool = False) -> bool:
+        """
+        Checks for an authentication token for a given resource, and if none exist, generates a new one
+
+        :param resource: the resource to authenticate with, 'security' or 'securitycenter'
+        :param force_refresh: force a refresh of the authentication tokens if saved in cache
+        :return: bool
+        """
         # Instantiate new AuthenticationToken object as needed
-        if not self.tokens.get(resource, False):
-            self.tokens[resource] = AuthenticationToken(token="", expires_on=0)
+        if not self.tokens.get(resource, False) or force_refresh:
+            self.tokens[resource] = AuthenticationToken(token="")
 
         # AuthenticationToken allocated has not yet expired
         if self.tokens[resource].token:
@@ -444,43 +508,112 @@ class MDESecurityCenter_Connector(BaseConnector):
             message = f"Authentication for {resource} valid until {summary['expires_on']} ({summary['expires_in']})"
             return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
+        method, endpoint = (f"GET {self.config.login_uri}/"
+                            f"{self.config.tenant_id}/"
+                            f"oauth2/token").split(" ", 1)
+
         # Prepare to request a new token
+        uri = f"{self.config.login_uri}/{self.config.tenant_id}/oauth2/token"
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
-        body = {
+        data = urllib.parse.urlencode({
             'client_id': self.config.client_id,
             'client_secret': self.config.client_secret,
             'resource': self.api_uri.format(resource=resource),
             'grant_type': 'client_credentials'
-        }
-        url = f"{self.login_uri}/{self.config.tenant_id}/oauth2/token"
-        data = urllib.parse.urlencode(body).encode("utf-8")
+        }).encode("utf-8")
 
         # The authentication request is a bit different from other REST calls so let's make a special one!
         try:
-            self.response = phantom.requests.get(url, data=data, headers=headers)
-            self.r_json = self.response.json()
+            resp_json = phantom.requests.get(uri=uri, headers=headers, data=data).json()
+            if not resp_json:
+                return resp_json
+            self.debug_print("response json:", resp_json)
         except Exception as e:
             message = parse_exception_message(e)
             return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
 
-        if 200 != self.response.status_code:
-            message = f"Failed to authenticate [{self.r_json['error']}]: {self.r_json['error_description']}"
-            return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
-
-        token = str(self.r_json.get('access_token', ''))
-        expires_on = int(self.r_json.get('expires_on', 0))
-        self.tokens[resource].update(token=token, expires_on=expires_on)
+        self.tokens[resource].update(token=str(resp_json.get('access_token', '')))
 
         summary = self.tokens[resource].summary()
         message = f"Authentication successful for {resource}: expires on {summary['expires_on']} ({summary['expires_in']})"
         self.save_progress(message)
         return self.action_result.set_status(phantom.APP_SUCCESS, status_message=message)
 
+    # ---------------------- #
+    # Authentication Helpers #
+    # ---------------------- #
+
+    # ======================== #
+    # ACTION HANDLER FUNCTIONS #
+    # ======================== #
+
+    # ---------------------- #
+    # Primary Action Handler #
+    # ---------------------- #
+
+    def handle_action(self, param: dict = None) -> bool:
+        # Empty default param definition
+        if param is None:
+            param = {}
+
+        self.debug_print(f"Using params: {param}")
+
+        if hasattr(self, f"_handle_{self.action_id}"):
+            return self.set_status_save_progress(
+                status_code=getattr(self, f"_handle_{self.action_id}")(**param),
+                status_message="Action completed")
+
+        # Missing handler function for action
+        message = f"{self.action_id} has no handler function: '_handle_{self.action_id}'"
+        return self.set_status_save_progress(phantom.APP_ERROR, status_message=message)
+
+    # ------------------ #
+    # Connectivity Tests #
+    # ------------------ #
+
+    def _handle_clear_authentication_tokens(self) -> bool:
+        """
+        Clears cached authentication tokens
+
+        :return: status
+        """
+        self.save_progress(f"In action handler for {self.action_id}")
+
+        for resource in self.resources:
+            self.tokens[resource] = AuthenticationToken(token="")
+
+        return self.set_status_save_progress(phantom.APP_SUCCESS, status_message="Authentication tokens cleared.")
+
+    def _handle_verify_authentication_tokens(self, force_refresh: bool = False):
+        """
+        Verifies authentication tokens, or forces a token refresh
+
+        :param force_refresh: force refresh saved tokens
+        :return: status
+        """
+        self.save_progress(f"In action handler for {self.action_id}")
+        self.action_result.set_status(phantom.APP_SUCCESS)
+
+        for resource in self.resources:
+            if not self._authenticate(resource=resource, force_refresh=force_refresh):
+                message = f"Could not authenticate with {resource}"
+                self.error_print(message)
+                self.action_result.set_status(phantom.APP_ERROR, message)
+            else:
+                self.debug_print(f"Token [{resource}]:", self.tokens[resource].summary())
+                self.action_result.add_data({resource: self.tokens[resource].parsed})
+
+        message = "Successfully verified authentication tokens."
+        if not self.action_result.get_status():
+            message = "Failed to verify authentication tokens."
+        return self.set_status_save_progress(self.action_result.get_status(), message)
+
     def _handle_test_connectivity(self, force_refresh: bool = False) -> bool:
         """
         Tests connection by attempting to authenticate to API
 
-        :return: status(phantom.APP_SUCCESS/phantom.APP_ERROR)
+        :param force_refresh:
+        :return: status
         """
 
         if force_refresh:
@@ -489,15 +622,31 @@ class MDESecurityCenter_Connector(BaseConnector):
         for resource in self.resources:
             self._authenticate(resource=resource)
 
+        self._handle_list_incidents(top=1)
+
         [self.action_result.add_data(token.summary()) for t, token in self.tokens.items()]
+        self.debug_print("self.action_result.get_data():", self.action_result.get_data())
 
         tokens = {resource: token.summary() for resource, token in self.tokens.items() if 0 < token.expires_on}
         self.save_progress(f"Active access tokens:\n{json.dumps(tokens, indent=4)}")
         return self.action_result.set_status(phantom.APP_SUCCESS, status_message="Test complete")
 
-    def _handle_list_incidents(self, odata_filter: str = None, top: int = 100, skip: int = 0) -> bool:
-        params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
+    # --------- #
+    # Incidents #
+    # --------- #
 
+    def _handle_list_incidents(self, odata_filter: str = None, top: int = 100, skip: int = 0) -> bool:
+        """
+        The list incidents API allows you to sort through incidents to create an informed cybersecurity response. It
+        exposes a collection of incidents that were flagged in your network, within the time range you specified in your
+        environment retention policy. The most recent incidents are displayed at the top of the list. Each incident
+        contains an array of related alerts, and their related entities.
+
+        :param odata_filter: on the `lastUpdateTime`, `createdTime`, `status`, and `assignedTo` properties
+        :param top: get only the top x results
+        :param skip: skip the first x results
+        :return: status
+        """
         params = {
             "$top": max(0, top),
             "$skip": max(0, skip)
@@ -518,33 +667,44 @@ class MDESecurityCenter_Connector(BaseConnector):
             else:
                 params["$top"] = LIST_INCIDENTS_LIMIT
 
-        url = f"{self.api_uri}{INCIDENT_LIST}".format(resource='security')
+        method, endpoint = (f"GET {self.api_uri.format(resource='security')}/"
+                            f"api/incidents").split(" ", 1)
         incident_count = 0
 
         for param in param_set:
-            if not self._make_rest_call(url, params=param, method="get"):
-                return phantom.APP_ERROR
+            status, resp_json = self._make_rest_call(endpoint, params=param, method=method)
+            if not status:
+                return status
 
-            for incident in self.r_json['value']:
+            for incident in resp_json['value']:
                 incident["source_data_identifier"] = self._sdi(incident)
                 for i, alert in enumerate(incident["alerts"]):
                     incident["alerts"][i]["source_data_identifier"] = self._sdi(alert)
                 self.action_result.add_data(incident)
 
-            incident_count += len(self.r_json.get("value", []))
+            incident_count += len(resp_json.get("value", []))
 
         message = f"Returned {incident_count} incidents"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
     def _handle_get_incident(self, incident_id: int) -> bool:
-        url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security', incident_id=incident_id)
+        """
+        Retrieves a specific incident by its ID
 
-        if not self._make_rest_call(url, method="get"):
-            return phantom.APP_ERROR
+        :param incident_id:
+        :return: status
+        """
+        method, endpoint = (f"GET {self.api_uri.format(resource='security')}/"
+                            f"api/incidents/{incident_id}").split(" ", 1)
 
-        self.r_json["source_data_identifier"] = self._sdi(self.r_json)
+        status, resp_json = self._make_rest_call(endpoint, method="get")
 
-        self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
+        if not status:
+            return status
+
+        resp_json["source_data_identifier"] = self._sdi(resp_json)
+
+        self.action_result.add_data({key: val for key, val in resp_json.items() if not key.startswith("@")})
 
         message = f"Retrieved incident {incident_id}"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
@@ -554,42 +714,51 @@ class MDESecurityCenter_Connector(BaseConnector):
                                 remove_tags: bool = False) -> bool:
         # get current container tags
         if not remove_tags:
-            url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security', incident_id=incident_id)
-
-            if not self._make_rest_call(url, method="get"):
+            if not self._handle_get_incident(incident_id=incident_id):
                 return phantom.APP_ERROR
 
-            tags = str(tags + f",{','.join(self.r_json['tags'])}").strip(",")
-            self.save_progress(f"Joined new tags with existing tags: '{tags}'")
+            incident_tags = self.action_result.get_data()[-1].get("tags", [])
 
-        body = {
-            'status': self.statuses['incident'].get(status),
-            'assignedTo': assigned_to,
-            'classification': self.categories.get(category, [False])[0],
+            if incident_tags:
+                tags = str(tags + f",{','.join(incident_tags)}").strip(",")
+                self.save_progress(f"Joined new tags with existing tags: '{tags}'")
+
+        data = {"comment": comment}
+        if "default" != status and status in self.statuses["incident"].keys():
+            data["status"] = self.statuses['incident'].get(status)
+        if assigned_to:
+            data["assignedTo"] = assigned_to
+        if self.categories.get(category, False):
             # DOESN'T LIKE:
             # - InformationalExpectedActivity.ConfirmedUserActivity
             # - FalsePositive.Clean
             # - FalsePositive.InsufficientData
             # - TruePositive.CompromisedUser
-            'determination': self.categories.get(category, [None, False])[1],
-            'tags': [tag.strip() for tag in tags.split(",") if tag.strip()],
-            'comment': comment
-        }
-        body = {key: val for key, val in body.items() if val and "" != f"{val}"}
-        data = json.dumps(body)
+            data["classification"] = self.categories[category][0]
+            data["determination"] = self.categories[category][1]
+        if tags:
+            data["tags"] = [tag.strip() for tag in tags.split(",") if tag.strip()]
 
-        url = f"{self.api_uri}{INCIDENT_SINGLE}".format(resource='security',
-                                                        incident_id=incident_id)
+        method, endpoint = (f"PATCH {self.api_uri.format(resource='security')}/"
+                            f"api/incidents/{incident_id}").split(" ", 1)
 
-        if not self._make_rest_call(url, data=data, method="patch"):
-            return phantom.APP_ERROR
+        self.debug_print("data:", data)
 
-        self.r_json["source_data_identifier"] = self._sdi(self.r_json)
+        status, resp_json = self._make_rest_call(endpoint, method=method, data=data)
 
-        self.action_result.add_data({key: val for key, val in self.r_json.items() if not key.startswith("@")})
+        if not status:
+            return status
 
-        message = f"Updated incident: {incident_id}:\n{self.r_json}"
+        resp_json["source_data_identifier"] = self._sdi(resp_json)
+
+        self.action_result.add_data({key: val for key, val in resp_json.items() if not key.startswith("@")})
+
+        message = f"Updated incident: {incident_id}:\n{resp_json}"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
+
+    # ------ #
+    # Alerts #
+    # ------ #
 
     def _handle_list_alerts(self, odata_filter: str = None, top: int = 500, skip: int = 0) -> bool:
         params = {"$filter": odata_filter, "$top": top, "$skip": skip, "$expand": "evidence"}
@@ -710,6 +879,10 @@ class MDESecurityCenter_Connector(BaseConnector):
         message = f"Returned {len(self.r_json['value'])} files for alert {self.param['alert_id']}"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
+    # --------------- #
+    # Library Actions #
+    # --------------- #
+
     def _handle_list_library_scripts(self) -> bool:
         url = f"{self.api_uri}{LIVE_RESPONSE_LIST_LIBRARY}".format(resource='securitycenter')
         if not self._make_rest_call(url, method="get"):
@@ -828,6 +1001,10 @@ class MDESecurityCenter_Connector(BaseConnector):
         message = f"{self.action_id} complete"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
+    # -------------- #
+    # Investigations #
+    # -------------- #
+
     def _handle_list_investigations(self) -> object:
         params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
         url = f"{self.api_uri}{INVESTIGATION_LIST}".format(resource="securitycenter")
@@ -886,6 +1063,10 @@ class MDESecurityCenter_Connector(BaseConnector):
         message = f"{self.action_id} complete"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
+    # --------------- #
+    # Machine Actions #
+    # --------------- #
+
     def _handle_list_machine_actions(self) -> object:
         params = {f"${k}": v for k, v in self.param.items() if v and k in ['filter', 'top', 'skip']}
         url = f"{self.api_uri}{MACHINE_LIST_ACTIONS}".format(resource='securitycenter',
@@ -923,6 +1104,10 @@ class MDESecurityCenter_Connector(BaseConnector):
         message = f"{self.action_id} complete"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
+    # ----- #
+    # Files #
+    # ----- #
+
     def _handle_get_file_info(self) -> object:
         url = f"{self.api_uri}{FILE_INFO}".format(file_id=self.param['file_hash'])
 
@@ -956,11 +1141,15 @@ class MDESecurityCenter_Connector(BaseConnector):
         message = f"{self.action_id} complete"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
+    # ------- #
+    # ON POLL #
+    # ------- #
+
     def _handle_on_poll(self) -> bool:
         # generate timestamp for ingestion
         x_hours_ago = (datetime.utcnow() - timedelta(hours=self.config.ingest_window)).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-        container_label = self._get_asset_label()
-        container_tags = self._get_asset_tags()
+        container_label = self.label
+        container_tags = self.tags
 
         # fetch the incidents
         url = f"{self.api_uri}{INCIDENT_LIST}".format(resource='security')
@@ -1510,15 +1699,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         message = f"Updated widget for {self.param['incident_id']}"
         return self.set_status_save_progress(phantom.APP_SUCCESS, status_message=message)
 
-    def handle_action(self, param) -> bool:
-        self.param = param
-        self.save_progress(f"Starting action: {self.action_id}\n{json.dumps(self.param, indent=4)}")
-
-        if not getattr(self, f"_handle_{self.action_id}")() and self.r_json:
-            self.set_status_save_progress(phantom.APP_ERROR, f"{self.action_id} has no _handler function")
-
-        return self.get_status()
-
     def _sdi(self, input_dictionary: dict) -> str:
         # incidentId
         if input_dictionary.get("incidentId", False):
@@ -1530,6 +1710,10 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         return str(uuid.UUID(version=4, int=random.Random().getrandbits(128)))
 
+    # ---------------------- #
+    # DATA OBJECT PROCESSING #
+    # ---------------------- #
+
     def initialize(self):
         # Load the state in initialize, use it to store data that needs to be accessed across actions
         self.state = self.load_state()
@@ -1539,7 +1723,13 @@ class MDESecurityCenter_Connector(BaseConnector):
 
         for resource in self.resources:
             if self.state.get("tokens", {}).get(resource, False):
-                self.tokens[resource].token = encryption_helper.decrypt(self.state["tokens"][resource], self.asset_id)
+                try:
+                    self.tokens[resource].token = encryption_helper.decrypt(self.state["tokens"][resource],
+                                                                            self.asset_id)
+                except Exception as e:
+                    self.debug_print("Failed to decrypt authentication token:", parse_exception_message(e))
+
+        self.debug_print("get_phantom_contents", get_phantom_contents())
 
         if not self.state.get('live_response', False):
             self.state['live_response'] = {}
@@ -1551,7 +1741,12 @@ class MDESecurityCenter_Connector(BaseConnector):
 
     def finalize(self):
         for resource in self.resources:
-            self.state["tokens"][resource] = encryption_helper.encrypt(self.tokens[resource].token, self.asset_id)
+            if self.tokens[resource].token:
+                try:
+                    self.state["tokens"][resource] = encryption_helper.encrypt(self.tokens[resource].token,
+                                                                               self.asset_id)
+                except Exception as e:
+                    self.debug_print("Failed to encrypt authentication token:", parse_exception_message(e))
 
         # Save any active live response actions
         self.state['live_response'] = {k: v for k, v in self.live_response.items()}
@@ -1560,27 +1755,6 @@ class MDESecurityCenter_Connector(BaseConnector):
         self.save_state(self.state)
         self.save_progress(f"Action execution time: {datetime.now() - self._action_start_time} seconds")
         return phantom.APP_SUCCESS
-
-    # ------------------------ #
-    #   SOAR REST API CALLS    #
-    # ------------------------ #
-
-    def _get_asset_name(self):
-        # Make REST call to SOAR
-        uri = phanrules.build_phantom_rest_url("asset", self.get_asset_id())
-        return json.loads(phanrules.requests.get(uri, verify=False).text).get("name", "unnamed_asset")
-
-    def _get_asset_tags(self):
-        # Make REST call to SOAR
-        uri = phanrules.build_phantom_rest_url("asset", self.get_asset_id())
-        return json.loads(phanrules.requests.get(uri, verify=False).text).get("tags", [])
-
-    def _get_asset_label(self):
-        # Make REST call to SOAR
-        uri = phanrules.build_phantom_rest_url("asset", self.get_asset_id())
-        return json.loads(phanrules.requests.get(uri, verify=False).text).get("configuration", {}).get("ingest",
-                                                                                                       {}).get(
-            "container_label", None)
 
 
 def main():
@@ -1650,3 +1824,16 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+"""
+Exception Occurred. 'dict' object has no attribute 'split'.
+Traceback (most recent call last):
+File \"lib3/phantom/base_connector.py/base_connector.py\", line 3145, in _handle_action
+File \"/home/phantomuser/phantom/apps/mdesecuritycenter_14b2b770-93ca-4684-b41e-d585f8466a61/mdesecuritycenter_connector.py\", line 1704, in initialize
+self.tokens[resource].token = self.state[\"tokens\"][resource]
+File \"/home/phantomuser/phantom/apps/mdesecuritycenter_14b2b770-93ca-4684-b41e-d585f8466a61/authentication_token.py\", line 36, in token
+self._parse_token()
+File \"/home/phantomuser/phantom/apps/mdesecuritycenter_14b2b770-93ca-4684-b41e-d585f8466a61/authentication_token.py\", line 40, in _parse_token
+token_parts = self._token.split(\".\")
+AttributeError: 'dict' object has no attribute 'split'
+"""
