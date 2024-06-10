@@ -4,7 +4,7 @@
   "description": "Splunk SOAR connector module for interacting with the Microsoft Defender for Endpoint Security Center API.",
   "type": "endpoint",
   "main_module": "mdesecuritycenter_connector.py",
-  "app_version": "2.0.2",
+  "app_version": "2.0.11",
   "product_vendor": "Microsoft",
   "product_name": "Microsoft 365 Defender for Endpoint",
   "product_version_regex": ".*",
@@ -218,6 +218,24 @@
           "contains": []
         }
       ],
+      "versions": "EQ(*)"
+    },
+    {
+      "action": "test ingest rules",
+      "identifier": "test_ingest_rules",
+      "description": "Checks a given incident against the ingest rules and returns information the action that would be accomplished.",
+      "verbose": "",
+      "type": "test",
+      "read_only": true,
+      "parameters": {
+        "incident_id": {
+          "description": "Incident ID",
+          "data_type": "numeric",
+          "required": true,
+          "primary": false
+        }
+      },
+      "output": [],
       "versions": "EQ(*)"
     },
     {
